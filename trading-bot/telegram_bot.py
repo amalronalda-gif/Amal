@@ -37,6 +37,7 @@ from marketflow.data import (DEFAULT_SYMBOL, GOLD_SYMBOLS, INTERVAL_SECONDS,
                              fetch_tradingview_quote)
 from marketflow.engine import Engine, Prediction
 from marketflow.backtest import run_backtest
+from marketflow import news as news_mod
 
 SUBS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          "subscriptions.json")
@@ -46,6 +47,7 @@ HELP = """<b>MarketFlow bot</b> — multi-strategy market flow reading for gold/
 
 /predict [symbol] [interval] — current prediction with strategy breakdown
 /backtest [symbol] [interval] — walk-forward backtest
+/news — USD economic calendar + latest gold headlines
 /watch [symbol] [interval] [minutes] — alert when the flow direction flips
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
 /unwatch — stop alerts
@@ -99,6 +101,53 @@ def spot_quote_line(symbol: str) -> str:
             f"({q.get('change', 0):+.2f}% today, "
             f"H <code>{q.get('high', 0):.2f}</code> / "
             f"L <code>{q.get('low', 0):.2f}</code>)")
+
+
+def event_risk_line() -> str:
+    """Warning when a high-impact USD event is inside the danger window."""
+    e = news_mod.event_risk(window_hours=8.0)
+    if not e:
+        return ""
+    hrs = e.hours_from_now()
+    when = "NOW" if hrs < 0.5 else f"in {hrs:.1f}h"
+    return (f"\n⚠️ <b>high-impact USD news {when}</b>: "
+            f"{html.escape(e.title)} — gold often whipsaws around releases; "
+            f"technical signals are unreliable in that window.")
+
+
+def format_news() -> str:
+    lines = ["📰 <b>Gold news & event risk</b>", ""]
+    try:
+        events = news_mod.upcoming_events(hours_ahead=36)
+        if events:
+            lines.append("<b>Economic calendar (USD, next 36h):</b>")
+            for e in events[:8]:
+                hrs = e.hours_from_now()
+                when = f"{hrs:+.1f}h" if abs(hrs) < 24 else f"{hrs / 24:+.1f}d"
+                badge = "🔴" if e.impact == "High" else "🟠"
+                extra = f" (f: {e.forecast}, p: {e.previous})" if e.forecast else ""
+                lines.append(f"{badge} {when}  {html.escape(e.title)}"
+                             f"{html.escape(extra)}")
+        else:
+            lines.append("No medium/high-impact USD events in the next 36h.")
+    except Exception as ex:
+        lines.append(f"calendar unavailable: {ex}")
+    lines.append("")
+    try:
+        heads = news_mod.gold_headlines()
+        if heads:
+            net = sum(h.sentiment for h in heads)
+            mood = ("leaning bullish" if net > 0
+                    else "leaning bearish" if net < 0 else "mixed")
+            lines.append(f"<b>Latest gold headlines</b> "
+                         f"(crude keyword sentiment: {mood}):")
+            for h in heads:
+                mark = {1: "🟢", -1: "🔴", 0: "⚪"}[h.sentiment]
+                lines.append(f"{mark} <a href=\"{h.link}\">"
+                             f"{html.escape(h.title)}</a>")
+    except Exception as ex:
+        lines.append(f"headlines unavailable: {ex}")
+    return "\n".join(lines) + DISCLAIMER
 
 
 def format_prediction(symbol: str, interval: str, pred: Prediction,
@@ -176,6 +225,8 @@ class Bot:
             self.cmd_predict(chat_id, args)
         elif cmd == "/backtest":
             self.cmd_backtest(chat_id, args)
+        elif cmd == "/news":
+            self.api.send(chat_id, format_news())
         elif cmd == "/watch":
             self.cmd_watch(chat_id, args)
         elif cmd == "/unwatch":
@@ -204,7 +255,8 @@ class Bot:
             pred = self.engine.predict(candles)
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
-                candles[-1].open_time) + spot_quote_line(symbol))
+                candles[-1].open_time) + spot_quote_line(symbol)
+                + event_risk_line())
         except Exception as e:
             self.api.send(chat_id, f"⚠️ failed: {e}")
 
@@ -266,7 +318,8 @@ class Bot:
                               head + format_prediction(
                                   sub["symbol"], sub["interval"], pred,
                                   candles[-1].close, candles[-1].open_time)
-                              + spot_quote_line(sub["symbol"]))
+                              + spot_quote_line(sub["symbol"])
+                              + event_risk_line())
             with self.lock:
                 if key in self.subs:
                     self.subs[key]["last_direction"] = pred.direction
