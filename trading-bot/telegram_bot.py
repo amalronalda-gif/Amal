@@ -221,7 +221,9 @@ class Bot:
         parts = text.split()
         cmd = parts[0].split("@")[0].lower()
         args = parts[1:]
-        if cmd in ("/start", "/help"):
+        if cmd == "/start":
+            self.api.send(chat_id, t(lang, "intro") + t(lang, "disclaimer"))
+        elif cmd == "/help":
             self.api.send(chat_id, t(lang, "help") + t(lang, "disclaimer"))
         elif cmd in ("/lang", "/language"):
             self.cmd_lang(chat_id, args)
@@ -354,8 +356,29 @@ class Bot:
 
     # ---------- main loop ----------
 
+    def setup_profile(self):
+        """Set the bot's intro screen and command menu (all languages).
+
+        Shown by Telegram before the user presses Start and as the "/"
+        command autocomplete. Best-effort: profile cosmetics must never
+        prevent the bot from starting.
+        """
+        for code, profile in i18n.BOT_PROFILE.items():
+            scope = {} if code == "en" else {"language_code": code}
+            try:
+                self.api.call("setMyShortDescription",
+                              short_description=profile["short"], **scope)
+                self.api.call("setMyDescription",
+                              description=profile["full"], **scope)
+                self.api.call("setMyCommands", commands=json.dumps(
+                    [{"command": c, "description": d}
+                     for c, d in profile["commands"]]), **scope)
+            except Exception as e:
+                print(f"[profile] {code}: {e}")
+
     def run(self):
         me = self.api.call("getMe")
+        self.setup_profile()
         print(f"running as @{me['username']} — press Ctrl-C to stop")
         threading.Thread(target=self.alert_loop, daemon=True).start()
         offset = None

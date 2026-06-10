@@ -33,7 +33,114 @@ STRATEGY_NAMES = {
     "support_resistance": {"ru": "поддержка/сопротивление", "uz": "tayanch/qarshilik"},
 }
 
+# Telegram bot profile texts (set via setMyDescription / setMyCommands).
+# short: under 120 chars, shown in the profile; full: under 512 chars,
+# shown on the empty chat screen before the user presses Start.
+BOT_PROFILE = {
+    "en": {
+        "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
+                 "signals, news and alerts. Educational, not financial advice.",
+        "full": "I read the gold market (XAUUSD) with 11 classic trading "
+                "strategies — liquidity sweeps, market structure, trend, "
+                "momentum, volumes, Ichimoku and more — and combine them "
+                "into one flow reading with confidence. Live TradingView "
+                "spot price, USD news calendar, alerts every N minutes.\n\n"
+                "Press Start and send /predict.\n"
+                "Educational signals, not financial advice.",
+        "commands": [
+            ("predict", "market flow now, e.g. /predict XAUUSD 4h"),
+            ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
+            ("news", "USD calendar + gold headlines"),
+            ("backtest", "test the strategy on history"),
+            ("status", "my subscription"),
+            ("unwatch", "stop alerts"),
+            ("lang", "language: en / ru / uz"),
+            ("help", "all commands"),
+        ],
+    },
+    "ru": {
+        "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
+                 "новости, оповещения. Обучающий, не фин. рекомендация.",
+        "full": "Я анализирую рынок золота (XAUUSD) по 11 классическим "
+                "стратегиям — снятие ликвидности, структура рынка, тренд, "
+                "моментум, объёмы, Ишимоку и др. — и свожу их в один "
+                "прогноз с уровнем уверенности. Спот-цена TradingView, "
+                "календарь новостей USD, оповещения каждые N минут.\n\n"
+                "Нажмите Start и отправьте /predict.\n"
+                "Обучающие сигналы, не финансовая рекомендация.",
+        "commands": [
+            ("predict", "поток рынка сейчас, напр. /predict XAUUSD 4h"),
+            ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
+            ("news", "календарь USD + новости золота"),
+            ("backtest", "проверка стратегии на истории"),
+            ("status", "моя подписка"),
+            ("unwatch", "остановить оповещения"),
+            ("lang", "язык: en / ru / uz"),
+            ("help", "все команды"),
+        ],
+    },
+    "uz": {
+        "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
+                 "yangiliklar, xabarlar. O'quv maqsadida.",
+        "full": "Men oltin bozorini (XAUUSD) 11 ta klassik strategiya bilan "
+                "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
+                "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
+                "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
+                "TradingView jonli narxi, USD yangiliklar kalendari, har N "
+                "daqiqada xabarlar.\n\nStart bosing va /predict yuboring.\n"
+                "O'quv signallari, moliyaviy maslahat emas.",
+        "commands": [
+            ("predict", "hozirgi bozor oqimi, masalan /predict XAUUSD 4h"),
+            ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
+            ("news", "USD kalendari + oltin yangiliklari"),
+            ("backtest", "strategiyani tarixda sinash"),
+            ("status", "mening obunam"),
+            ("unwatch", "xabarlarni to'xtatish"),
+            ("lang", "til: en / ru / uz"),
+            ("help", "barcha buyruqlar"),
+        ],
+    },
+}
+
 UI = {
+    "intro": {
+        "en": """👋 Welcome to <b>MarketFlow</b>!
+
+I analyze the <b>gold market (XAUUSD)</b> using 11 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
+
+<b>Quick start:</b>
+▫️ /predict — what gold is doing right now
+▫️ /predict XAUUSD 4h — bigger picture
+▫️ /watch XAUUSD 5m 5 all — reading every 5 minutes
+▫️ /news — events that can move gold today
+▫️ /lang ru | /lang uz — Русский / O'zbekcha
+
+Full command list: /help""",
+        "ru": """👋 Добро пожаловать в <b>MarketFlow</b>!
+
+Я анализирую <b>рынок золота (XAUUSD)</b> по 11 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
+
+<b>Быстрый старт:</b>
+▫️ /predict — что происходит с золотом сейчас
+▫️ /predict XAUUSD 4h — общая картина
+▫️ /watch XAUUSD 5m 5 all — сводка каждые 5 минут
+▫️ /news — события, которые могут двинуть золото
+▫️ /lang en | /lang uz — English / O'zbekcha
+
+Все команды: /help""",
+        "uz": """👋 <b>MarketFlow</b> ga xush kelibsiz!
+
+Men <b>oltin bozorini (XAUUSD)</b> 11 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
+
+<b>Tezkor boshlash:</b>
+▫️ /predict — oltin hozir nima qilmoqda
+▫️ /predict XAUUSD 4h — kattaroq manzara
+▫️ /watch XAUUSD 5m 5 all — har 5 daqiqada hisobot
+▫️ /news — oltinni qimirlatishi mumkin bo'lgan hodisalar
+▫️ /lang en | /lang ru — English / Русский
+
+Barcha buyruqlar: /help""",
+    },
     "help": {
         "en": """<b>MarketFlow bot</b> — multi-strategy market flow reading for gold/USDT
 
