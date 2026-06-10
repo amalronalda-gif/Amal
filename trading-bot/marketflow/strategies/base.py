@@ -1,0 +1,68 @@
+"""Strategy framework: each strategy scores the market at a bar index.
+
+Score convention: float in [-1.0, +1.0].
+  +1.0 = strongly bullish, -1.0 = strongly bearish, 0.0 = no opinion.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from ..data import Candle
+from .. import indicators as ta
+
+
+@dataclass
+class Signal:
+    score: float
+    reason: str
+
+    def __post_init__(self):
+        self.score = max(-1.0, min(1.0, self.score))
+
+
+NEUTRAL = Signal(0.0, "no setup")
+
+
+class Context:
+    """Precomputed indicator series shared by all strategies.
+
+    Everything here is computed only from data up to each index (no
+    look-ahead), so the backtester can safely evaluate at any bar i.
+    """
+
+    MIN_BARS = 220  # enough warm-up for the slowest indicator (EMA200)
+
+    def __init__(self, candles: list[Candle]):
+        self.candles = candles
+        closes = [c.close for c in candles]
+        self.closes = closes
+        self.ema20 = ta.ema(closes, 20)
+        self.ema50 = ta.ema(closes, 50)
+        self.ema200 = ta.ema(closes, 200)
+        self.rsi14 = ta.rsi(closes, 14)
+        self.macd_line, self.macd_signal, self.macd_hist = ta.macd(closes)
+        self.atr14 = ta.atr(candles, 14)
+        self.bb_upper, self.bb_mid, self.bb_lower = ta.bollinger(closes, 20, 2.0)
+        self.stoch_k, self.stoch_d = ta.stochastic(candles)
+        self.obv = ta.obv(candles)
+        self.donchian_hi, self.donchian_lo = ta.donchian(candles, 20)
+        self.ichimoku = ta.ichimoku(candles)
+        # swing points are confirmed `strength` bars late; strategies must
+        # only use swings with index <= i - strength to avoid look-ahead
+        self.swing_strength = 3
+        self.swing_highs, self.swing_lows = ta.swing_points(candles, self.swing_strength)
+
+    def confirmed_swings(self, i: int) -> tuple[list[int], list[int]]:
+        """Swing highs/lows already confirmed as of bar i."""
+        cutoff = i - self.swing_strength
+        return ([s for s in self.swing_highs if s <= cutoff],
+                [s for s in self.swing_lows if s <= cutoff])
+
+
+class Strategy:
+    name = "base"
+    description = ""
+
+    def evaluate(self, ctx: Context, i: int) -> Signal:
+        raise NotImplementedError
