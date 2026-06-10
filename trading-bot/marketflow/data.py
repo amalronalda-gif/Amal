@@ -11,11 +11,22 @@ import csv
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
 BINANCE_DATA_URL = "https://data-api.binance.vision/api/v3/klines"
 DEFAULT_SYMBOL = "PAXGUSDT"
+
+# Binance spot has no literal XAUUSD market; PAXG (1 token = 1 troy oz of
+# gold) is the tradable gold/USDT pair, so map common gold tickers to it.
+SYMBOL_ALIASES = {
+    "XAUUSD": "PAXGUSDT",
+    "XAUUSDT": "PAXGUSDT",
+    "GOLD": "PAXGUSDT",
+    "PAXG": "PAXGUSDT",
+    "XAUT": "XAUTUSDT",  # Tether Gold, the other on-exchange gold token
+}
 
 INTERVAL_SECONDS = {
     "1m": 60, "3m": 180, "5m": 300, "15m": 900, "30m": 1800,
@@ -59,6 +70,7 @@ def fetch_klines(symbol: str = DEFAULT_SYMBOL, interval: str = "1h",
     """Fetch up to `limit` recent candles (multiple pages if limit > 1000)."""
     if interval not in INTERVAL_SECONDS:
         raise ValueError(f"unsupported interval {interval!r}")
+    symbol = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
     candles: list[Candle] = []
     end_time: int | None = None
     remaining = limit
@@ -67,7 +79,14 @@ def fetch_klines(symbol: str = DEFAULT_SYMBOL, interval: str = "1h",
         url = f"{BINANCE_DATA_URL}?symbol={symbol}&interval={interval}&limit={page}"
         if end_time is not None:
             url += f"&endTime={end_time}"
-        rows = _http_get_json(url, retries=retries)
+        try:
+            rows = _http_get_json(url, retries=retries)
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                raise ValueError(
+                    f"unknown symbol {symbol!r} on Binance — for gold use "
+                    f"PAXGUSDT (or alias XAUUSD/GOLD)") from None
+            raise
         if not rows:
             break
         batch = [Candle(int(r[0]), float(r[1]), float(r[2]), float(r[3]),
@@ -87,6 +106,11 @@ def _http_get_json(url: str, retries: int = 3):
             req = urllib.request.Request(url, headers={"User-Agent": "marketflow/1.0"})
             with urllib.request.urlopen(req, timeout=20) as resp:
                 return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500:
+                raise  # client error, retrying won't help
+            if attempt == retries:
+                raise
         except Exception:
             if attempt == retries:
                 raise
