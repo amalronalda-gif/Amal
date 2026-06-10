@@ -12,6 +12,7 @@ import json
 import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 
@@ -116,6 +117,43 @@ def _http_get_json(url: str, retries: int = 3):
                 raise
             time.sleep(delay)
             delay *= 2
+
+
+TRADINGVIEW_QUOTE_URL = ("https://scanner.tradingview.com/symbol"
+                         "?symbol={sym}&fields=close,bid,ask,change,high,low")
+
+# Binance symbols that represent gold, for which a live spot XAU/USD quote
+# from TradingView (OANDA feed) is a meaningful add-on.
+GOLD_SYMBOLS = {"PAXGUSDT", "XAUTUSDT"}
+
+
+def fetch_tradingview_quote(tv_symbol: str = "OANDA:XAUUSD") -> dict | None:
+    """Live quote from TradingView's public scanner endpoint.
+
+    Returns e.g. {'close': 4100.5, 'bid': ..., 'ask': ..., 'change': ...,
+    'high': ..., 'low': ...} or None on failure. Quote only — TradingView
+    has no public endpoint for candle history.
+    """
+    url = TRADINGVIEW_QUOTE_URL.format(sym=urllib.parse.quote(tv_symbol))
+    headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/124.0 Safari/537.36"),
+        "Accept": "application/json",
+        "Referer": "https://www.tradingview.com/",
+    }
+    for attempt in range(3):  # endpoint throttles intermittently with 503s
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                quote = json.loads(resp.read().decode())
+            if isinstance(quote, dict) and "close" in quote:
+                return quote
+            return None
+        except Exception:
+            if attempt < 2:
+                time.sleep(1.5 * (attempt + 1))
+    return None
 
 
 def save_csv(candles: list[Candle], path: str) -> None:

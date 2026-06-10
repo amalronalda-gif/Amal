@@ -32,7 +32,9 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-from marketflow.data import DEFAULT_SYMBOL, INTERVAL_SECONDS, fetch_klines
+from marketflow.data import (DEFAULT_SYMBOL, GOLD_SYMBOLS, INTERVAL_SECONDS,
+                             SYMBOL_ALIASES, fetch_klines,
+                             fetch_tradingview_quote)
 from marketflow.engine import Engine, Prediction
 from marketflow.backtest import run_backtest
 
@@ -45,15 +47,16 @@ HELP = """<b>MarketFlow bot</b> — multi-strategy market flow reading for gold/
 /predict [symbol] [interval] — current prediction with strategy breakdown
 /backtest [symbol] [interval] — walk-forward backtest
 /watch [symbol] [interval] [minutes] — alert when the flow direction flips
+/watch [symbol] [interval] [minutes] all — send the reading on EVERY check
 /unwatch — stop alerts
 /status — show your watch subscription
 
-Defaults: symbol <code>PAXGUSDT</code> (tokenized gold = XAUUSDT equivalent), \
-interval <code>1h</code>, check every 15 min.
+Defaults: symbol <code>XAUUSD</code>/gold (data: Binance PAXG candles + live \
+TradingView spot quote), interval <code>1h</code>, check every 15 min.
 Examples:
-<code>/predict 4h</code>
+<code>/predict XAUUSD 4h</code>
 <code>/predict BTCUSDT 15m</code>
-<code>/watch 1h 30</code>""" + DISCLAIMER
+<code>/watch XAUUSD 5m 5 all</code> — full reading every 5 minutes""" + DISCLAIMER
 
 
 class TelegramAPI:
@@ -81,6 +84,21 @@ class TelegramAPI:
             self.call("sendMessage", chat_id=chat_id,
                       text=text[chunk_start:chunk_start + 4000],
                       parse_mode="HTML", disable_web_page_preview=True)
+
+
+def spot_quote_line(symbol: str) -> str:
+    """Live spot XAU/USD from TradingView (OANDA feed) for gold symbols."""
+    resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+    if resolved not in GOLD_SYMBOLS:
+        return ""
+    q = fetch_tradingview_quote("OANDA:XAUUSD")
+    if not q:
+        return ""
+    return (f"\n💰 live spot XAU/USD (TradingView/OANDA): "
+            f"<code>{q['close']:.2f}</code> "
+            f"({q.get('change', 0):+.2f}% today, "
+            f"H <code>{q.get('high', 0):.2f}</code> / "
+            f"L <code>{q.get('low', 0):.2f}</code>)")
 
 
 def format_prediction(symbol: str, interval: str, pred: Prediction,
@@ -186,7 +204,7 @@ class Bot:
             pred = self.engine.predict(candles)
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
-                candles[-1].open_time))
+                candles[-1].open_time) + spot_quote_line(symbol))
         except Exception as e:
             self.api.send(chat_id, f"⚠️ failed: {e}")
 
@@ -203,19 +221,23 @@ class Bot:
             self.api.send(chat_id, f"⚠️ failed: {e}")
 
     def cmd_watch(self, chat_id: int, args: list[str]):
+        send_all = any(a.lower() in ("all", "every", "always") for a in args)
+        args = [a for a in args
+                if a.lower() not in ("all", "every", "always", "flips")]
         symbol, interval, rest = parse_args_text(args)
         every_min = max(5, int(rest[0])) if rest else 15
         with self.lock:
             self.subs[str(chat_id)] = {
                 "symbol": symbol, "interval": interval,
                 "every_min": every_min, "next_check": 0,
-                "last_direction": None,
+                "last_direction": None, "mode": "all" if send_all else "flip",
             }
             self._save_subs()
+        what = ("send you the reading every check" if send_all
+                else "message you when the market flow direction flips")
         self.api.send(chat_id,
                       f"👁 Watching <b>{symbol} {interval}</b>, checking every "
-                      f"{every_min} min. I'll message you when the market flow "
-                      f"direction flips. /unwatch to stop.")
+                      f"{every_min} min. I'll {what}. /unwatch to stop.")
 
     # ---------- alert loop (background thread) ----------
 
@@ -235,13 +257,16 @@ class Bot:
             candles = fetch_klines(sub["symbol"], sub["interval"], 600)
             pred = self.engine.predict(candles)
             prev = sub.get("last_direction")
-            if prev is not None and pred.direction != prev:
+            flipped = prev is not None and pred.direction != prev
+            if flipped or sub.get("mode") == "all":
+                head = (f"🔔 <b>{sub['symbol']} {sub['interval']}</b> "
+                        f"flow flipped: {prev} → <b>{pred.direction}</b>\n\n"
+                        if flipped else "")
                 self.api.send(chat_id,
-                              f"🔔 <b>{sub['symbol']} {sub['interval']}</b> "
-                              f"flow flipped: {prev} → <b>{pred.direction}</b>\n\n"
-                              + format_prediction(sub["symbol"], sub["interval"],
-                                                  pred, candles[-1].close,
-                                                  candles[-1].open_time))
+                              head + format_prediction(
+                                  sub["symbol"], sub["interval"], pred,
+                                  candles[-1].close, candles[-1].open_time)
+                              + spot_quote_line(sub["symbol"]))
             with self.lock:
                 if key in self.subs:
                     self.subs[key]["last_direction"] = pred.direction
