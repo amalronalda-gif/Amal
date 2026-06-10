@@ -1,0 +1,16 @@
+{
+  "name": "DeutschWeg — German A1 to B1 & Goethe Prep",
+  "short_name": "DeutschWeg",
+  "description": "Learn German from A1 to B1 and prepare for the Goethe-Zertifikat: grammar, vocabulary, listening, quizzes and exam practice.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f4ef",
+  "theme_color": "#c8102e",
+  "lang": "de",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
