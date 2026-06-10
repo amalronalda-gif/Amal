@@ -112,6 +112,7 @@ I analyze the <b>gold market (XAUUSD)</b> using 11 classic trading strategies �
 ▫️ /predict — what gold is doing right now
 ▫️ /predict XAUUSD 4h — bigger picture
 ▫️ /watch XAUUSD 5m 5 all — reading every 5 minutes
+▫️ /predict EURUSD · /predict SILVER — other markets
 ▫️ /news — events that can move gold today
 ▫️ /lang ru | /lang uz — Русский / O'zbekcha
 
@@ -124,6 +125,7 @@ Full command list: /help""",
 ▫️ /predict — что происходит с золотом сейчас
 ▫️ /predict XAUUSD 4h — общая картина
 ▫️ /watch XAUUSD 5m 5 all — сводка каждые 5 минут
+▫️ /predict EURUSD · /predict SILVER — другие рынки
 ▫️ /news — события, которые могут двинуть золото
 ▫️ /lang en | /lang uz — English / O'zbekcha
 
@@ -136,6 +138,7 @@ Men <b>oltin bozorini (XAUUSD)</b> 11 ta klassik savdo strategiyasi bilan tahlil
 ▫️ /predict — oltin hozir nima qilmoqda
 ▫️ /predict XAUUSD 4h — kattaroq manzara
 ▫️ /watch XAUUSD 5m 5 all — har 5 daqiqada hisobot
+▫️ /predict EURUSD · /predict SILVER — boshqa bozorlar
 ▫️ /news — oltinni qimirlatishi mumkin bo'lgan hodisalar
 ▫️ /lang en | /lang ru — English / Русский
 
@@ -171,6 +174,7 @@ Examples:
 По умолчанию: символ <code>XAUUSD</code>/золото (данные: свечи Binance PAXG + спот-котировка TradingView), таймфрейм <code>1h</code>, проверка каждые 15 мин.
 Примеры:
 <code>/predict XAUUSD 4h</code>
+<code>/predict EURUSD 1h</code> · <code>/predict SILVER 4h</code>
 <code>/watch XAUUSD 5m 5 all</code> — полная сводка каждые 5 минут""",
         "uz": """<b>MarketFlow bot</b> — oltin/USDT uchun ko'p strategiyali bozor oqimi tahlili
 
@@ -186,6 +190,7 @@ Examples:
 Standart: simvol <code>XAUUSD</code>/oltin (ma'lumot: Binance PAXG shamlari + TradingView jonli narxi), interval <code>1h</code>, har 15 daqiqada tekshiruv.
 Misollar:
 <code>/predict XAUUSD 4h</code>
+<code>/predict EURUSD 1h</code> · <code>/predict SILVER 4h</code>
 <code>/watch XAUUSD 5m 5 all</code> — har 5 daqiqada to'liq hisobot""",
     },
     "disclaimer": {
@@ -274,11 +279,11 @@ Misollar:
         "uz": "⚪ {n} ta strategiya neytral",
     },
     "spot_line": {
-        "en": "\n💰 live spot XAU/USD (TradingView/OANDA): <code>{price}</code> "
+        "en": "\n💰 live spot {pair} (TradingView): <code>{price}</code> "
               "({chg}% today, H <code>{high}</code> / L <code>{low}</code>)",
-        "ru": "\n💰 спот XAU/USD в реальном времени (TradingView/OANDA): <code>{price}</code> "
+        "ru": "\n💰 спот {pair} в реальном времени (TradingView): <code>{price}</code> "
               "({chg}% за день, макс. <code>{high}</code> / мин. <code>{low}</code>)",
-        "uz": "\n💰 jonli spot XAU/USD (TradingView/OANDA): <code>{price}</code> "
+        "uz": "\n💰 jonli spot {pair} (TradingView): <code>{price}</code> "
               "({chg}% bugun, maks. <code>{high}</code> / min. <code>{low}</code>)",
     },
     "risk_now": {"en": "NOW", "ru": "СЕЙЧАС", "uz": "HOZIR"},

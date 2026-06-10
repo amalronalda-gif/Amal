@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-from marketflow.data import (DEFAULT_SYMBOL, GOLD_SYMBOLS, INTERVAL_SECONDS,
+from marketflow.data import (DEFAULT_SYMBOL, INTERVAL_SECONDS, SPOT_QUOTES,
                              SYMBOL_ALIASES, fetch_klines,
                              fetch_tradingview_quote)
 from marketflow.engine import Engine, Prediction
@@ -74,16 +74,21 @@ class TelegramAPI:
 
 
 def spot_quote_line(symbol: str, lang: str = "en") -> str:
-    """Live spot XAU/USD from TradingView (OANDA feed) for gold symbols."""
+    """Live spot quote from TradingView for markets we have a feed for."""
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
-    if resolved not in GOLD_SYMBOLS:
+    feed = SPOT_QUOTES.get(resolved)
+    if not feed:
         return ""
-    q = fetch_tradingview_quote("OANDA:XAUUSD")
+    tv_symbol, pair = feed
+    q = fetch_tradingview_quote(tv_symbol)
     if not q:
         return ""
-    return t(lang, "spot_line", price=f"{q['close']:.2f}",
-             chg=f"{q.get('change', 0):+.2f}", high=f"{q.get('high', 0):.2f}",
-             low=f"{q.get('low', 0):.2f}")
+    digits = 5 if q["close"] < 10 else 2  # FX pairs need more precision
+    return t(lang, "spot_line", pair=pair,
+             price=f"{q['close']:.{digits}f}",
+             chg=f"{q.get('change', 0):+.2f}",
+             high=f"{q.get('high', 0):.{digits}f}",
+             low=f"{q.get('low', 0):.{digits}f}")
 
 
 def event_risk_line(lang: str = "en") -> str:
