@@ -11,6 +11,12 @@ A free, self-contained website to learn German from level **A1 to B1** and prepa
 - 🎓 **Goethe exam prep** — exam format overview for each level, reading practice with Richtig/Falsch questions, writing tasks with model answers (Musterbriefe), speaking strategies and a readiness checklist
 - 📊 **Progress tracking** — saved locally in your browser (no account needed)
 
+## Bonus: Тени Севера ⚔️
+
+The repo also contains **[game/index.html](game/index.html)** — a self-contained first-person
+open-world fantasy RPG (Witcher/Skyrim-inspired) written in pure WebGL with no dependencies.
+Open it in a desktop browser, or with GitHub Pages visit `/game/` on your site.
+
 ## Run it
 
 No build step, no dependencies. Either:

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тени Севера — RPG от первого лица</title>
+<style>
+  :root{
+    --gold:#d4af6a; --gold2:#f0d9a8; --blood:#a32020; --panel:rgba(12,10,8,.78);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;
+    font-family:Georgia,'Times New Roman',serif;color:#e8dcc0;user-select:none}
+  #gl{position:fixed;inset:0;display:block;width:100%;height:100%}
+
+  /* ---------- crosshair ---------- */
+  #crosshair{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:18px;height:18px;pointer-events:none;opacity:.85}
+  #crosshair::before,#crosshair::after{content:"";position:absolute;background:#e8dcc0;
+    box-shadow:0 0 3px #000}
+  #crosshair::before{left:8px;top:0;width:2px;height:18px}
+  #crosshair::after{left:0;top:8px;width:18px;height:2px}
+
+  /* ---------- HUD bars ---------- */
+  #hud{position:fixed;left:24px;bottom:22px;width:300px;pointer-events:none}
+  .bar{height:14px;border:1px solid #5a4a30;background:rgba(0,0,0,.55);
+    border-radius:3px;margin-top:6px;overflow:hidden;box-shadow:0 0 8px rgba(0,0,0,.6)}
+  .bar>div{height:100%;transition:width .15s}
+  #hpFill{background:linear-gradient(#d24545,#7d1d1d);width:100%}
+  #stFill{background:linear-gradient(#58b558,#2c6b2c);width:100%}
+  #xpWrap{height:7px;margin-top:8px}
+  #xpFill{background:linear-gradient(#e8c97a,#a8843a);width:0}
+  #lvlTag{font-size:14px;color:var(--gold);text-shadow:0 1px 3px #000;margin-top:5px}
+
+  /* ---------- quest panel ---------- */
+  #quest{position:fixed;left:24px;top:74px;max-width:330px;background:var(--panel);
+    border:1px solid #4a3b24;border-left:3px solid var(--gold);padding:10px 14px;
+    border-radius:3px;pointer-events:none}
+  #quest h3{font-size:15px;color:var(--gold2);letter-spacing:.5px}
+  #quest p{font-size:13px;margin-top:4px;color:#cdbf9d}
+  #quest .qprog{color:#fff;font-weight:bold}
+
+  /* ---------- compass ---------- */
+  #compass{position:fixed;top:14px;left:50%;transform:translateX(-50%);
+    width:340px;height:34px;background:var(--panel);border:1px solid #4a3b24;
+    border-radius:4px;pointer-events:none}
+
+  /* ---------- minimap ---------- */
+  #minimapWrap{position:fixed;top:14px;right:14px;border:2px solid #4a3b24;
+    border-radius:50%;overflow:hidden;box-shadow:0 0 14px rgba(0,0,0,.7);pointer-events:none}
+  #minimap{display:block;width:170px;height:170px}
+
+  /* ---------- clock ---------- */
+  #clock{position:fixed;top:192px;right:24px;font-size:14px;color:var(--gold2);
+    text-shadow:0 1px 3px #000;text-align:center;width:150px;pointer-events:none}
+
+  /* ---------- sword ---------- */
+  #sword{position:fixed;right:4%;bottom:-6vmin;width:34vmin;height:60vmin;
+    pointer-events:none;transform-origin:55% 95%;transform:rotate(14deg);
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));
+    animation:idle 3.4s ease-in-out infinite}
+  @keyframes idle{0%,100%{transform:rotate(14deg) translateY(0)}
+    50%{transform:rotate(16deg) translateY(1.2vmin)}}
+  #sword.swing{animation:swing .42s ease-out}
+  @keyframes swing{
+    0%{transform:rotate(26deg) translate(2vmin,0)}
+    35%{transform:rotate(-74deg) translate(-14vmin,-4vmin)}
+    100%{transform:rotate(14deg) translate(0,0)}}
+
+  /* ---------- vignettes ---------- */
+  #dmgVignette{position:fixed;inset:0;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 140px 60px rgba(160,10,10,.85);transition:opacity .5s}
+  #lowHp{position:fixed;inset:0;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 120px 40px rgba(120,0,0,.55)}
+
+  /* ---------- floating texts / notifications ---------- */
+  .floatTxt{position:fixed;pointer-events:none;font-weight:bold;font-size:18px;
+    text-shadow:0 1px 4px #000;animation:floatUp 1s ease-out forwards}
+  @keyframes floatUp{from{opacity:1;transform:translateY(0)}
+    to{opacity:0;transform:translateY(-46px)}}
+  #notif{position:fixed;top:18%;left:50%;transform:translateX(-50%);
+    text-align:center;pointer-events:none}
+  .note{font-size:24px;color:var(--gold2);text-shadow:0 2px 8px #000;
+    letter-spacing:1px;animation:noteAnim 3.6s ease forwards;margin-top:8px}
+  .note small{display:block;font-size:15px;color:#cdbf9d}
+  @keyframes noteAnim{0%{opacity:0;transform:scale(.85)}10%{opacity:1;transform:scale(1)}
+    80%{opacity:1}100%{opacity:0}}
+
+  /* ---------- quest marker ---------- */
+  #marker{position:fixed;pointer-events:none;display:none;text-align:center;
+    transform:translate(-50%,-100%)}
+  #marker .dia{width:16px;height:16px;margin:0 auto;background:var(--gold);
+    transform:rotate(45deg);box-shadow:0 0 10px var(--gold)}
+  #marker .dist{font-size:13px;color:var(--gold2);text-shadow:0 1px 3px #000;margin-top:6px}
+
+  /* ---------- hint ---------- */
+  #hint{position:fixed;bottom:18%;left:50%;transform:translateX(-50%);
+    font-size:17px;color:#fff;text-shadow:0 1px 4px #000;background:var(--panel);
+    border:1px solid #4a3b24;padding:6px 16px;border-radius:4px;display:none;pointer-events:none}
+  kbd{background:#3a2f1d;border:1px solid var(--gold);border-radius:3px;
+    padding:1px 7px;color:var(--gold2);font-family:inherit}
+
+  /* ---------- screens ---------- */
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:radial-gradient(ellipse at center,
+    rgba(20,16,10,.88) 0%,rgba(5,4,2,.97) 100%);z-index:10;text-align:center;padding:20px}
+  .screen h1{font-size:54px;color:var(--gold);letter-spacing:6px;
+    text-shadow:0 0 30px rgba(212,175,106,.4),0 3px 6px #000}
+  .screen h2{font-size:30px;color:var(--gold2);letter-spacing:3px}
+  .screen .sub{font-size:16px;color:#b8a880;margin-top:6px;letter-spacing:2px}
+  .story{max-width:640px;margin:22px 0;font-size:16px;line-height:1.65;color:#d6c8a4}
+  .controls{display:grid;grid-template-columns:auto auto;gap:7px 22px;margin:10px 0 24px;
+    font-size:14px;color:#cdbf9d;text-align:left}
+  .btn{font-family:inherit;font-size:20px;letter-spacing:2px;color:var(--gold2);
+    background:linear-gradient(#3a2f1d,#241c10);border:1px solid var(--gold);
+    padding:13px 52px;border-radius:3px;cursor:pointer;margin-top:8px;
+    transition:all .2s;text-transform:uppercase}
+  .btn:hover{background:linear-gradient(#54421f,#332712);box-shadow:0 0 18px rgba(212,175,106,.35)}
+  .hidden{display:none !important}
+  #deathScreen h1{color:var(--blood);text-shadow:0 0 30px rgba(163,32,32,.5)}
+  .stats{margin:14px 0;font-size:15px;color:#cdbf9d}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<!-- HUD -->
+<div id="crosshair" class="hidden"></div>
+<div id="hud" class="hidden">
+  <div id="lvlTag">Уровень 1 — Охотник</div>
+  <div class="bar"><div id="hpFill"></div></div>
+  <div class="bar"><div id="stFill"></div></div>
+  <div class="bar" id="xpWrap"><div id="xpFill"></div></div>
+</div>
+<div id="quest" class="hidden">
+  <h3 id="qTitle"></h3>
+  <p id="qText"></p>
+</div>
+<canvas id="compass" class="hidden" width="340" height="34"></canvas>
+<div id="minimapWrap" class="hidden"><canvas id="minimap" width="170" height="170"></canvas></div>
+<div id="clock" class="hidden"></div>
+<div id="marker"><div class="dia"></div><div class="dist"></div></div>
+<div id="hint"></div>
+<div id="notif"></div>
+<div id="dmgVignette"></div>
+<div id="lowHp"></div>
+
+<!-- Sword viewmodel -->
+<svg id="sword" class="hidden" viewBox="0 0 100 240">
+  <defs>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7d8893"/><stop offset=".45" stop-color="#dfe7ee"/>
+      <stop offset=".55" stop-color="#f5f9fc"/><stop offset="1" stop-color="#6c7680"/>
+    </linearGradient>
+    <linearGradient id="hilt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a4426"/><stop offset="1" stop-color="#33240f"/>
+    </linearGradient>
+  </defs>
+  <polygon points="50,2 60,30 60,160 40,160 40,30" fill="url(#blade)" stroke="#3c444c" stroke-width="1.4"/>
+  <rect x="47.6" y="22" width="4.8" height="130" fill="#9aa6b1" opacity=".55"/>
+  <rect x="22" y="158" width="56" height="11" rx="4" fill="#caa24e" stroke="#7d6325" stroke-width="1.5"/>
+  <rect x="43" y="169" width="14" height="48" rx="4" fill="url(#hilt)" stroke="#1d1408" stroke-width="1.2"/>
+  <circle cx="50" cy="226" r="11" fill="#caa24e" stroke="#7d6325" stroke-width="1.6"/>
+</svg>
+
+<!-- MENU -->
+<div id="menu" class="screen">
+  <h1>ТЕНИ СЕВЕРА</h1>
+  <div class="sub">приключение от первого лица</div>
+  <p class="story">Северная долина в беде: стаи одичавших волков терзают тракты,
+    а в горах поселился древний тролль. Ты — странствующий охотник на чудовищ.
+    Возьми серебряный меч, собери травы для эликсира и избавь долину от зла…</p>
+  <div class="controls">
+    <span><kbd>W A S D</kbd></span><span>движение</span>
+    <span><kbd>Мышь</kbd></span><span>обзор</span>
+    <span><kbd>ЛКМ</kbd></span><span>удар мечом</span>
+    <span><kbd>Shift</kbd></span><span>бег (тратит выносливость)</span>
+    <span><kbd>Пробел</kbd></span><span>прыжок</span>
+    <span><kbd>E</kbd></span><span>собрать траву</span>
+    <span><kbd>M</kbd></span><span>звук вкл/выкл</span>
+    <span><kbd>Esc</kbd></span><span>пауза</span>
+  </div>
+  <button class="btn" id="startBtn">Начать игру</button>
+</div>
+
+<!-- PAUSE -->
+<div id="pauseScreen" class="screen hidden">
+  <h2>ПАУЗА</h2>
+  <button class="btn" id="resumeBtn">Продолжить</button>
+</div>
+
+<!-- DEATH -->
+<div id="deathScreen" class="screen hidden">
+  <h1>ТЫ ПОГИБ</h1>
+  <p class="story">Долина ещё нуждается в своём охотнике…</p>
+  <button class="btn" id="respawnBtn">Возродиться</button>
+</div>
+
+<!-- VICTORY -->
+<div id="winScreen" class="screen hidden">
+  <h2>ДОЛИНА СПАСЕНА!</h2>
+  <p class="story">Тролль повержен, и волчьи стаи рассеялись по лесам.
+    Жители Севера будут слагать песни о твоём подвиге, охотник.</p>
+  <div class="stats" id="winStats"></div>
+  <button class="btn" id="roamBtn">Странствовать дальше</button>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ТЕНИ СЕВЕРА — first-person open-world RPG on raw WebGL, no libraries
+   ===================================================================== */
+
+/* ---------------- tiny math ---------------- */
+function mPersp(fov,asp,n,f){const t=1/Math.tan(fov/2),nf=1/(n-f);
+  return[t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)*nf,-1, 0,0,2*f*n*nf,0];}
+function mLookAt(e,c,up){
+  let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2];
+  let l=1/(Math.hypot(zx,zy,zz)||1);zx*=l;zy*=l;zz*=l;
+  let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx;
+  l=1/(Math.hypot(xx,xy,xz)||1);xx*=l;xy*=l;xz*=l;
+  const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+  return[xx,yx,zx,0, xy,yy,zy,0, xz,yz,zz,0,
+    -(xx*e[0]+xy*e[1]+xz*e[2]),-(yx*e[0]+yy*e[1]+yz*e[2]),-(zx*e[0]+zy*e[1]+zz*e[2]),1];}
+function mMul(a,b){const o=new Array(16);
+  for(let c=0;c<4;c++)for(let r=0;r<4;r++)
+    o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];
+  return o;}
+function mTRS(x,y,z,ry,s){const c=Math.cos(ry),si=Math.sin(ry);
+  return[c*s,0,-si*s,0, 0,s,0,0, si*s,0,c*s,0, x,y,z,1];}
+function nRotY(ry){const c=Math.cos(ry),s=Math.sin(ry);
+  return[c,0,-s, 0,1,0, s,0,c];}
+const N_ID=[1,0,0, 0,1,0, 0,0,1], M_ID=[1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ---------------- deterministic noise ---------------- */
+let seed=1337;
+function rnd(){seed=(Math.imul(seed,1103515245)+12345)&0x7fffffff;return seed/0x7fffffff;}
+function hash2(ix,iz){let n=(Math.imul(ix,374761393)+Math.imul(iz,668265263))|0;
+  n=Math.imul(n^(n>>>13),1274126177);n^=n>>>16;return(n>>>0)/4294967295;}
+function noise2(x,z){const ix=Math.floor(x),iz=Math.floor(z),fx=x-ix,fz=z-iz;
+  const u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
+  return lerp(lerp(hash2(ix,iz),hash2(ix+1,iz),u),
+              lerp(hash2(ix,iz+1),hash2(ix+1,iz+1),u),v);}
+function fbm(x,z){let a=0.5,f=1,s=0;
+  for(let i=0;i<4;i++){s+=a*noise2(x*f,z*f);f*=2;a*=0.5;}return s;}
+
+/* ---------------- world ---------------- */
+const WORLD_R=290, WATER_Y=0;
+function terrainH(x,z){
+  let y=(fbm(x*0.013,z*0.013)-0.47)*22;
+  const m=Math.max(0,fbm(x*0.0045+97,z*0.0045+31)-0.45);
+  y+=m*m*160;
+  const d=Math.hypot(x,z);
+  if(d<40){const t=clamp(d/40,0,1);y=lerp(2.2,y,t*t);}      // flat spawn
+  if(d>WORLD_R-40)y+=(d-(WORLD_R-40))*0.6;                  // rim mountains
+  return y;}
+function terrainN(x,z){const e=1.2;
+  const nx=terrainH(x-e,z)-terrainH(x+e,z),nz=terrainH(x,z-e)-terrainH(x,z+e);
+  const l=1/Math.hypot(nx,2*e,nz);return[nx*l,2*e*l,nz*l];}
+
+/* ---------------- WebGL setup ---------------- */
+const cv=document.getElementById("gl");
+const gl=cv.getContext("webgl",{antialias:true});
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;
+  gl.viewport(0,0,cv.width,cv.height);}
+addEventListener("resize",resize);resize();
+
+const VS=`attribute vec3 aPos;attribute vec3 aNor;attribute vec3 aCol;
+uniform mat4 uVP,uModel;uniform mat3 uNor;
+varying vec3 vC,vN;varying float vD;
+void main(){vec4 w=uModel*vec4(aPos,1.0);gl_Position=uVP*w;
+vC=aCol;vN=uNor*aNor;vD=gl_Position.w;}`;
+const FS=`precision mediump float;
+varying vec3 vC,vN;varying float vD;
+uniform vec3 uSunDir,uSunCol,uAmb,uFogCol;
+uniform float uFogDen,uEmis,uAlpha;
+void main(){
+  float d=max(dot(normalize(vN),uSunDir),0.0);
+  vec3 c=vC*(uAmb+uSunCol*d);
+  c=mix(c,vC*1.25,uEmis);
+  float f=clamp(1.0-exp(-uFogDen*uFogDen*vD*vD),0.0,1.0);
+  gl_FragColor=vec4(mix(c,uFogCol,f),uAlpha);}`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);
+  gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(s);
+  return s;}
+const prog=gl.createProgram();
+gl.attachShader(prog,shader(gl.VERTEX_SHADER,VS));
+gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(prog);gl.useProgram(prog);
+const A={pos:gl.getAttribLocation(prog,"aPos"),nor:gl.getAttribLocation(prog,"aNor"),
+  col:gl.getAttribLocation(prog,"aCol")};
+const U={};for(const n of["uVP","uModel","uNor","uSunDir","uSunCol","uAmb",
+  "uFogCol","uFogDen","uEmis","uAlpha"])U[n]=gl.getUniformLocation(prog,n);
+gl.enable(gl.DEPTH_TEST);
+gl.enable(gl.CULL_FACE);
+gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+
+/* ---------------- geometry builders ---------------- */
+function tri(a,b,c,col,out){
+  const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+  let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
+  const l=1/(Math.hypot(nx,ny,nz)||1);nx*=l;ny*=l;nz*=l;
+  out.push(a[0],a[1],a[2],nx,ny,nz,col[0],col[1],col[2],
+           b[0],b[1],b[2],nx,ny,nz,col[0],col[1],col[2],
+           c[0],c[1],c[2],nx,ny,nz,col[0],col[1],col[2]);}
+function quad(a,b,c,d,col,out){tri(a,b,c,col,out);tri(a,c,d,col,out);}
+function box(cx,cy,cz,sx,sy,sz,ry,col,out){
+  const hx=sx/2,hy=sy/2,hz=sz/2,co=Math.cos(ry),si=Math.sin(ry);
+  const p=(x,y,z)=>[cx+x*co+z*si,cy+y,cz-x*si+z*co];
+  const v=[p(-hx,-hy,-hz),p(hx,-hy,-hz),p(hx,hy,-hz),p(-hx,hy,-hz),
+           p(-hx,-hy,hz),p(hx,-hy,hz),p(hx,hy,hz),p(-hx,hy,hz)];
+  quad(v[4],v[5],v[6],v[7],col,out);quad(v[1],v[0],v[3],v[2],col,out);
+  quad(v[5],v[1],v[2],v[6],col,out);quad(v[0],v[4],v[7],v[3],col,out);
+  quad(v[3],v[7],v[6],v[2],col,out);quad(v[0],v[1],v[5],v[4],col,out);}
+function pyramid(cx,cy,cz,s,h,ry,col,out){
+  const co=Math.cos(ry),si=Math.sin(ry);
+  const p=(x,z)=>[cx+x*co+z*si,cy,cz-x*si+z*co];
+  const a=[cx,cy+h,cz],b0=p(-s,-s),b1=p(s,-s),b2=p(s,s),b3=p(-s,s);
+  tri(b1,b0,a,col,out);tri(b2,b1,a,col,out);
+  tri(b3,b2,a,col,out);tri(b0,b3,a,col,out);
+  quad(b0,b1,b2,b3,col,out);}
+function mesh(arr){const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);
+  return{buf,n:arr.length/9};}
+function draw(m,model,nor,emis,alpha){
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.buf);
+  gl.vertexAttribPointer(A.pos,3,gl.FLOAT,false,36,0);
+  gl.vertexAttribPointer(A.nor,3,gl.FLOAT,false,36,12);
+  gl.vertexAttribPointer(A.col,3,gl.FLOAT,false,36,24);
+  gl.enableVertexAttribArray(A.pos);gl.enableVertexAttribArray(A.nor);
+  gl.enableVertexAttribArray(A.col);
+  gl.uniformMatrix4fv(U.uModel,false,model||M_ID);
+  gl.uniformMatrix3fv(U.uNor,false,nor||N_ID);
+  gl.uniform1f(U.uEmis,emis||0);gl.uniform1f(U.uAlpha,alpha===undefined?1:alpha);
+  gl.drawArrays(gl.TRIANGLES,0,m.n);}
+
+/* ---------------- build terrain ---------------- */
+function terrainColor(y,ny,x,z){
+  const v=noise2(x*0.3,z*0.3)*0.07;
+  if(y<WATER_Y+0.7)return[0.56+v,0.5+v,0.33];               // sand
+  if(y>30&&ny>0.78)return[0.88,0.9,0.94];                   // snow
+  if(ny<0.72)return[0.42+v,0.4+v,0.38];                     // rock
+  return[0.2+v,0.4+v*1.5,0.14];}                            // grass
+const terr=(()=>{const out=[],SEG=150,S=WORLD_R*2+40,h=S/2,st=S/SEG;
+  const H=[],C=[];
+  for(let j=0;j<=SEG;j++)for(let i=0;i<=SEG;i++){
+    const x=-h+i*st,z=-h+j*st,y=terrainH(x,z),n=terrainN(x,z);
+    H.push([x,y,z]);C.push(terrainColor(y,n[1],x,z));}
+  for(let j=0;j<SEG;j++)for(let i=0;i<SEG;i++){
+    const a=j*(SEG+1)+i,b=a+1,c=a+SEG+1,d=c+1;
+    tri(H[a],H[c],H[b],C[a],out);tri(H[b],H[c],H[d],C[b],out);}
+  return mesh(out);})();
+
+/* ---------------- water ---------------- */
+const water=(()=>{const out=[],h=WORLD_R+20,c=[0.13,0.3,0.45];
+  quad([-h,WATER_Y,-h],[-h,WATER_Y,h],[h,WATER_Y,h],[h,WATER_Y,-h],c,out);
+  return mesh(out);})();
+
+/* ---------------- forest, rocks ---------------- */
+const flora=(()=>{const out=[];
+  for(let i=0;i<420;i++){
+    const x=(rnd()*2-1)*(WORLD_R-15),z=(rnd()*2-1)*(WORLD_R-15);
+    const y=terrainH(x,z),n=terrainN(x,z);
+    if(y<1.4||y>24||n[1]<0.8||Math.hypot(x,z)<18)continue;
+    const s=0.8+rnd()*0.9,ry=rnd()*6.28,g=0.3+rnd()*0.14;
+    box(x,y+1.2*s,z,0.45*s,2.6*s,0.45*s,ry,[0.34,0.24,0.13],out);
+    const fc=[0.07+rnd()*0.05,g,0.1];
+    pyramid(x,y+1.7*s,z,2.2*s,3.1*s,ry,fc,out);
+    pyramid(x,y+3.4*s,z,1.6*s,2.5*s,ry+0.5,fc,out);
+    pyramid(x,y+4.9*s,z,1.0*s,1.9*s,ry+1.0,fc,out);}
+  for(let i=0;i<130;i++){
+    const x=(rnd()*2-1)*(WORLD_R-10),z=(rnd()*2-1)*(WORLD_R-10);
+    const y=terrainH(x,z);if(y<0.5)continue;
+    const s=0.6+rnd()*2.4,v=rnd()*0.08;
+    box(x,y+s*0.25,z,s,s*0.8,s*0.9,rnd()*6.28,[0.4+v,0.39+v,0.38+v],out);}
+  return mesh(out);})();
+
+/* ---------------- creature meshes ---------------- */
+const wolfMesh=(()=>{const o=[],c=[0.26,0.25,0.27],cd=[0.2,0.19,0.21];
+  box(0,0.62,-0.05,0.5,0.46,1.1,0,c,o);          // body
+  box(0,0.84,0.62,0.34,0.32,0.42,0,c,o);         // head
+  box(0,0.74,0.93,0.17,0.16,0.28,0,cd,o);        // snout
+  box(-0.1,1.06,0.55,0.09,0.16,0.06,0,cd,o);     // ears
+  box(0.1,1.06,0.55,0.09,0.16,0.06,0,cd,o);
+  box(-0.17,0.27,0.4,0.13,0.55,0.13,0,cd,o);     // legs
+  box(0.17,0.27,0.4,0.13,0.55,0.13,0,cd,o);
+  box(-0.17,0.27,-0.42,0.13,0.55,0.13,0,cd,o);
+  box(0.17,0.27,-0.42,0.13,0.55,0.13,0,cd,o);
+  box(0,0.72,-0.75,0.11,0.11,0.5,0,cd,o);        // tail
+  return mesh(o);})();
+const trollMesh=(()=>{const o=[],c=[0.33,0.43,0.27],cd=[0.27,0.35,0.22];
+  box(-0.38,0.8,0,0.52,1.6,0.52,0,cd,o);         // legs
+  box(0.38,0.8,0,0.52,1.6,0.52,0,cd,o);
+  box(0,2.3,0,1.7,1.7,1.1,0,c,o);                // body
+  box(0,3.5,0.12,0.75,0.75,0.75,0,c,o);          // head
+  box(-0.18,3.45,0.52,0.12,0.12,0.12,0,[0.9,0.2,0.1],o); // eyes
+  box(0.18,3.45,0.52,0.12,0.12,0.12,0,[0.9,0.2,0.1],o);
+  box(-1.12,2.0,0,0.45,2.1,0.45,0,cd,o);         // arms
+  box(1.12,2.0,0,0.45,2.1,0.45,0,cd,o);
+  return mesh(o);})();
+const herbMesh=(()=>{const o=[],g=[0.35,0.85,0.4];
+  quad([-0.35,0,0],[0.35,0,0],[0.35,0.6,0],[-0.35,0.6,0],g,o);
+  quad([0.35,0,0],[-0.35,0,0],[-0.35,0.6,0],[0.35,0.6,0],g,o);
+  quad([0,0,-0.35],[0,0,0.35],[0,0.6,0.35],[0,0.6,-0.35],g,o);
+  quad([0,0,0.35],[0,0,-0.35],[0,0.6,-0.35],[0,0.6,0.35],g,o);
+  box(0,0.66,0,0.22,0.14,0.22,0.6,[1,0.85,0.3],o);
+  return mesh(o);})();
+
+/* ---------------- audio ---------------- */
+let AC=null,muted=false;
+function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
+function tone(f,dur,type,vol,slide){if(muted)return;const a=ac(),o=a.createOscillator(),
+  g=a.createGain();o.type=type||"sine";o.frequency.value=f;
+  if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(slide,1),a.currentTime+dur);
+  g.gain.value=vol||0.15;g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+dur);
+  o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+dur);}
+function swoosh(){if(muted)return;const a=ac(),len=a.sampleRate*0.18,
+  b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=a.createBufferSource();s.buffer=b;
+  const f=a.createBiquadFilter();f.type="bandpass";f.frequency.value=900;
+  f.frequency.exponentialRampToValueAtTime(300,a.currentTime+0.18);
+  const g=a.createGain();g.gain.value=0.25;
+  s.connect(f).connect(g).connect(a.destination);s.start();}
+const sfx={
+  swing:()=>swoosh(),
+  hit:()=>tone(140,0.16,"square",0.2,60),
+  hurt:()=>tone(110,0.3,"sawtooth",0.22,40),
+  pickup:()=>{tone(660,0.1,"sine",0.16);setTimeout(()=>tone(990,0.14,"sine",0.16),90);},
+  level:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.25,"triangle",0.18),i*110));},
+  quest:()=>{tone(392,0.3,"triangle",0.16);setTimeout(()=>tone(523,0.4,"triangle",0.16),200);},
+  die:()=>tone(220,1.2,"sawtooth",0.25,30)};
+
+/* ---------------- game state ---------------- */
+const player={x:0,z:8,y:terrainH(0,8),vy:0,yaw:Math.PI,pitch:0,
+  hp:100,maxHp:100,st:100,maxSt:100,dmg:14,lvl:1,xp:0,
+  atkCd:0,onGround:true,kills:0,herbs:0,bossKilled:false};
+let enemies=[],herbs=[],questStage=0,gameOn=false,paused=false,dead=false,
+  dayTime=0.3,spawnTimer=0,trollPos=null,freeRoam=false;
+const QUESTS=[
+  {title:"Волчья напасть",text:n=>`Перебейте одичавших волков: <span class="qprog">${n}/5</span>`,need:5},
+  {title:"Травы для эликсира",text:n=>`Соберите светящиеся травы: <span class="qprog">${n}/5</span>`,need:5},
+  {title:"Логово тролля",text:()=>`Найдите и убейте горного тролля. Следуйте за маркером.`,need:1},
+  {title:"Долина спасена",text:()=>`Все задания выполнены. Странствуйте свободно!`,need:0}];
+
+function spawnWolf(nearPlayer){
+  for(let t=0;t<30;t++){
+    let x,z;
+    if(nearPlayer){const a=Math.random()*6.28,d=60+Math.random()*160;
+      x=player.x+Math.cos(a)*d;z=player.z+Math.sin(a)*d;}
+    else{x=(Math.random()*2-1)*(WORLD_R-30);z=(Math.random()*2-1)*(WORLD_R-30);}
+    if(Math.hypot(x,z)>WORLD_R-15)continue;
+    const y=terrainH(x,z);if(y<0.8)continue;
+    if(Math.hypot(x-player.x,z-player.z)<45)continue;
+    enemies.push({kind:"wolf",x,z,y,hp:40,maxHp:40,heading:Math.random()*6.28,
+      atkCd:0,wanderT:0,dead:0,bob:Math.random()*6});
+    return;}}
+function spawnTroll(){
+  for(let t=0;t<400;t++){
+    const a=Math.random()*6.28,d=150+Math.random()*90;
+    const x=Math.cos(a)*d,z=Math.sin(a)*d,y=terrainH(x,z);
+    if(y>2&&y<20){trollPos=[x,z];
+      enemies.push({kind:"troll",x,z,y,hp:350,maxHp:350,heading:0,
+        atkCd:0,wanderT:0,dead:0,bob:0});return;}}
+  trollPos=[160,160];
+  enemies.push({kind:"troll",x:160,z:160,y:terrainH(160,160),hp:350,maxHp:350,
+    heading:0,atkCd:0,wanderT:0,dead:0,bob:0});}
+function placeHerbs(){herbs=[];let tries=0;
+  while(herbs.length<12&&tries++<600){
+    const x=(Math.random()*2-1)*(WORLD_R-40),z=(Math.random()*2-1)*(WORLD_R-40);
+    const y=terrainH(x,z);
+    if(y<1||y>22||Math.hypot(x,z)<25)continue;
+    herbs.push({x,z,y,taken:false});}}
+
+/* ---------------- input ---------------- */
+const keys={};
+addEventListener("keydown",e=>{keys[e.code]=true;
+  if(e.code==="KeyM"){muted=!muted;note(muted?"Звук выключен":"Звук включён","");}
+  if(e.code==="KeyE")tryPickup();});
+addEventListener("keyup",e=>keys[e.code]=false);
+addEventListener("mousemove",e=>{
+  if(document.pointerLockElement!==cv||!gameOn||dead)return;
+  player.yaw+=e.movementX*0.0024;
+  player.pitch=clamp(player.pitch-e.movementY*0.0024,-1.45,1.45);});
+addEventListener("mousedown",e=>{
+  if(document.pointerLockElement===cv&&e.button===0&&gameOn&&!dead)attack();});
+document.addEventListener("pointerlockchange",()=>{
+  if(document.pointerLockElement!==cv&&gameOn&&!dead&&!freeRoamShown())pause(true);});
+function freeRoamShown(){return !document.getElementById("winScreen").classList.contains("hidden");}
+
+/* ---------------- UI helpers ---------------- */
+const $=id=>document.getElementById(id);
+function show(id,on){$(id).classList.toggle("hidden",!on);}
+function note(big,small){const d=document.createElement("div");d.className="note";
+  d.innerHTML=big+(small?`<small>${small}</small>`:"");
+  $("notif").appendChild(d);setTimeout(()=>d.remove(),3700);}
+function floatText(wx,wy,wz,txt,color){
+  const p=project(wx,wy,wz);if(!p)return;
+  const d=document.createElement("div");d.className="floatTxt";
+  d.style.left=p[0]+"px";d.style.top=p[1]+"px";d.style.color=color;
+  d.textContent=txt;document.body.appendChild(d);setTimeout(()=>d.remove(),1000);}
+let curVP=M_ID;
+function project(x,y,z){
+  const cx=curVP[0]*x+curVP[4]*y+curVP[8]*z+curVP[12];
+  const cy=curVP[1]*x+curVP[5]*y+curVP[9]*z+curVP[13];
+  const cw=curVP[3]*x+curVP[7]*y+curVP[11]*z+curVP[15];
+  if(cw<0.3)return null;
+  return[(cx/cw*0.5+0.5)*innerWidth,(0.5-cy/cw*0.5)*innerHeight];}
+function updateQuestUI(){
+  const q=QUESTS[questStage];$("qTitle").textContent="✦ "+q.title;
+  const n=questStage===0?player.kills:questStage===1?player.herbs:0;
+  $("qText").innerHTML=q.text(Math.min(n,q.need));}
+function xpNeed(){return player.lvl*100;}
+function gainXp(n){player.xp+=n;
+  while(player.xp>=xpNeed()){player.xp-=xpNeed();player.lvl++;
+    player.maxHp+=20;player.hp=player.maxHp;player.dmg+=5;
+    note(`Уровень ${player.lvl}!`,`+20 здоровья, +5 урона`);sfx.level();}}
+
+/* ---------------- combat ---------------- */
+function attack(){
+  if(player.atkCd>0||player.st<10)return;
+  player.atkCd=0.55;player.st-=10;sfx.swing();
+  const sw=$("sword");sw.classList.remove("swing");void sw.offsetWidth;
+  sw.classList.add("swing");
+  const fx=Math.sin(player.yaw),fz=-Math.cos(player.yaw);
+  setTimeout(()=>{
+    for(const e of enemies){
+      if(e.dead)continue;
+      const dx=e.x-player.x,dz=e.z-player.z,d=Math.hypot(dx,dz);
+      const range=e.kind==="troll"?4.2:3.4;
+      if(d>range)continue;
+      if((dx*fx+dz*fz)/(d||1)<0.45)continue;
+      const dmg=Math.round(player.dmg+Math.random()*8);
+      e.hp-=dmg;sfx.hit();
+      floatText(e.x,e.y+(e.kind==="troll"?4:1.4),e.z,"-"+dmg,"#ffd76a");
+      if(e.hp<=0)killEnemy(e);}
+  },140);}
+function killEnemy(e){
+  e.dead=0.001;
+  if(e.kind==="wolf"){player.kills++;gainXp(25);
+    floatText(e.x,e.y+1.6,e.z,"+25 XP","#9ad07a");
+    if(questStage===0&&player.kills>=5)advanceQuest();}
+  else{player.bossKilled=true;gainXp(200);
+    note("Тролль повержен!","+200 опыта");
+    if(questStage===2)advanceQuest();}
+  updateQuestUI();}
+function advanceQuest(){
+  questStage++;sfx.quest();
+  if(questStage===1)note("Задание выполнено!","Новое задание: Травы для эликсира");
+  else if(questStage===2){note("Задание выполнено!","Новое задание: Логово тролля");spawnTroll();}
+  else if(questStage===3){
+    $("winStats").innerHTML=
+      `Уровень: ${player.lvl} &nbsp;•&nbsp; Убито волков: ${player.kills} &nbsp;•&nbsp; Собрано трав: ${player.herbs}`;
+    show("winScreen",true);document.exitPointerLock();}
+  updateQuestUI();}
+function tryPickup(){
+  if(!gameOn||dead)return;
+  for(const h of herbs){
+    if(h.taken)continue;
+    if(Math.hypot(h.x-player.x,h.z-player.z)<2.6){
+      h.taken=true;player.herbs++;gainXp(10);sfx.pickup();
+      floatText(h.x,h.y+1,h.z,"+трава","#7ae8a0");
+      if(questStage===1&&player.herbs>=5)advanceQuest();
+      updateQuestUI();return;}}}
+function hurtPlayer(n){
+  player.hp-=n;sfx.hurt();
+  const v=$("dmgVignette");v.style.transition="none";v.style.opacity=1;
+  requestAnimationFrame(()=>{v.style.transition="opacity .5s";v.style.opacity=0;});
+  if(player.hp<=0&&!dead){dead=true;sfx.die();show("deathScreen",true);
+    document.exitPointerLock();}}
+
+/* ---------------- enemy AI ---------------- */
+function updateEnemies(dt){
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    if(e.dead){e.dead+=dt;e.y-=dt*0.8;
+      if(e.dead>2.5)enemies.splice(i,1);continue;}
+    e.bob+=dt*8;e.atkCd=Math.max(0,e.atkCd-dt);
+    const dx=player.x-e.x,dz=player.z-e.z,d=Math.hypot(dx,dz);
+    const troll=e.kind==="troll";
+    const aggro=troll?40:30,atkR=troll?3.4:2.4,spd=troll?5:6.8;
+    let mvx=0,mvz=0;
+    if(d<aggro&&!dead){
+      e.heading=Math.atan2(dx,dz);
+      if(d>atkR*0.8){mvx=dx/d*spd;mvz=dz/d*spd;}
+      else if(e.atkCd<=0){e.atkCd=troll?1.7:1.25;
+        hurtPlayer(Math.round(troll?20+Math.random()*10:7+Math.random()*6));}}
+    else{e.wanderT-=dt;
+      if(e.wanderT<=0){e.wanderT=2+Math.random()*4;
+        e.heading=Math.random()*6.28;}
+      mvx=Math.sin(e.heading)*1.4;mvz=Math.cos(e.heading)*1.4;}
+    const nx=e.x+mvx*dt,nz=e.z+mvz*dt,ny=terrainH(nx,nz);
+    if(ny>WATER_Y-0.3&&Math.hypot(nx,nz)<WORLD_R-8){e.x=nx;e.z=nz;e.y=ny;}
+    else e.heading+=2;}}
+
+/* ---------------- player physics ---------------- */
+function updatePlayer(dt){
+  const sprint=keys.ShiftLeft||keys.ShiftRight;
+  let spd=6.5;
+  if(sprint&&player.st>1&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD)){
+    spd=11.5;player.st=Math.max(0,player.st-26*dt);}
+  else player.st=Math.min(player.maxSt,player.st+16*dt);
+  const fx=Math.sin(player.yaw),fz=-Math.cos(player.yaw);
+  const rx=Math.cos(player.yaw),rz=Math.sin(player.yaw);
+  let mx=0,mz=0;
+  if(keys.KeyW){mx+=fx;mz+=fz;} if(keys.KeyS){mx-=fx;mz-=fz;}
+  if(keys.KeyD){mx+=rx;mz+=rz;} if(keys.KeyA){mx-=rx;mz-=rz;}
+  const ml=Math.hypot(mx,mz);
+  if(ml>0){mx/=ml;mz/=ml;
+    const g=terrainH(player.x,player.z);
+    if(g<WATER_Y+0.2)spd*=0.45;                        // wading
+    let nx2=player.x+mx*spd*dt,nz2=player.z+mz*spd*dt;
+    const r=Math.hypot(nx2,nz2);
+    if(r>WORLD_R){nx2*=WORLD_R/r;nz2*=WORLD_R/r;}
+    const slope=terrainH(nx2,nz2)-terrainH(player.x,player.z);
+    if(slope<spd*dt*1.6){player.x=nx2;player.z=nz2;}}  // can't climb cliffs
+  const ground=Math.max(terrainH(player.x,player.z),WATER_Y-1.0);
+  player.vy-=22*dt;player.y+=player.vy*dt;
+  if(player.y<=ground){player.y=ground;player.vy=0;player.onGround=true;}
+  else player.onGround=false;
+  if(keys.Space&&player.onGround){player.vy=8;player.onGround=false;}
+  player.atkCd=Math.max(0,player.atkCd-dt);}
+
+/* ---------------- minimap ---------------- */
+const mmTerrain=document.createElement("canvas");mmTerrain.width=170;mmTerrain.height=170;
+(()=>{const c=mmTerrain.getContext("2d"),img=c.createImageData(170,170);
+  for(let j=0;j<170;j++)for(let i=0;i<170;i++){
+    const x=(i/170*2-1)*WORLD_R,z=(j/170*2-1)*WORLD_R;
+    const y=terrainH(x,z),n=terrainN(x,z);
+    let col;
+    if(y<WATER_Y)col=[30,70,110];
+    else col=terrainColor(y,n[1],x,z).map(v=>v*255*(0.6+0.4*n[1]));
+    const o=(j*170+i)*4;
+    img.data[o]=col[0];img.data[o+1]=col[1];img.data[o+2]=col[2];img.data[o+3]=255;}
+  c.putImageData(img,0,0);})();
+function drawMinimap(){
+  const c=$("minimap").getContext("2d");
+  c.clearRect(0,0,170,170);c.drawImage(mmTerrain,0,0);
+  const px=(player.x/WORLD_R*0.5+0.5)*170,pz=(player.z/WORLD_R*0.5+0.5)*170;
+  for(const h of herbs){if(h.taken)continue;
+    c.fillStyle="#6effa0";
+    c.fillRect((h.x/WORLD_R*0.5+0.5)*170-1.5,(h.z/WORLD_R*0.5+0.5)*170-1.5,3,3);}
+  for(const e of enemies){if(e.dead)continue;
+    c.fillStyle=e.kind==="troll"?"#ff5050":"#e09090";
+    const s=e.kind==="troll"?6:3.4;
+    c.fillRect((e.x/WORLD_R*0.5+0.5)*170-s/2,(e.z/WORLD_R*0.5+0.5)*170-s/2,s,s);}
+  if(questStage===2&&trollPos){
+    c.fillStyle="#ffd24a";c.beginPath();
+    c.arc((trollPos[0]/WORLD_R*0.5+0.5)*170,(trollPos[1]/WORLD_R*0.5+0.5)*170,5,0,6.28);
+    c.fill();}
+  c.save();c.translate(px,pz);c.rotate(player.yaw);
+  c.fillStyle="#fff";c.beginPath();
+  c.moveTo(0,-7);c.lineTo(5,5);c.lineTo(-5,5);c.closePath();c.fill();c.restore();}
+function drawCompass(){
+  const c=$("compass").getContext("2d");c.clearRect(0,0,340,34);
+  c.font="bold 15px Georgia";c.textAlign="center";c.textBaseline="middle";
+  const dirs=[["С",0],["В",90],["Ю",180],["З",270]];
+  let yawDeg=player.yaw*180/Math.PI%360;if(yawDeg<0)yawDeg+=360;
+  for(const[t,a]of dirs){
+    let rel=a-yawDeg;while(rel>180)rel-=360;while(rel<-180)rel+=360;
+    if(Math.abs(rel)>60)continue;
+    const x=170+rel*2.6;
+    c.fillStyle=t==="С"?"#e86a6a":"#e8dcc0";c.fillText(t,x,16);}
+  for(let a=0;a<360;a+=15){
+    let rel=a-yawDeg;while(rel>180)rel-=360;while(rel<-180)rel+=360;
+    if(Math.abs(rel)>60||a%90===0)continue;
+    c.fillStyle="rgba(232,220,192,.4)";c.fillRect(170+rel*2.6,12,1,9);}}
+
+/* ---------------- day/night ---------------- */
+function skyColors(){
+  const sunA=dayTime*Math.PI*2-Math.PI/2;     // dayTime 0..1, 0.25=noon-ish
+  const sunH=Math.sin(sunA);                  // -1..1
+  const day=clamp(sunH*2+0.4,0,1);
+  const dusk=clamp(1-Math.abs(sunH)*3,0,1)*clamp(day+0.4,0,1);
+  const sky=[lerp(0.03,0.45,day)+dusk*0.32,lerp(0.04,0.62,day)+dusk*0.1,
+             lerp(0.1,0.85,day)];
+  const sunDir=[Math.cos(sunA)*0.5,Math.max(sunH,0.06),Math.sin(sunA)*0.3];
+  const l=1/Math.hypot(...sunDir);
+  return{sky,day,dusk,sunDir:[sunDir[0]*l,sunDir[1]*l,sunDir[2]*l]};}
+
+/* ---------------- main loop ---------------- */
+let lastT=0;
+function frame(t){
+  requestAnimationFrame(frame);
+  const dt=Math.min((t-lastT)/1000||0.016,0.05);lastT=t;
+  if(!gameOn||paused)return;
+  if(!dead){
+    updatePlayer(dt);
+    updateEnemies(dt);
+    dayTime=(dayTime+dt/300)%1;            // full day = 5 min
+    spawnTimer-=dt;
+    const wolves=enemies.filter(e=>e.kind==="wolf"&&!e.dead).length;
+    if(spawnTimer<=0&&wolves<7){spawnWolf(true);spawnTimer=14;}}
+  render(t/1000);
+  updateHUD();}
+function render(time){
+  const{sky,day,dusk,sunDir}=skyColors();
+  gl.clearColor(sky[0],sky[1],sky[2],1);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  const eye=[player.x,player.y+1.7,player.z];
+  const fwd=[Math.sin(player.yaw)*Math.cos(player.pitch),Math.sin(player.pitch),
+             -Math.cos(player.yaw)*Math.cos(player.pitch)];
+  const view=mLookAt(eye,[eye[0]+fwd[0],eye[1]+fwd[1],eye[2]+fwd[2]],[0,1,0]);
+  const proj=mPersp(1.15,innerWidth/innerHeight,0.1,900);
+  curVP=mMul(proj,view);
+  gl.uniformMatrix4fv(U.uVP,false,curVP);
+  gl.uniform3fv(U.uSunDir,sunDir);
+  gl.uniform3f(U.uSunCol,lerp(0.12,1.0,day)+dusk*0.3,lerp(0.12,0.95,day),
+    lerp(0.25,0.85,day));
+  gl.uniform3f(U.uAmb,lerp(0.1,0.35,day)+dusk*0.12,lerp(0.12,0.36,day),
+    lerp(0.22,0.42,day));
+  gl.uniform3fv(U.uFogCol,sky);
+  gl.uniform1f(U.uFogDen,0.0035);
+  draw(terr);draw(flora);
+  // creatures
+  for(const e of enemies){
+    const m=e.kind==="troll"?trollMesh:wolfMesh;
+    const bob=e.dead?0:Math.abs(Math.sin(e.bob))*0.06;
+    const sink=e.dead?-Math.min(e.dead*0.6,1.4):0;
+    draw(m,mTRS(e.x,e.y+bob+sink,e.z,e.heading,e.kind==="troll"?1:1),
+      nRotY(e.heading));}
+  // herbs (glowing, double-sided)
+  gl.disable(gl.CULL_FACE);
+  for(const h of herbs){if(h.taken)continue;
+    const pulse=1+Math.sin(time*3+h.x)*0.12;
+    draw(herbMesh,mTRS(h.x,h.y,h.z,time*0.7,pulse),N_ID,0.75);}
+  // water
+  gl.enable(gl.BLEND);gl.depthMask(false);
+  draw(water,M_ID,N_ID,0,0.72);
+  gl.depthMask(true);gl.disable(gl.BLEND);
+  gl.enable(gl.CULL_FACE);}
+
+/* ---------------- HUD update ---------------- */
+function updateHUD(){
+  $("hpFill").style.width=clamp(player.hp/player.maxHp*100,0,100)+"%";
+  $("stFill").style.width=clamp(player.st/player.maxSt*100,0,100)+"%";
+  $("xpFill").style.width=clamp(player.xp/xpNeed()*100,0,100)+"%";
+  $("lvlTag").textContent=`Уровень ${player.lvl} — Охотник`;
+  $("lowHp").style.opacity=player.hp<player.maxHp*0.3&&!dead?
+    0.5+Math.sin(performance.now()/300)*0.3:0;
+  // clock
+  const h24=Math.floor(dayTime*24),m=Math.floor(dayTime*24%1*60);
+  const icon=h24>=6&&h24<20?"☀":"☾";
+  $("clock").textContent=`${icon} ${String(h24).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+  drawMinimap();drawCompass();
+  // herb hint
+  let near=false;
+  for(const h of herbs){if(h.taken)continue;
+    if(Math.hypot(h.x-player.x,h.z-player.z)<2.6){near=true;break;}}
+  const hint=$("hint");
+  if(near&&!dead){hint.style.display="block";
+    hint.innerHTML=`<kbd>E</kbd> — собрать траву`;}
+  else hint.style.display="none";
+  // quest marker
+  const mk=$("marker");
+  if(questStage===2&&trollPos&&!dead){
+    const troll=enemies.find(e=>e.kind==="troll");
+    const tx=troll?troll.x:trollPos[0],tz=troll?troll.z:trollPos[1];
+    const ty=terrainH(tx,tz)+6;
+    const p=project(tx,ty,tz);
+    if(p&&p[0]>0&&p[0]<innerWidth){
+      mk.style.display="block";mk.style.left=p[0]+"px";mk.style.top=p[1]+"px";
+      mk.querySelector(".dist").textContent=
+        Math.round(Math.hypot(tx-player.x,tz-player.z))+" м";}
+    else mk.style.display="none";}
+  else mk.style.display="none";}
+
+/* ---------------- flow control ---------------- */
+function pause(on){
+  paused=on;show("pauseScreen",on);
+  if(!on)cv.requestPointerLock();}
+function startGame(){
+  show("menu",false);
+  ["crosshair","hud","quest","minimapWrap","clock"].forEach(id=>show(id,true));
+  $("compass").classList.remove("hidden");
+  $("sword").classList.remove("hidden");
+  gameOn=true;
+  for(let i=0;i<8;i++)spawnWolf(false);
+  placeHerbs();updateQuestUI();
+  cv.requestPointerLock();
+  ac();
+  setTimeout(()=>note("Волчья напасть","Перебейте одичавших волков: 0/5"),600);}
+$("startBtn").onclick=startGame;
+$("resumeBtn").onclick=()=>pause(false);
+$("respawnBtn").onclick=()=>{
+  dead=false;player.hp=player.maxHp;player.st=player.maxSt;
+  player.x=0;player.z=8;player.y=terrainH(0,8);player.vy=0;
+  enemies=enemies.filter(e=>e.kind!=="wolf"||e.dead||
+    Math.hypot(e.x-player.x,e.z-player.z)>=60);
+  show("deathScreen",false);cv.requestPointerLock();};
+$("roamBtn").onclick=()=>{freeRoam=true;show("winScreen",false);cv.requestPointerLock();};
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
