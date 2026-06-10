@@ -33,7 +33,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 from marketflow.data import (DEFAULT_SYMBOL, INTERVAL_SECONDS, SPOT_QUOTES,
-                             SYMBOL_ALIASES, fetch_klines,
+                             SUPPORTED_MARKETS, SYMBOL_ALIASES, fetch_klines,
                              fetch_tradingview_quote, fx_market_open)
 
 try:
@@ -100,10 +100,7 @@ def spot_quote_line(symbol: str, lang: str = "en") -> str:
              high=f"{q.get('high', 0):.{digits}f}",
              low=f"{q.get('low', 0):.{digits}f}")
     if not fx_market_open():
-        line += t(lang, "market_closed")
-        # Binance-backed candles keep trading; Yahoo futures candles pause
-        line += t(lang, "market_closed_futures" if "=" in resolved
-                  else "market_closed_crypto")
+        line += t(lang, "market_closed") + t(lang, "market_closed_crypto")
     return line
 
 
@@ -333,9 +330,18 @@ class Bot:
         else:
             self.api.send(chat_id, t(self.lang(chat_id), "lang_usage"))
 
+    def _symbol_ok(self, chat_id: int, symbol: str, lang: str) -> bool:
+        resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+        if resolved in SUPPORTED_MARKETS:
+            return True
+        self.api.send(chat_id, t(lang, "unsupported_symbol"))
+        return False
+
     def cmd_predict(self, chat_id: int, args: list[str]):
         lang = self.lang(chat_id)
         symbol, interval, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
         self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
                                  interval=interval))
         try:
@@ -354,6 +360,8 @@ class Bot:
     def cmd_mtf(self, chat_id: int, args: list[str]):
         lang = self.lang(chat_id)
         symbol, _, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
         self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
                                  interval="+".join(MTF_INTERVALS)))
         try:
@@ -439,6 +447,8 @@ class Bot:
     def cmd_backtest(self, chat_id: int, args: list[str]):
         lang = self.lang(chat_id)
         symbol, interval, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
         self.api.send(chat_id, t(lang, "backtesting", symbol=symbol,
                                  interval=interval))
         try:
@@ -456,6 +466,8 @@ class Bot:
         args = [a for a in args
                 if a.lower() not in ("all", "every", "always", "flips")]
         symbol, interval, rest = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
         every_min = max(5, int(rest[0])) if rest else 15
         with self.lock:
             self.subs[str(chat_id)] = {

@@ -21,28 +21,25 @@ DEFAULT_SYMBOL = "PAXGUSDT"
 
 # Binance spot has no literal XAUUSD market; PAXG (1 token = 1 troy oz of
 # gold) is the tradable gold/USDT pair, so map common gold tickers to it.
-# Symbols containing '=' (e.g. SI=F silver futures) come from Yahoo Finance
-# instead, since Binance has no silver market.
 SYMBOL_ALIASES = {
     "XAUUSD": "PAXGUSDT",
     "XAUUSDT": "PAXGUSDT",
     "GOLD": "PAXGUSDT",
     "PAXG": "PAXGUSDT",
     "XAUT": "XAUTUSDT",  # Tether Gold, the other on-exchange gold token
-    "EURUSD": "EURUSDT",
-    "EUR": "EURUSDT",
-    "XAGUSD": "SI=F",    # COMEX silver futures via Yahoo (tracks spot)
-    "XAGUSDT": "SI=F",
-    "XAG": "SI=F",
-    "SILVER": "SI=F",
+    "BTCUSD": "BTCUSDT",
+    "BTC": "BTCUSDT",
+    "BITCOIN": "BTCUSDT",
 }
 
-# resolved symbol -> (TradingView symbol for live spot quote, display pair)
+# the only markets this bot serves (resolved Binance symbols)
+SUPPORTED_MARKETS = {"PAXGUSDT", "XAUTUSDT", "BTCUSDT"}
+
+# resolved symbol -> (TradingView symbol for live spot quote, display pair).
+# BTC needs no extra quote: its Binance candles ARE the live market.
 SPOT_QUOTES = {
     "PAXGUSDT": ("OANDA:XAUUSD", "XAU/USD"),
     "XAUTUSDT": ("OANDA:XAUUSD", "XAU/USD"),
-    "EURUSDT": ("OANDA:EURUSD", "EUR/USD"),
-    "SI=F": ("TVC:SILVER", "XAG/USD"),
 }
 
 INTERVAL_SECONDS = {
@@ -88,8 +85,6 @@ def fetch_klines(symbol: str = DEFAULT_SYMBOL, interval: str = "1h",
     if interval not in INTERVAL_SECONDS:
         raise ValueError(f"unsupported interval {interval!r}")
     symbol = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
-    if "=" in symbol:  # Yahoo Finance instrument (e.g. SI=F silver futures)
-        return _fetch_klines_yahoo(symbol, interval, limit)
     candles: list[Candle] = []
     end_time: int | None = None
     remaining = limit
@@ -136,73 +131,6 @@ def _http_get_json(url: str, retries: int = 3, headers: dict | None = None):
                 raise
             time.sleep(delay)
             delay *= 2
-
-
-YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
-YAHOO_INTERVALS = {"1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
-                   "1h": "60m", "1d": "1d", "1w": "1wk"}
-YAHOO_RESAMPLE = {"2h": 7200, "4h": 14400, "6h": 21600, "12h": 43200}
-# Yahoo caps intraday history lookback (seconds) per interval
-YAHOO_MAX_LOOKBACK = {"1m": 7 * 86400, "5m": 60 * 86400, "15m": 60 * 86400,
-                      "30m": 60 * 86400, "60m": 729 * 86400}
-
-
-def _fetch_klines_yahoo(symbol: str, interval: str, limit: int) -> list[Candle]:
-    base = "1h" if interval in YAHOO_RESAMPLE else interval
-    yint = YAHOO_INTERVALS.get(base)
-    if yint is None:
-        raise ValueError(f"interval {interval!r} not supported for {symbol} "
-                         f"(Yahoo source); use one of "
-                         f"{sorted(YAHOO_INTERVALS | YAHOO_RESAMPLE)}")
-    factor = (YAHOO_RESAMPLE[interval] // 3600) if interval in YAHOO_RESAMPLE else 1
-    span = limit * factor * INTERVAL_SECONDS[base]
-    period2 = int(time.time())
-    # markets close nights/weekends: ask for a generous calendar window
-    lookback = int(span * 1.8) + 3 * 86400
-    lookback = min(lookback, YAHOO_MAX_LOOKBACK.get(yint, 10 * 365 * 86400))
-    url = (YAHOO_CHART_URL.format(sym=urllib.parse.quote(symbol))
-           + f"?interval={yint}&period1={period2 - lookback}&period2={period2}")
-    payload = _http_get_json(url, headers={"User-Agent": "Mozilla/5.0"})
-    result = (payload.get("chart", {}).get("result") or [None])[0]
-    if not result:
-        err = payload.get("chart", {}).get("error") or {}
-        raise ValueError(f"Yahoo has no data for {symbol!r}: "
-                         f"{err.get('description', 'unknown error')}")
-    ts = result.get("timestamp") or []
-    q = result["indicators"]["quote"][0]
-    candles = [
-        Candle(t * 1000, o, h, l, c, v or 0.0)
-        for t, o, h, l, c, v in zip(ts, q["open"], q["high"], q["low"],
-                                    q["close"], q["volume"])
-        if None not in (o, h, l, c)
-    ]
-    if interval in YAHOO_RESAMPLE:
-        candles = _resample(candles, YAHOO_RESAMPLE[interval])
-    return candles[-limit:]
-
-
-def _resample(candles: list[Candle], seconds: int) -> list[Candle]:
-    """Aggregate candles into fixed buckets of `seconds` (UTC-aligned)."""
-    out: list[Candle] = []
-    bucket_ms = seconds * 1000
-    group: list[Candle] = []
-    bucket = None
-    for c in candles:
-        b = c.open_time // bucket_ms
-        if b != bucket and group:
-            out.append(_merge(group, bucket * bucket_ms))
-            group = []
-        bucket = b
-        group.append(c)
-    if group:
-        out.append(_merge(group, bucket * bucket_ms))
-    return out
-
-
-def _merge(group: list[Candle], open_time: int) -> Candle:
-    return Candle(open_time, group[0].open,
-                  max(c.high for c in group), min(c.low for c in group),
-                  group[-1].close, sum(c.volume for c in group))
 
 
 TRADINGVIEW_QUOTE_URL = ("https://scanner.tradingview.com/symbol"

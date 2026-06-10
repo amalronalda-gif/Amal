@@ -118,7 +118,7 @@ I analyze the <b>gold market (XAUUSD)</b> using 11 classic trading strategies �
 ▫️ /predict — what gold is doing right now
 ▫️ /predict XAUUSD 4h — bigger picture
 ▫️ /watch XAUUSD 5m 5 all — reading every 5 minutes
-▫️ /predict EURUSD · /predict SILVER — other markets
+▫️ /predict BTCUSD — Bitcoin
 ▫️ /news — events that can move gold today
 ▫️ /lang ru | /lang uz — Русский / O'zbekcha
 
@@ -131,7 +131,7 @@ Full command list: /help""",
 ▫️ /predict — что происходит с золотом сейчас
 ▫️ /predict XAUUSD 4h — общая картина
 ▫️ /watch XAUUSD 5m 5 all — сводка каждые 5 минут
-▫️ /predict EURUSD · /predict SILVER — другие рынки
+▫️ /predict BTCUSD — биткоин
 ▫️ /news — события, которые могут двинуть золото
 ▫️ /lang en | /lang uz — English / O'zbekcha
 
@@ -144,7 +144,7 @@ Men <b>oltin bozorini (XAUUSD)</b> 11 ta klassik savdo strategiyasi bilan tahlil
 ▫️ /predict — oltin hozir nima qilmoqda
 ▫️ /predict XAUUSD 4h — kattaroq manzara
 ▫️ /watch XAUUSD 5m 5 all — har 5 daqiqada hisobot
-▫️ /predict EURUSD · /predict SILVER — boshqa bozorlar
+▫️ /predict BTCUSD — Bitcoin
 ▫️ /news — oltinni qimirlatishi mumkin bo'lgan hodisalar
 ▫️ /lang en | /lang ru — English / Русский
 
@@ -167,6 +167,7 @@ Barcha buyruqlar: /help""",
 Defaults: symbol <code>XAUUSD</code>/gold (data: Binance PAXG candles + live TradingView spot quote), interval <code>1h</code>, check every 15 min.
 Examples:
 <code>/predict XAUUSD 4h</code>
+<code>/predict BTCUSD 15m</code>
 <code>/watch XAUUSD 5m 5 all</code> — full reading every 5 minutes""",
         "ru": """<b>MarketFlow бот</b> — мультистратегический анализ потока рынка для золота/USDT
 
@@ -184,7 +185,7 @@ Examples:
 По умолчанию: символ <code>XAUUSD</code>/золото (данные: свечи Binance PAXG + спот-котировка TradingView), таймфрейм <code>1h</code>, проверка каждые 15 мин.
 Примеры:
 <code>/predict XAUUSD 4h</code>
-<code>/predict EURUSD 1h</code> · <code>/predict SILVER 4h</code>
+<code>/predict BTCUSD 15m</code>
 <code>/watch XAUUSD 5m 5 all</code> — полная сводка каждые 5 минут""",
         "uz": """<b>MarketFlow bot</b> — oltin/USDT uchun ko'p strategiyali bozor oqimi tahlili
 
@@ -202,7 +203,7 @@ Examples:
 Standart: simvol <code>XAUUSD</code>/oltin (ma'lumot: Binance PAXG shamlari + TradingView jonli narxi), interval <code>1h</code>, har 15 daqiqada tekshiruv.
 Misollar:
 <code>/predict XAUUSD 4h</code>
-<code>/predict EURUSD 1h</code> · <code>/predict SILVER 4h</code>
+<code>/predict BTCUSD 15m</code>
 <code>/watch XAUUSD 5m 5 all</code> — har 5 daqiqada to'liq hisobot""",
     },
     "disclaimer": {
@@ -319,13 +320,14 @@ Misollar:
               "shuning uchun prognoz jonli qoladi — lekin spot ochilguncha "
               "hajmlar kam bo'ladi.",
     },
-    "market_closed_futures": {
-        "en": " Futures candles also pause while the exchange is closed, so "
-              "the analysis reflects the last session.",
-        "ru": " Фьючерсные свечи тоже не обновляются, пока биржа закрыта — "
-              "анализ отражает последнюю сессию.",
-        "uz": " Fyuchers shamlari ham birja yopiqligida yangilanmaydi — tahlil "
-              "oxirgi sessiyani aks ettiradi.",
+    "unsupported_symbol": {
+        "en": "I only cover gold and Bitcoin: try <code>/predict XAUUSD</code> "
+              "or <code>/predict BTCUSD</code>.",
+        "ru": "Я работаю только с золотом и биткоином: попробуйте "
+              "<code>/predict XAUUSD</code> или <code>/predict BTCUSD</code>.",
+        "uz": "Men faqat oltin va Bitcoin bilan ishlayman: "
+              "<code>/predict XAUUSD</code> yoki <code>/predict BTCUSD</code> "
+              "ni sinab ko'ring.",
     },
     "risk_now": {"en": "NOW", "ru": "СЕЙЧАС", "uz": "HOZIR"},
     "risk_in": {"en": "in {h}h", "ru": "через {h} ч", "uz": "{h} soatdan keyin"},
