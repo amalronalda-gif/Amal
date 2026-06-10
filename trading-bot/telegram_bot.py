@@ -38,27 +38,12 @@ from marketflow.data import (DEFAULT_SYMBOL, GOLD_SYMBOLS, INTERVAL_SECONDS,
 from marketflow.engine import Engine, Prediction
 from marketflow.backtest import run_backtest
 from marketflow import news as news_mod
+from marketflow import i18n
+from marketflow.i18n import t
 
-SUBS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "subscriptions.json")
-DISCLAIMER = "\n<i>Educational signals, not financial advice.</i>"
-
-HELP = """<b>MarketFlow bot</b> — multi-strategy market flow reading for gold/USDT
-
-/predict [symbol] [interval] — current prediction with strategy breakdown
-/backtest [symbol] [interval] — walk-forward backtest
-/news — USD economic calendar + latest gold headlines
-/watch [symbol] [interval] [minutes] — alert when the flow direction flips
-/watch [symbol] [interval] [minutes] all — send the reading on EVERY check
-/unwatch — stop alerts
-/status — show your watch subscription
-
-Defaults: symbol <code>XAUUSD</code>/gold (data: Binance PAXG candles + live \
-TradingView spot quote), interval <code>1h</code>, check every 15 min.
-Examples:
-<code>/predict XAUUSD 4h</code>
-<code>/predict BTCUSDT 15m</code>
-<code>/watch XAUUSD 5m 5 all</code> — full reading every 5 minutes""" + DISCLAIMER
+_HERE = os.path.dirname(os.path.abspath(__file__))
+SUBS_FILE = os.path.join(_HERE, "subscriptions.json")
+LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 
 
 class TelegramAPI:
@@ -88,7 +73,7 @@ class TelegramAPI:
                       parse_mode="HTML", disable_web_page_preview=True)
 
 
-def spot_quote_line(symbol: str) -> str:
+def spot_quote_line(symbol: str, lang: str = "en") -> str:
     """Live spot XAU/USD from TradingView (OANDA feed) for gold symbols."""
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
     if resolved not in GOLD_SYMBOLS:
@@ -96,70 +81,67 @@ def spot_quote_line(symbol: str) -> str:
     q = fetch_tradingview_quote("OANDA:XAUUSD")
     if not q:
         return ""
-    return (f"\n💰 live spot XAU/USD (TradingView/OANDA): "
-            f"<code>{q['close']:.2f}</code> "
-            f"({q.get('change', 0):+.2f}% today, "
-            f"H <code>{q.get('high', 0):.2f}</code> / "
-            f"L <code>{q.get('low', 0):.2f}</code>)")
+    return t(lang, "spot_line", price=f"{q['close']:.2f}",
+             chg=f"{q.get('change', 0):+.2f}", high=f"{q.get('high', 0):.2f}",
+             low=f"{q.get('low', 0):.2f}")
 
 
-def event_risk_line() -> str:
+def event_risk_line(lang: str = "en") -> str:
     """Warning when a high-impact USD event is inside the danger window."""
     e = news_mod.event_risk(window_hours=8.0)
     if not e:
         return ""
     hrs = e.hours_from_now()
-    when = "NOW" if hrs < 0.5 else f"in {hrs:.1f}h"
-    return (f"\n⚠️ <b>high-impact USD news {when}</b>: "
-            f"{html.escape(e.title)} — gold often whipsaws around releases; "
-            f"technical signals are unreliable in that window.")
+    when = (t(lang, "risk_now") if hrs < 0.5
+            else t(lang, "risk_in", h=f"{hrs:.1f}"))
+    return t(lang, "risk_line", when=when, title=html.escape(e.title))
 
 
-def format_news() -> str:
-    lines = ["📰 <b>Gold news & event risk</b>", ""]
+def format_news(lang: str = "en") -> str:
+    lines = [t(lang, "news_title"), ""]
     try:
         events = news_mod.upcoming_events(hours_ahead=36)
         if events:
-            lines.append("<b>Economic calendar (USD, next 36h):</b>")
+            lines.append(t(lang, "news_cal_header"))
             for e in events[:8]:
                 hrs = e.hours_from_now()
                 when = f"{hrs:+.1f}h" if abs(hrs) < 24 else f"{hrs / 24:+.1f}d"
                 badge = "🔴" if e.impact == "High" else "🟠"
-                extra = f" (f: {e.forecast}, p: {e.previous})" if e.forecast else ""
+                extra = (t(lang, "forecast_prev", f=e.forecast, p=e.previous)
+                         if e.forecast else "")
                 lines.append(f"{badge} {when}  {html.escape(e.title)}"
                              f"{html.escape(extra)}")
         else:
-            lines.append("No medium/high-impact USD events in the next 36h.")
+            lines.append(t(lang, "news_none"))
     except Exception as ex:
-        lines.append(f"calendar unavailable: {ex}")
+        lines.append(t(lang, "news_cal_unavail", error=ex))
     lines.append("")
     try:
         heads = news_mod.gold_headlines()
         if heads:
             net = sum(h.sentiment for h in heads)
-            mood = ("leaning bullish" if net > 0
-                    else "leaning bearish" if net < 0 else "mixed")
-            lines.append(f"<b>Latest gold headlines</b> "
-                         f"(crude keyword sentiment: {mood}):")
+            mood = t(lang, "mood_bull" if net > 0
+                     else "mood_bear" if net < 0 else "mood_mixed")
+            lines.append(t(lang, "news_heads_header", mood=mood))
             for h in heads:
                 mark = {1: "🟢", -1: "🔴", 0: "⚪"}[h.sentiment]
                 lines.append(f"{mark} <a href=\"{h.link}\">"
                              f"{html.escape(h.title)}</a>")
     except Exception as ex:
-        lines.append(f"headlines unavailable: {ex}")
-    return "\n".join(lines) + DISCLAIMER
+        lines.append(t(lang, "news_heads_unavail", error=ex))
+    return "\n".join(lines) + t(lang, "disclaimer")
 
 
 def format_prediction(symbol: str, interval: str, pred: Prediction,
-                      close: float, bar_ms: int) -> str:
+                      close: float, bar_ms: int, lang: str = "en") -> str:
     icon = {"BULLISH": "📈", "BEARISH": "📉", "NEUTRAL": "➖"}[pred.direction]
     ts = datetime.fromtimestamp(bar_ms / 1000, tz=timezone.utc)
     lines = [
-        f"{icon} <b>{symbol} {interval}</b> — <b>{pred.direction}</b>",
-        f"score <code>{pred.score:+.3f}</code> · confidence "
-        f"<code>{pred.confidence:.0f}%</code> · agreement "
-        f"<code>{pred.agreement * 100:.0f}%</code>",
-        f"close <code>{close:.2f}</code> · bar {ts:%Y-%m-%d %H:%M} UTC",
+        f"{icon} <b>{symbol} {interval}</b> — "
+        f"<b>{i18n.direction(lang, pred.direction)}</b>",
+        t(lang, "pred_stats", score=f"{pred.score:+.3f}",
+          conf=f"{pred.confidence:.0f}", agr=f"{pred.agreement * 100:.0f}"),
+        t(lang, "pred_close", close=f"{close:.2f}", ts=f"{ts:%Y-%m-%d %H:%M}"),
         "",
     ]
     ordered = sorted(pred.signals.items(), key=lambda kv: -abs(kv[1].score))
@@ -167,12 +149,14 @@ def format_prediction(symbol: str, interval: str, pred: Prediction,
         if sig.score == 0.0:
             continue
         mark = "🟢" if sig.score > 0 else "🔴"
+        reason = i18n.translate_reason(sig.reason, lang)
         lines.append(f"{mark} <code>{sig.score:+.2f}</code> "
-                     f"<b>{name}</b>: {html.escape(sig.reason)}")
+                     f"<b>{i18n.strategy_name(lang, name)}</b>: "
+                     f"{html.escape(reason)}")
     quiet = sum(1 for s in pred.signals.values() if s.score == 0.0)
     if quiet:
-        lines.append(f"⚪ {quiet} strategies neutral")
-    return "\n".join(lines) + DISCLAIMER
+        lines.append(t(lang, "neutral_count", n=quiet))
+    return "\n".join(lines) + t(lang, "disclaimer")
 
 
 def parse_args_text(parts: list[str]) -> tuple[str, str, list[str]]:
@@ -195,13 +179,15 @@ class Bot:
         self.allowed = allowed
         self.engine = Engine()
         self.lock = threading.Lock()
-        self.subs: dict[str, dict] = self._load_subs()
+        self.subs: dict[str, dict] = self._load_json(SUBS_FILE)
+        self.langs: dict[str, str] = self._load_json(LANGS_FILE)
 
-    # ---------- subscriptions ----------
+    # ---------- persistence ----------
 
-    def _load_subs(self) -> dict:
+    @staticmethod
+    def _load_json(path: str) -> dict:
         try:
-            with open(SUBS_FILE) as f:
+            with open(path) as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             return {}
@@ -210,69 +196,101 @@ class Bot:
         with open(SUBS_FILE, "w") as f:
             json.dump(self.subs, f, indent=2)
 
+    def _save_langs(self):
+        with open(LANGS_FILE, "w") as f:
+            json.dump(self.langs, f, indent=2)
+
+    def lang(self, chat_id: int) -> str:
+        return self.langs.get(str(chat_id), "en")
+
     # ---------- command handling ----------
 
-    def handle(self, chat_id: int, text: str):
+    def handle(self, chat_id: int, text: str, tg_lang: str | None = None):
+        key = str(chat_id)
+        # first contact: adopt the user's Telegram client language if we
+        # support it and they haven't chosen one explicitly
+        if key not in self.langs and tg_lang:
+            code = tg_lang.split("-")[0].lower()
+            if code in i18n.LANGS:
+                self.langs[key] = code
+                self._save_langs()
+        lang = self.lang(chat_id)
         if self.allowed and chat_id not in self.allowed:
-            self.api.send(chat_id, "Sorry, this bot is private.")
+            self.api.send(chat_id, t(lang, "private"))
             return
         parts = text.split()
         cmd = parts[0].split("@")[0].lower()
         args = parts[1:]
         if cmd in ("/start", "/help"):
-            self.api.send(chat_id, HELP)
+            self.api.send(chat_id, t(lang, "help") + t(lang, "disclaimer"))
+        elif cmd in ("/lang", "/language"):
+            self.cmd_lang(chat_id, args)
         elif cmd == "/predict":
             self.cmd_predict(chat_id, args)
         elif cmd == "/backtest":
             self.cmd_backtest(chat_id, args)
         elif cmd == "/news":
-            self.api.send(chat_id, format_news())
+            self.api.send(chat_id, format_news(lang))
         elif cmd == "/watch":
             self.cmd_watch(chat_id, args)
         elif cmd == "/unwatch":
             with self.lock:
-                removed = self.subs.pop(str(chat_id), None)
+                removed = self.subs.pop(key, None)
                 self._save_subs()
-            self.api.send(chat_id, "Alerts stopped." if removed
-                          else "You had no active watch.")
+            self.api.send(chat_id, t(lang, "unwatch_ok") if removed
+                          else t(lang, "unwatch_none"))
         elif cmd == "/status":
-            sub = self.subs.get(str(chat_id))
+            sub = self.subs.get(key)
             if sub:
-                self.api.send(chat_id,
-                              f"Watching <b>{sub['symbol']} {sub['interval']}</b> "
-                              f"every {sub['every_min']} min; last flow: "
-                              f"{sub.get('last_direction', '—')}")
+                last = sub.get("last_direction")
+                self.api.send(chat_id, t(
+                    lang, "status_active", symbol=sub["symbol"],
+                    interval=sub["interval"], min=sub["every_min"],
+                    dir=i18n.direction(lang, last) if last else "—"))
             else:
-                self.api.send(chat_id, "No active watch. Use /watch to start.")
+                self.api.send(chat_id, t(lang, "status_none"))
         elif cmd.startswith("/"):
-            self.api.send(chat_id, "Unknown command — try /help")
+            self.api.send(chat_id, t(lang, "unknown_cmd"))
+
+    def cmd_lang(self, chat_id: int, args: list[str]):
+        choice = args[0].lower() if args else None
+        if choice in i18n.LANGS:
+            self.langs[str(chat_id)] = choice
+            self._save_langs()
+            self.api.send(chat_id, t(choice, "lang_set"))
+        else:
+            self.api.send(chat_id, t(self.lang(chat_id), "lang_usage"))
 
     def cmd_predict(self, chat_id: int, args: list[str]):
+        lang = self.lang(chat_id)
         symbol, interval, _ = parse_args_text(args)
-        self.api.send(chat_id, f"Crunching {symbol} {interval}…")
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval=interval))
         try:
             candles = fetch_klines(symbol, interval, 600)
             pred = self.engine.predict(candles)
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
-                candles[-1].open_time) + spot_quote_line(symbol)
-                + event_risk_line())
+                candles[-1].open_time, lang) + spot_quote_line(symbol, lang)
+                + event_risk_line(lang))
         except Exception as e:
-            self.api.send(chat_id, f"⚠️ failed: {e}")
+            self.api.send(chat_id, t(lang, "failed", error=e))
 
     def cmd_backtest(self, chat_id: int, args: list[str]):
+        lang = self.lang(chat_id)
         symbol, interval, _ = parse_args_text(args)
-        self.api.send(chat_id, f"Backtesting {symbol} {interval} "
-                               f"(1500 bars), this takes a moment…")
+        self.api.send(chat_id, t(lang, "backtesting", symbol=symbol,
+                                 interval=interval))
         try:
             candles = fetch_klines(symbol, interval, 1500)
             result = run_backtest(candles, engine=self.engine, threshold=0.3)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
-                          + "</pre>" + DISCLAIMER)
+                          + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:
-            self.api.send(chat_id, f"⚠️ failed: {e}")
+            self.api.send(chat_id, t(lang, "failed", error=e))
 
     def cmd_watch(self, chat_id: int, args: list[str]):
+        lang = self.lang(chat_id)
         send_all = any(a.lower() in ("all", "every", "always") for a in args)
         args = [a for a in args
                 if a.lower() not in ("all", "every", "always", "flips")]
@@ -285,11 +303,9 @@ class Bot:
                 "last_direction": None, "mode": "all" if send_all else "flip",
             }
             self._save_subs()
-        what = ("send you the reading every check" if send_all
-                else "message you when the market flow direction flips")
-        self.api.send(chat_id,
-                      f"👁 Watching <b>{symbol} {interval}</b>, checking every "
-                      f"{every_min} min. I'll {what}. /unwatch to stop.")
+        self.api.send(chat_id, t(
+            lang, "watching_all" if send_all else "watching_flip",
+            symbol=symbol, interval=interval, min=every_min))
 
     # ---------- alert loop (background thread) ----------
 
@@ -305,21 +321,25 @@ class Bot:
 
     def _check_subscription(self, chat_id: int, sub: dict):
         key = str(chat_id)
+        lang = self.lang(chat_id)
         try:
             candles = fetch_klines(sub["symbol"], sub["interval"], 600)
             pred = self.engine.predict(candles)
             prev = sub.get("last_direction")
             flipped = prev is not None and pred.direction != prev
             if flipped or sub.get("mode") == "all":
-                head = (f"🔔 <b>{sub['symbol']} {sub['interval']}</b> "
-                        f"flow flipped: {prev} → <b>{pred.direction}</b>\n\n"
+                head = (t(lang, "flow_flipped", symbol=sub["symbol"],
+                          interval=sub["interval"],
+                          prev=i18n.direction(lang, prev),
+                          new=i18n.direction(lang, pred.direction)) + "\n\n"
                         if flipped else "")
                 self.api.send(chat_id,
                               head + format_prediction(
                                   sub["symbol"], sub["interval"], pred,
-                                  candles[-1].close, candles[-1].open_time)
-                              + spot_quote_line(sub["symbol"])
-                              + event_risk_line())
+                                  candles[-1].close, candles[-1].open_time,
+                                  lang)
+                              + spot_quote_line(sub["symbol"], lang)
+                              + event_risk_line(lang))
             with self.lock:
                 if key in self.subs:
                     self.subs[key]["last_direction"] = pred.direction
@@ -351,9 +371,10 @@ class Bot:
                 msg = u.get("message") or {}
                 text = msg.get("text")
                 chat = msg.get("chat", {}).get("id")
+                tg_lang = (msg.get("from") or {}).get("language_code")
                 if text and chat:
                     try:
-                        self.handle(chat, text)
+                        self.handle(chat, text, tg_lang)
                     except Exception as e:
                         print(f"[handle] {e}")
 
