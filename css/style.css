@@ -168,6 +168,11 @@ table.gram th { background: var(--bg); font-weight: 700; }
 .flash-hint { font-size: .8rem; opacity: .65; margin-top: 10px; }
 .flash-example { font-size: .92rem; margin-top: 12px; font-style: italic; }
 .flash-controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.speak-btn {
+  background: rgba(255,255,255,.18); border: none; border-radius: 99px;
+  font-size: 1.2rem; padding: 6px 12px; cursor: pointer; margin-top: 10px;
+}
+.speak-btn:hover { background: rgba(255,255,255,.32); }
 .flash-counter { color: var(--muted); font-size: .9rem; }
 
 .vocab-table-toggle { margin-top: 24px; }
