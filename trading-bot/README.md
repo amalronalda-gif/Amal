@@ -85,6 +85,38 @@ max drawdown. Stops are checked before targets within a bar (conservative).
 A 400-candle sample dataset is included at
 `sample_data/paxgusdt_4h_sample.csv` so everything runs offline.
 
+## Telegram bot
+
+Get MarketFlow predictions and direction-flip alerts in Telegram:
+
+1. In Telegram, open **@BotFather** → send `/newbot` → pick a name and a
+   username ending in `bot` → copy the HTTP API **token** it gives you.
+2. Run the bot (any machine with Python 3.10+ and internet, e.g. a VPS,
+   Raspberry Pi, or your laptop):
+
+   ```bash
+   cd trading-bot
+   export TELEGRAM_BOT_TOKEN="123456789:AAExampleTokenFromBotFather"
+   python3 telegram_bot.py
+   ```
+3. Open your bot in Telegram and send `/start`.
+
+Commands:
+
+| Command | What it does |
+|---|---|
+| `/predict [symbol] [interval]` | current flow reading with strategy breakdown, e.g. `/predict 4h` |
+| `/backtest [symbol] [interval]` | walk-forward backtest over 1500 bars |
+| `/watch [symbol] [interval] [minutes]` | message you whenever the flow direction flips (checked every N minutes, default 15) |
+| `/unwatch` | stop alerts |
+| `/status` | show your subscription |
+
+To keep the bot private, set `TELEGRAM_ALLOWED_CHATS` to a comma-separated
+list of allowed chat IDs (send `/status` once and check the console log, or
+ask @userinfobot for your ID). Subscriptions persist across restarts in
+`subscriptions.json`. To keep it running on a server:
+`nohup python3 telegram_bot.py >> bot.log 2>&1 &` (or a systemd unit).
+
 ## Tuning
 
 - Weights: `marketflow/engine.py` → `DEFAULT_WEIGHTS`
