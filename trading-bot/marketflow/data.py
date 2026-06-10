@@ -213,6 +213,21 @@ TRADINGVIEW_QUOTE_URL = ("https://scanner.tradingview.com/symbol"
 GOLD_SYMBOLS = {"PAXGUSDT", "XAUTUSDT"}
 
 
+def fx_market_open(dt: "datetime | None" = None) -> bool:
+    """Approximate spot metals/FX schedule (UTC): opens Sunday 22:00, closes
+    Friday 21:00, with a daily maintenance break 21:00-22:00 UTC."""
+    from datetime import datetime, timezone
+    now = dt or datetime.now(timezone.utc)
+    wd = now.weekday()
+    if wd == 5:                      # Saturday
+        return False
+    if wd == 6:                      # Sunday: opens 22:00 UTC
+        return now.hour >= 22
+    if wd == 4:                      # Friday: closes 21:00 UTC
+        return now.hour < 21
+    return not 21 <= now.hour < 22   # Mon-Thu daily break
+
+
 def fetch_tradingview_quote(tv_symbol: str = "OANDA:XAUUSD") -> dict | None:
     """Live quote from TradingView's public scanner endpoint.
 

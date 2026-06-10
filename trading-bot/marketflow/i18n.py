@@ -281,9 +281,9 @@ Misollar:
         "uz": "ball <code>{score}</code> · ishonch <code>{conf}%</code> · strategiyalar mosligi <code>{agr}%</code>",
     },
     "pred_close": {
-        "en": "close <code>{close}</code> · bar {ts} UTC",
-        "ru": "закрытие <code>{close}</code> · свеча {ts} UTC",
-        "uz": "yopilish <code>{close}</code> · sham {ts} UTC",
+        "en": "close <code>{close}</code> · bar {ts} UTC ({uk} UK)",
+        "ru": "закрытие <code>{close}</code> · свеча {ts} UTC ({uk} Лондон)",
+        "uz": "yopilish <code>{close}</code> · sham {ts} UTC ({uk} London)",
     },
     "neutral_count": {
         "en": "⚪ {n} strategies neutral",
@@ -297,6 +297,35 @@ Misollar:
               "({chg}% за день, макс. <code>{high}</code> / мин. <code>{low}</code>)",
         "uz": "\n💰 jonli spot {pair} (TradingView): <code>{price}</code> "
               "({chg}% bugun, maks. <code>{high}</code> / min. <code>{low}</code>)",
+    },
+    "market_closed": {
+        "en": "\n🕒 <b>Spot market is closed right now</b> — the quote above is "
+              "the last traded price. Spot gold/FX hours: daily break "
+              "21:00–22:00 UTC (22:00–23:00 UK summer), closed Fri 21:00 → "
+              "Sun 22:00 UTC.",
+        "ru": "\n🕒 <b>Спотовый рынок сейчас закрыт</b> — выше показана последняя "
+              "цена. Часы спот золота/форекс: ежедневный перерыв 21:00–22:00 "
+              "UTC, закрыт с пт 21:00 до вс 22:00 UTC.",
+        "uz": "\n🕒 <b>Spot bozor hozir yopiq</b> — yuqoridagi narx oxirgi savdo "
+              "narxi. Spot oltin/forex soatlari: har kuni 21:00–22:00 UTC "
+              "tanaffus, juma 21:00 dan yakshanba 22:00 UTC gacha yopiq.",
+    },
+    "market_closed_crypto": {
+        "en": " The candles I analyze (Binance) trade 24/7, so the prediction "
+              "stays live — but expect thin volume until spot reopens.",
+        "ru": " Свечи, которые я анализирую (Binance), торгуются 24/7, поэтому "
+              "прогноз остаётся актуальным — но до открытия спота объёмы малы.",
+        "uz": " Men tahlil qiladigan shamlar (Binance) 24/7 savdo qiladi, "
+              "shuning uchun prognoz jonli qoladi — lekin spot ochilguncha "
+              "hajmlar kam bo'ladi.",
+    },
+    "market_closed_futures": {
+        "en": " Futures candles also pause while the exchange is closed, so "
+              "the analysis reflects the last session.",
+        "ru": " Фьючерсные свечи тоже не обновляются, пока биржа закрыта — "
+              "анализ отражает последнюю сессию.",
+        "uz": " Fyuchers shamlari ham birja yopiqligida yangilanmaydi — tahlil "
+              "oxirgi sessiyani aks ettiradi.",
     },
     "risk_now": {"en": "NOW", "ru": "СЕЙЧАС", "uz": "HOZIR"},
     "risk_in": {"en": "in {h}h", "ru": "через {h} ч", "uz": "{h} soatdan keyin"},

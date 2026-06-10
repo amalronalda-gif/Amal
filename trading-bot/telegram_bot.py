@@ -34,7 +34,13 @@ from datetime import datetime, timezone
 
 from marketflow.data import (DEFAULT_SYMBOL, INTERVAL_SECONDS, SPOT_QUOTES,
                              SYMBOL_ALIASES, fetch_klines,
-                             fetch_tradingview_quote)
+                             fetch_tradingview_quote, fx_market_open)
+
+try:
+    from zoneinfo import ZoneInfo
+    _LONDON = ZoneInfo("Europe/London")
+except Exception:
+    _LONDON = None
 from marketflow.engine import Prediction, engine_for
 from marketflow.backtest import run_backtest
 from marketflow.indicators import atr as atr_indicator
@@ -88,11 +94,17 @@ def spot_quote_line(symbol: str, lang: str = "en") -> str:
     if not q:
         return ""
     digits = 5 if q["close"] < 10 else 2  # FX pairs need more precision
-    return t(lang, "spot_line", pair=pair,
+    line = t(lang, "spot_line", pair=pair,
              price=f"{q['close']:.{digits}f}",
              chg=f"{q.get('change', 0):+.2f}",
              high=f"{q.get('high', 0):.{digits}f}",
              low=f"{q.get('low', 0):.{digits}f}")
+    if not fx_market_open():
+        line += t(lang, "market_closed")
+        # Binance-backed candles keep trading; Yahoo futures candles pause
+        line += t(lang, "market_closed_futures" if "=" in resolved
+                  else "market_closed_crypto")
+    return line
 
 
 def event_risk_line(lang: str = "en") -> str:
@@ -168,12 +180,15 @@ def format_prediction(symbol: str, interval: str, pred: Prediction,
                       close: float, bar_ms: int, lang: str = "en") -> str:
     icon = {"BULLISH": "📈", "BEARISH": "📉", "NEUTRAL": "➖"}[pred.direction]
     ts = datetime.fromtimestamp(bar_ms / 1000, tz=timezone.utc)
+    uk = f"{ts.astimezone(_LONDON):%H:%M}" if _LONDON else "—"
+    digits = 5 if close < 10 else 2
     lines = [
         f"{icon} <b>{symbol} {interval}</b> — "
         f"<b>{i18n.direction(lang, pred.direction)}</b>",
         t(lang, "pred_stats", score=f"{pred.score:+.3f}",
           conf=f"{pred.confidence:.0f}", agr=f"{pred.agreement * 100:.0f}"),
-        t(lang, "pred_close", close=f"{close:.2f}", ts=f"{ts:%Y-%m-%d %H:%M}"),
+        t(lang, "pred_close", close=f"{close:.{digits}f}",
+          ts=f"{ts:%Y-%m-%d %H:%M}", uk=uk),
         "",
     ]
     ordered = sorted(pred.signals.items(), key=lambda kv: -abs(kv[1].score))
