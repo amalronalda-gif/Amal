@@ -35,8 +35,9 @@ from datetime import datetime, timezone
 from marketflow.data import (DEFAULT_SYMBOL, INTERVAL_SECONDS, SPOT_QUOTES,
                              SYMBOL_ALIASES, fetch_klines,
                              fetch_tradingview_quote)
-from marketflow.engine import Engine, Prediction
+from marketflow.engine import Prediction, engine_for
 from marketflow.backtest import run_backtest
+from marketflow.indicators import atr as atr_indicator
 from marketflow import news as news_mod
 from marketflow import i18n
 from marketflow.i18n import t
@@ -44,6 +45,9 @@ from marketflow.i18n import t
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SUBS_FILE = os.path.join(_HERE, "subscriptions.json")
 LANGS_FILE = os.path.join(_HERE, "user_langs.json")
+PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
+STATS_HORIZON = 12          # bars ahead a prediction is judged against
+MTF_INTERVALS = ("15m", "1h", "4h")
 
 
 class TelegramAPI:
@@ -137,6 +141,29 @@ def format_news(lang: str = "en") -> str:
     return "\n".join(lines) + t(lang, "disclaimer")
 
 
+def trade_plan_line(candles, pred: Prediction, lang: str = "en") -> str:
+    """ATR-based entry/stop/target suggestion for non-neutral signals.
+
+    Mirrors the backtester's exits (1.5 ATR stop, 3 ATR target = 1:2 R:R)
+    so the suggestion matches what the published stats were measured on.
+    """
+    if pred.direction == "NEUTRAL":
+        return ""
+    a = atr_indicator(candles, 14)[-1]
+    if not a:
+        return ""
+    entry = candles[-1].close
+    side = 1 if pred.direction == "BULLISH" else -1
+    stop = entry - side * 1.5 * a
+    target = entry + side * 3.0 * a
+    digits = 5 if entry < 10 else 2
+    return t(lang, "plan",
+             entry=f"{entry:.{digits}f}", stop=f"{stop:.{digits}f}",
+             target=f"{target:.{digits}f}",
+             sd=f"{(stop / entry - 1) * 100:+.2f}",
+             td=f"{(target / entry - 1) * 100:+.2f}")
+
+
 def format_prediction(symbol: str, interval: str, pred: Prediction,
                       close: float, bar_ms: int, lang: str = "en") -> str:
     icon = {"BULLISH": "📈", "BEARISH": "📉", "NEUTRAL": "➖"}[pred.direction]
@@ -182,10 +209,14 @@ class Bot:
     def __init__(self, token: str, allowed: set[int] | None):
         self.api = TelegramAPI(token)
         self.allowed = allowed
-        self.engine = Engine()
         self.lock = threading.Lock()
         self.subs: dict[str, dict] = self._load_json(SUBS_FILE)
         self.langs: dict[str, str] = self._load_json(LANGS_FILE)
+        try:
+            with open(PRED_LOG_FILE) as f:
+                self.pred_log: list[dict] = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.pred_log = []
 
     # ---------- persistence ----------
 
@@ -207,6 +238,21 @@ class Bot:
 
     def lang(self, chat_id: int) -> str:
         return self.langs.get(str(chat_id), "en")
+
+    def _log_prediction(self, symbol: str, interval: str, candles, pred):
+        """Record non-neutral calls so /stats can grade them later."""
+        if pred.direction == "NEUTRAL":
+            return
+        resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+        with self.lock:
+            self.pred_log.append({
+                "bar": candles[-1].open_time, "symbol": resolved,
+                "interval": interval, "direction": pred.direction,
+                "score": round(pred.score, 3), "close": candles[-1].close,
+            })
+            self.pred_log = self.pred_log[-1000:]
+            with open(PRED_LOG_FILE, "w") as f:
+                json.dump(self.pred_log, f)
 
     # ---------- command handling ----------
 
@@ -238,6 +284,10 @@ class Bot:
             self.cmd_backtest(chat_id, args)
         elif cmd == "/news":
             self.api.send(chat_id, format_news(lang))
+        elif cmd == "/mtf":
+            self.cmd_mtf(chat_id, args)
+        elif cmd == "/stats":
+            self.cmd_stats(chat_id)
         elif cmd == "/watch":
             self.cmd_watch(chat_id, args)
         elif cmd == "/unwatch":
@@ -275,13 +325,101 @@ class Bot:
                                  interval=interval))
         try:
             candles = fetch_klines(symbol, interval, 600)
-            pred = self.engine.predict(candles)
+            pred = engine_for(symbol).predict(candles)
+            self._log_prediction(symbol, interval, candles, pred)
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
-                candles[-1].open_time, lang) + spot_quote_line(symbol, lang)
+                candles[-1].open_time, lang)
+                + trade_plan_line(candles, pred, lang)
+                + spot_quote_line(symbol, lang)
                 + event_risk_line(lang))
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
+
+    def cmd_mtf(self, chat_id: int, args: list[str]):
+        lang = self.lang(chat_id)
+        symbol, _, _ = parse_args_text(args)
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval="+".join(MTF_INTERVALS)))
+        try:
+            engine = engine_for(symbol)
+            lines = [t(lang, "mtf_header", symbol=symbol), ""]
+            directions = []
+            for interval in MTF_INTERVALS:
+                candles = fetch_klines(symbol, interval, 600)
+                pred = engine.predict(candles)
+                directions.append(pred.direction)
+                icon = {"BULLISH": "📈", "BEARISH": "📉",
+                        "NEUTRAL": "➖"}[pred.direction]
+                lines.append(f"{icon} <code>{interval:>3}</code> "
+                             f"<b>{i18n.direction(lang, pred.direction)}</b> "
+                             f"(<code>{pred.score:+.3f}</code>, "
+                             f"{pred.confidence:.0f}%)")
+            lines.append("")
+            non_neutral = [d for d in directions if d != "NEUTRAL"]
+            if non_neutral and len(set(directions)) == 1:
+                lines.append(t(lang, "mtf_aligned",
+                               dir=i18n.direction(lang, directions[0])))
+            else:
+                lines.append(t(lang, "mtf_mixed"))
+            self.api.send(chat_id, "\n".join(lines) + t(lang, "disclaimer"))
+        except Exception as e:
+            self.api.send(chat_id, t(lang, "failed", error=e))
+
+    def cmd_stats(self, chat_id: int):
+        lang = self.lang(chat_id)
+        with self.lock:
+            entries = list(self.pred_log)
+        if not entries:
+            self.api.send(chat_id, t(lang, "stats_none"))
+            return
+        markets = {}
+        for e in entries:
+            markets.setdefault((e["symbol"], e["interval"]), []).append(e)
+        per_market = []
+        total_hits = total_eval = pending = 0
+        for (symbol, interval), group in markets.items():
+            try:
+                candles = fetch_klines(symbol, interval, 1000)
+            except Exception:
+                continue
+            index = {c.open_time: i for i, c in enumerate(candles)}
+            hits = evaluated = 0
+            for e in group:
+                i = index.get(e["bar"])
+                if i is None:
+                    continue  # too old for the fetched window
+                j = i + STATS_HORIZON
+                if j >= len(candles):
+                    pending += 1
+                    continue
+                fwd = candles[j].close - e["close"]
+                if fwd == 0:
+                    continue
+                evaluated += 1
+                if (fwd > 0) == (e["direction"] == "BULLISH"):
+                    hits += 1
+            if evaluated:
+                per_market.append(t(lang, "stats_line", symbol=symbol,
+                                    interval=interval, hits=hits,
+                                    total=evaluated,
+                                    pct=f"{hits / evaluated * 100:.0f}"))
+                total_hits += hits
+                total_eval += evaluated
+        if not total_eval:
+            msg = t(lang, "stats_none")
+            if pending:
+                msg += "\n" + t(lang, "stats_pending", n=pending)
+            self.api.send(chat_id, msg)
+            return
+        lines = [t(lang, "stats_header", h=STATS_HORIZON), ""]
+        lines += per_market
+        lines.append("")
+        lines.append(t(lang, "stats_total", hits=total_hits, total=total_eval,
+                       pct=f"{total_hits / total_eval * 100:.0f}"))
+        if pending:
+            lines.append(t(lang, "stats_pending", n=pending))
+        self.api.send(chat_id, "\n".join(lines) + t(lang, "disclaimer"))
 
     def cmd_backtest(self, chat_id: int, args: list[str]):
         lang = self.lang(chat_id)
@@ -290,7 +428,8 @@ class Bot:
                                  interval=interval))
         try:
             candles = fetch_klines(symbol, interval, 1500)
-            result = run_backtest(candles, engine=self.engine, threshold=0.3)
+            result = run_backtest(candles, engine=engine_for(symbol),
+                                  threshold=0.3)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
                           + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:
@@ -331,7 +470,8 @@ class Bot:
         lang = self.lang(chat_id)
         try:
             candles = fetch_klines(sub["symbol"], sub["interval"], 600)
-            pred = self.engine.predict(candles)
+            pred = engine_for(sub["symbol"]).predict(candles)
+            self._log_prediction(sub["symbol"], sub["interval"], candles, pred)
             prev = sub.get("last_direction")
             flipped = prev is not None and pred.direction != prev
             if flipped or sub.get("mode") == "all":
@@ -345,6 +485,7 @@ class Bot:
                                   sub["symbol"], sub["interval"], pred,
                                   candles[-1].close, candles[-1].open_time,
                                   lang)
+                              + trade_plan_line(candles, pred, lang)
                               + spot_quote_line(sub["symbol"], lang)
                               + event_risk_line(lang))
             with self.lock:

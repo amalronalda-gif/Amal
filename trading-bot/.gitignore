@@ -3,3 +3,4 @@ __pycache__/
 subscriptions.json
 *.log
 user_langs.json
+predictions_log.json

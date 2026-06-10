@@ -51,6 +51,8 @@ BOT_PROFILE = {
             ("predict", "market flow now, e.g. /predict XAUUSD 4h"),
             ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
             ("news", "USD calendar + gold headlines"),
+            ("mtf", "15m+1h+4h confluence check"),
+            ("stats", "accuracy of past predictions"),
             ("backtest", "test the strategy on history"),
             ("status", "my subscription"),
             ("unwatch", "stop alerts"),
@@ -72,6 +74,8 @@ BOT_PROFILE = {
             ("predict", "поток рынка сейчас, напр. /predict XAUUSD 4h"),
             ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
             ("news", "календарь USD + новости золота"),
+            ("mtf", "сверка 15m+1h+4h"),
+            ("stats", "точность прошлых прогнозов"),
             ("backtest", "проверка стратегии на истории"),
             ("status", "моя подписка"),
             ("unwatch", "остановить оповещения"),
@@ -93,6 +97,8 @@ BOT_PROFILE = {
             ("predict", "hozirgi bozor oqimi, masalan /predict XAUUSD 4h"),
             ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
             ("news", "USD kalendari + oltin yangiliklari"),
+            ("mtf", "15m+1h+4h mosligini tekshirish"),
+            ("stats", "o'tgan prognozlar aniqligi"),
             ("backtest", "strategiyani tarixda sinash"),
             ("status", "mening obunam"),
             ("unwatch", "xabarlarni to'xtatish"),
@@ -150,6 +156,8 @@ Barcha buyruqlar: /help""",
 /predict [symbol] [interval] — current prediction with strategy breakdown
 /backtest [symbol] [interval] — walk-forward backtest
 /news — USD economic calendar + latest gold headlines
+/mtf [symbol] — 15m+1h+4h confluence check
+/stats — accuracy of my past predictions
 /watch [symbol] [interval] [minutes] — alert when the flow direction flips
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
 /unwatch — stop alerts
@@ -165,6 +173,8 @@ Examples:
 /predict [символ] [таймфрейм] — текущий прогноз с разбором по стратегиям
 /backtest [символ] [таймфрейм] — бэктест на истории
 /news — экономкалендарь США + свежие новости по золоту
+/mtf [символ] — сверка 15m+1h+4h
+/stats — точность моих прошлых прогнозов
 /watch [символ] [таймфрейм] [минуты] — оповещение при смене направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
 /unwatch — остановить оповещения
@@ -181,6 +191,8 @@ Examples:
 /predict [simvol] [interval] — strategiyalar tahlili bilan joriy prognoz
 /backtest [simvol] [interval] — tarixiy ma'lumotlarda backtest
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
+/mtf [simvol] — 15m+1h+4h mosligini tekshirish
+/stats — o'tgan prognozlarim aniqligi
 /watch [simvol] [interval] [daqiqa] — yo'nalish o'zgarganda xabar berish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
 /unwatch — xabarlarni to'xtatish
@@ -323,6 +335,63 @@ Misollar:
     "mood_mixed": {"en": "mixed", "ru": "смешанный", "uz": "aralash"},
     "forecast_prev": {"en": " (f: {f}, p: {p})", "ru": " (прогноз: {f}, пред.: {p})",
                       "uz": " (prognoz: {f}, oldingi: {p})"},
+    "plan": {
+        "en": "\n📋 <b>If trading this signal</b>: entry ~<code>{entry}</code> · "
+              "stop <code>{stop}</code> ({sd}%) · target <code>{target}</code> "
+              "({td}%) · R:R 1:2\nSize the position so the stop costs ≤1% of "
+              "your account.",
+        "ru": "\n📋 <b>Если торговать этот сигнал</b>: вход ~<code>{entry}</code> · "
+              "стоп <code>{stop}</code> ({sd}%) · цель <code>{target}</code> "
+              "({td}%) · R:R 1:2\nРазмер позиции — чтобы стоп стоил ≤1% депозита.",
+        "uz": "\n📋 <b>Bu signal bo'yicha savdo qilsangiz</b>: kirish "
+              "~<code>{entry}</code> · stop <code>{stop}</code> ({sd}%) · maqsad "
+              "<code>{target}</code> ({td}%) · R:R 1:2\nPozitsiya hajmini stop "
+              "hisobingizning ≤1% iga teng bo'ladigan qilib tanlang.",
+    },
+    "mtf_header": {
+        "en": "🔭 <b>{symbol} — multi-timeframe view</b>",
+        "ru": "🔭 <b>{symbol} — мультитаймфрейм</b>",
+        "uz": "🔭 <b>{symbol} — ko'p taymfreym ko'rinishi</b>",
+    },
+    "mtf_aligned": {
+        "en": "✅ All timeframes agree: <b>{dir}</b> — stronger signal.",
+        "ru": "✅ Все таймфреймы совпадают: <b>{dir}</b> — сигнал сильнее.",
+        "uz": "✅ Barcha taymfreymlar mos: <b>{dir}</b> — signal kuchliroq.",
+    },
+    "mtf_mixed": {
+        "en": "↔️ Timeframes disagree — wait for alignment or reduce risk.",
+        "ru": "↔️ Таймфреймы расходятся — дождитесь совпадения или снизьте риск.",
+        "uz": "↔️ Taymfreymlar mos emas — moslikni kuting yoki riskni kamaytiring.",
+    },
+    "stats_header": {
+        "en": "📊 <b>Prediction accuracy</b> (each call checked {h} bars later)",
+        "ru": "📊 <b>Точность прогнозов</b> (проверка через {h} свечей)",
+        "uz": "📊 <b>Prognozlar aniqligi</b> ({h} sham o'tgach tekshiriladi)",
+    },
+    "stats_line": {
+        "en": "{symbol} {interval}: {hits}/{total} correct ({pct}%)",
+        "ru": "{symbol} {interval}: {hits}/{total} верных ({pct}%)",
+        "uz": "{symbol} {interval}: {hits}/{total} to'g'ri ({pct}%)",
+    },
+    "stats_total": {
+        "en": "<b>Overall: {hits}/{total} ({pct}%)</b>",
+        "ru": "<b>Итого: {hits}/{total} ({pct}%)</b>",
+        "uz": "<b>Jami: {hits}/{total} ({pct}%)</b>",
+    },
+    "stats_pending": {
+        "en": "{n} more predictions are still waiting for their horizon.",
+        "ru": "Ещё {n} прогнозов ждут своего горизонта.",
+        "uz": "Yana {n} ta prognoz o'z gorizontini kutmoqda.",
+    },
+    "stats_none": {
+        "en": "📊 No evaluable predictions yet. I automatically log every "
+              "non-neutral /predict and /watch reading — check back later.",
+        "ru": "📊 Пока нечего оценивать. Я автоматически записываю каждый "
+              "ненейтральный прогноз из /predict и /watch — загляните позже.",
+        "uz": "📊 Hozircha baholanadigan prognozlar yo'q. Har bir neytral "
+              "bo'lmagan /predict va /watch natijasini avtomatik yozib boraman — "
+              "keyinroq qayta tekshiring.",
+    },
 }
 
 
