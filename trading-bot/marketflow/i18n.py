@@ -504,6 +504,9 @@ Misollar:
               "Kirish signalga qarshi savdo bo'lardi.",
     },
     "side_for": {"en": "<b>For:</b>", "ru": "<b>За:</b>", "uz": "<b>Tarafdor:</b>"},
+    "side_neutral": {"en": "⚪ <b>Neutral (no setup):</b>",
+                     "ru": "⚪ <b>Нейтральны (нет сетапа):</b>",
+                     "uz": "⚪ <b>Neytral (setup yo'q):</b>"},
     "side_against": {"en": "<b>Against:</b>", "ru": "<b>Против:</b>",
                      "uz": "<b>Qarshi:</b>"},
     "scalp_header": {

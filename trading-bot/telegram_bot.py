@@ -524,10 +524,10 @@ class Bot:
                                dir=i18n.direction(lang, pred.direction)))
             fors = sorted(((n, s) for n, s in pred.signals.items()
                            if s.score * side > 0),
-                          key=lambda kv: -abs(kv[1].score))[:4]
+                          key=lambda kv: -abs(kv[1].score))
             against = sorted(((n, s) for n, s in pred.signals.items()
                               if s.score * side < 0),
-                             key=lambda kv: -abs(kv[1].score))[:3]
+                             key=lambda kv: -abs(kv[1].score))
             for title_key, group in (("side_for", fors),
                                      ("side_against", against)):
                 if group:
@@ -538,6 +538,12 @@ class Bot:
                         lines.append(f"• <code>{sig.score:+.2f}</code> "
                                      f"<b>{i18n.strategy_name(lang, name)}</b>: "
                                      f"{html.escape(reason)}")
+            neutral = [i18n.strategy_name(lang, n)
+                       for n, s in pred.signals.items() if s.score == 0]
+            if neutral:
+                lines.append("")
+                lines.append(t(lang, "side_neutral") + " "
+                             + html.escape(", ".join(neutral)))
             msg = "\n".join(lines)
             if aligned >= SIDE_WAIT_T:
                 msg += trade_plan_line(candles, pred, lang, symbol,
