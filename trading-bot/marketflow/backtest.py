@@ -42,12 +42,13 @@ class BacktestResult:
     def win_rate(self) -> float:
         if not self.trades:
             return 0.0
-        return sum(1 for t in self.trades if t.pnl_pct > 0) / len(self.trades)
+        return (sum(1 for t in self.trades if t.r_multiple > 0)
+                / len(self.trades))
 
     @property
     def profit_factor(self) -> float:
-        wins = sum(t.pnl_pct for t in self.trades if t.pnl_pct > 0)
-        losses = -sum(t.pnl_pct for t in self.trades if t.pnl_pct < 0)
+        wins = sum(t.r_multiple for t in self.trades if t.r_multiple > 0)
+        losses = -sum(t.r_multiple for t in self.trades if t.r_multiple < 0)
         if losses == 0:
             return float("inf") if wins > 0 else 0.0
         return wins / losses
@@ -129,10 +130,10 @@ def run_backtest(candles: list[Candle], engine: Engine | None = None,
                 entry = candles[i + 1].open
                 stop = entry - direction * stop_atr * a
                 target = entry + direction * target_atr * a
-                exit_price, exit_idx = _simulate(candles, i + 1, direction,
-                                                 stop, target, max_hold)
-                risk = abs(entry - stop)
-                r_mult = (exit_price - entry) * direction / risk if risk else 0.0
+                tp1 = entry + direction * stop_atr * a
+                r_mult, exit_idx, exit_price = _simulate(
+                    candles, i + 1, direction, entry, stop, tp1, target,
+                    max_hold)
                 result.trades.append(Trade(i + 1, exit_idx, direction,
                                            entry, exit_price, r_mult))
                 equity *= 1.0 + (risk_pct / 100.0) * r_mult
@@ -143,18 +144,36 @@ def run_backtest(candles: list[Candle], engine: Engine | None = None,
 
 
 def _simulate(candles: list[Candle], entry_idx: int, direction: int,
-              stop: float, target: float, max_hold: int) -> tuple[float, int]:
+              entry: float, stop: float, tp1: float, target: float,
+              max_hold: int) -> tuple[float, int, float]:
+    """Simulate the trade with the same management the bot's trade cards
+    prescribe: close half at TP1 (+1R) and move the stop to breakeven,
+    let the rest run to TP2 (+2R). Returns (r_multiple, exit_idx, exit_px).
+
+    Conservative intra-bar ordering: the stop is checked before targets.
+    """
     last = min(entry_idx + max_hold, len(candles) - 1)
+    risk = abs(entry - stop)
+    if risk == 0:
+        return 0.0, entry_idx, entry
+    half_done = False
+    cur_stop = stop
     for k in range(entry_idx, last + 1):
         c = candles[k]
-        if direction == 1:
-            if c.low <= stop:       # conservative: stop checked before target
-                return stop, k
-            if c.high >= target:
-                return target, k
-        else:
-            if c.high >= stop:
-                return stop, k
-            if c.low <= target:
-                return target, k
-    return candles[last].close, last
+        hit_stop = c.low <= cur_stop if direction == 1 else c.high >= cur_stop
+        if hit_stop:
+            if half_done:
+                return 0.5, k, cur_stop          # +1R banked on half, BE rest
+            return -1.0, k, cur_stop
+        hit_tp1 = c.high >= tp1 if direction == 1 else c.low <= tp1
+        if not half_done and hit_tp1:
+            half_done = True
+            cur_stop = entry                     # breakeven for the remainder
+        hit_tp2 = c.high >= target if direction == 1 else c.low <= target
+        if half_done and hit_tp2:
+            return 1.5, k, target                # 0.5R (half) + 1.0R (half at 2R)
+    px = candles[last].close
+    move_r = (px - entry) * direction / risk
+    if half_done:
+        return 0.5 + 0.5 * move_r, last, px
+    return move_r, last, px
