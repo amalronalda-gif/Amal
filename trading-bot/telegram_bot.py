@@ -55,6 +55,8 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
+SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
+SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
 ACCOUNT_USD = 100.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
@@ -513,6 +515,64 @@ class Bot:
             lang, "watching_all" if send_all else "watching_flip",
             symbol=symbol, interval=interval, min=every_min))
 
+    def _signal_track(self, chat_id: int, sub: dict, candles, pred, lang: str):
+        """Explicit ENTRY/EXIT calls layered on a /watch subscription.
+
+        ENTRY when the ensemble score crosses SIGNAL_THRESHOLD; EXIT when
+        the ATR stop/target is touched, the signal flips against the open
+        direction, or SIGNAL_MAX_HOLD bars pass.
+        """
+        digits = 5 if candles[-1].close < 10 else 2
+        price = candles[-1].close
+        sig = sub.get("signal")
+        if sig:
+            since = [c for c in candles if c.open_time > sig["opened"]]
+            outcome = exit_px = None
+            for c in since:  # conservative: stop before target within a bar
+                if sig["dir"] == 1:
+                    if c.low <= sig["stop"]:
+                        outcome, exit_px = "stop", sig["stop"]
+                        break
+                    if c.high >= sig["target"]:
+                        outcome, exit_px = "target", sig["target"]
+                        break
+                else:
+                    if c.high >= sig["stop"]:
+                        outcome, exit_px = "stop", sig["stop"]
+                        break
+                    if c.low <= sig["target"]:
+                        outcome, exit_px = "target", sig["target"]
+                        break
+            if outcome is None:
+                flipped_against = ((pred.direction == "BULLISH" and sig["dir"] == -1)
+                                   or (pred.direction == "BEARISH" and sig["dir"] == 1))
+                if flipped_against:
+                    outcome, exit_px = "flip", price
+                elif len(since) >= SIGNAL_MAX_HOLD:
+                    outcome, exit_px = "time", price
+            if outcome:
+                key = {"target": "signal_exit_target", "stop": "signal_exit_stop",
+                       "flip": "signal_exit_flip", "time": "signal_exit_time"}[outcome]
+                self.api.send(chat_id, t(lang, key, symbol=sub["symbol"],
+                                         price=f"{exit_px:.{digits}f}"))
+                sub["signal"] = None
+            return
+        if pred.direction != "NEUTRAL" and abs(pred.score) >= SIGNAL_THRESHOLD:
+            a = atr_indicator(candles, 14)[-1]
+            if not a:
+                return
+            d = 1 if pred.score > 0 else -1
+            sub["signal"] = {"dir": d, "entry": price,
+                             "stop": price - d * 1.5 * a,
+                             "target": price + d * 3.0 * a,
+                             "opened": candles[-1].open_time}
+            s = sub["signal"]
+            self.api.send(chat_id, t(
+                lang, "signal_enter",
+                dir=i18n.direction(lang, pred.direction), symbol=sub["symbol"],
+                entry=f"{price:.{digits}f}", stop=f"{s['stop']:.{digits}f}",
+                target=f"{s['target']:.{digits}f}"))
+
     # ---------- alert loop (background thread) ----------
 
     def alert_loop(self):
@@ -550,9 +610,11 @@ class Bot:
                                                 sub["symbol"])
                               + spot_quote_line(sub["symbol"], lang)
                               + event_risk_line(lang))
+            self._signal_track(chat_id, sub, candles, pred, lang)
             with self.lock:
                 if key in self.subs:
                     self.subs[key]["last_direction"] = pred.direction
+                    self.subs[key]["signal"] = sub.get("signal")
                     self.subs[key]["next_check"] = (time.time()
                                                     + sub["every_min"] * 60)
                     self._save_subs()

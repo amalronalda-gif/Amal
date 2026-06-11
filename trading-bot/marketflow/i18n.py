@@ -162,7 +162,7 @@ Barcha buyruqlar: /help""",
 /news — USD economic calendar + latest gold headlines
 /mtf [symbol] — 15m+1h+4h confluence check
 /stats — accuracy of my past predictions
-/watch [symbol] [interval] [minutes] — alert when the flow direction flips
+/watch [symbol] [interval] [minutes] — entry/exit signals + flip alerts
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
 /unwatch — stop alerts
 /status — show your watch subscription
@@ -180,7 +180,7 @@ Examples:
 /news — экономкалендарь США + свежие новости по золоту
 /mtf [символ] — сверка 15m+1h+4h
 /stats — точность моих прошлых прогнозов
-/watch [символ] [таймфрейм] [минуты] — оповещение при смене направления
+/watch [символ] [таймфрейм] [минуты] — сигналы входа/выхода + смена направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
 /unwatch — остановить оповещения
 /status — моя подписка
@@ -198,7 +198,7 @@ Examples:
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
 /mtf [simvol] — 15m+1h+4h mosligini tekshirish
 /stats — o'tgan prognozlarim aniqligi
-/watch [simvol] [interval] [daqiqa] — yo'nalish o'zgarganda xabar berish
+/watch [simvol] [interval] [daqiqa] — kirish/chiqish signallari + yo'nalish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
 /unwatch — xabarlarni to'xtatish
 /status — mening obunam
@@ -232,19 +232,19 @@ Misollar:
     },
     "watching_flip": {
         "en": "👁 Watching <b>{symbol} {interval}</b>, checking every {min} min. "
-              "I'll message you when the market flow direction flips. /unwatch to stop.",
+              "I'll message you when the market flow direction flips, and mark ENTRY/EXIT points (entry, stop, target). /unwatch to stop.",
         "ru": "👁 Слежу за <b>{symbol} {interval}</b>, проверка каждые {min} мин. "
-              "Напишу, когда направление потока рынка сменится. /unwatch — остановить.",
+              "Напишу, когда направление сменится, и буду отмечать ТОЧКИ ВХОДА и ВЫХОДА (вход, стоп, цель). /unwatch — остановить.",
         "uz": "👁 <b>{symbol} {interval}</b> kuzatilmoqda, har {min} daqiqada tekshiruv. "
-              "Bozor oqimi yo'nalishi o'zgarganda xabar beraman. To'xtatish: /unwatch.",
+              "Yo'nalish o'zgarganda xabar beraman va KIRISH/CHIQISH nuqtalarini ko'rsataman (kirish, stop, maqsad). To'xtatish: /unwatch.",
     },
     "watching_all": {
         "en": "👁 Watching <b>{symbol} {interval}</b>, checking every {min} min. "
-              "I'll send you the reading every check. /unwatch to stop.",
+              "I'll send you the reading every check, and mark ENTRY/EXIT points. /unwatch to stop.",
         "ru": "👁 Слежу за <b>{symbol} {interval}</b>, проверка каждые {min} мин. "
-              "Буду присылать сводку при каждой проверке. /unwatch — остановить.",
+              "Буду присылать сводку при каждой проверке и отмечать ТОЧКИ ВХОДА и ВЫХОДА. /unwatch — остановить.",
         "uz": "👁 <b>{symbol} {interval}</b> kuzatilmoqda, har {min} daqiqada tekshiruv. "
-              "Har tekshiruvda hisobot yuboraman. To'xtatish: /unwatch.",
+              "Har tekshiruvda hisobot yuboraman va KIRISH/CHIQISH nuqtalarini ko'rsataman. To'xtatish: /unwatch.",
     },
     "unwatch_ok": {"en": "Alerts stopped.", "ru": "Оповещения остановлены.",
                    "uz": "Xabarlar to'xtatildi."},
@@ -437,6 +437,40 @@ Misollar:
         "uz": "📊 Hozircha baholanadigan prognozlar yo'q. Har bir neytral "
               "bo'lmagan /predict va /watch natijasini avtomatik yozib boraman — "
               "keyinroq qayta tekshiring.",
+    },
+    "signal_enter": {
+        "en": "🟢 <b>ENTRY</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
+              "stop <code>{stop}</code> · target <code>{target}</code> · R:R 1:2",
+        "ru": "🟢 <b>ТОЧКА ВХОДА</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
+              "стоп <code>{stop}</code> · цель <code>{target}</code> · R:R 1:2",
+        "uz": "🟢 <b>KIRISH NUQTASI</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
+              "stop <code>{stop}</code> · maqsad <code>{target}</code> · R:R 1:2",
+    },
+    "signal_exit_target": {
+        "en": "✅ <b>EXIT</b> {symbol}: target reached @ <code>{price}</code> (+2R)",
+        "ru": "✅ <b>ВЫХОД</b> {symbol}: цель достигнута @ <code>{price}</code> (+2R)",
+        "uz": "✅ <b>CHIQISH</b> {symbol}: maqsadga yetildi @ <code>{price}</code> (+2R)",
+    },
+    "signal_exit_stop": {
+        "en": "🛑 <b>EXIT</b> {symbol}: stop hit @ <code>{price}</code> (−1R)",
+        "ru": "🛑 <b>ВЫХОД</b> {symbol}: сработал стоп @ <code>{price}</code> (−1R)",
+        "uz": "🛑 <b>CHIQISH</b> {symbol}: stop ishladi @ <code>{price}</code> (−1R)",
+    },
+    "signal_exit_flip": {
+        "en": "↩️ <b>EXIT</b> {symbol}: signal flipped — exit at market @ "
+              "<code>{price}</code>",
+        "ru": "↩️ <b>ВЫХОД</b> {symbol}: сигнал развернулся — выход по рынку @ "
+              "<code>{price}</code>",
+        "uz": "↩️ <b>CHIQISH</b> {symbol}: signal teskari bo'ldi — bozor "
+              "narxida chiqish @ <code>{price}</code>",
+    },
+    "signal_exit_time": {
+        "en": "⏱ <b>EXIT</b> {symbol}: time limit — exit at market @ "
+              "<code>{price}</code>",
+        "ru": "⏱ <b>ВЫХОД</b> {symbol}: вышло время — выход по рынку @ "
+              "<code>{price}</code>",
+        "uz": "⏱ <b>CHIQISH</b> {symbol}: vaqt tugadi — bozor narxida "
+              "chiqish @ <code>{price}</code>",
     },
 }
 
