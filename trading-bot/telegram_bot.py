@@ -53,10 +53,16 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 SUBS_FILE = os.path.join(_HERE, "subscriptions.json")
 LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
+PAPER_FILE = os.path.join(_HERE, "paper_accounts.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
 ACCOUNT_USD = 100.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
+PAPER_START = 100.0         # paper-trader starting balance
+PAPER_GOAL = 1200.0         # paper-trader target balance
+PAPER_THRESHOLD = 0.23      # |score| needed to open a paper trade
+PAPER_MAX_HOLD = 48         # bars before a paper position is closed at market
+PAPER_MIN_BALANCE = 10.0    # stop trading below this (account blown)
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
                 "BTCUSDT": "BTC"}
 
@@ -262,6 +268,11 @@ class Bot:
                 self.pred_log: list[dict] = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             self.pred_log = []
+        self.paper: dict[str, dict] = self._load_json(PAPER_FILE)
+
+    def _save_paper(self):
+        with open(PAPER_FILE, "w") as f:
+            json.dump(self.paper, f, indent=2)
 
     # ---------- persistence ----------
 
@@ -333,6 +344,10 @@ class Bot:
             self.cmd_mtf(chat_id, args)
         elif cmd == "/stats":
             self.cmd_stats(chat_id)
+        elif cmd == "/trade":
+            self.cmd_trade(chat_id, args)
+        elif cmd == "/account":
+            self.cmd_account(chat_id)
         elif cmd == "/watch":
             self.cmd_watch(chat_id, args)
         elif cmd == "/unwatch":
@@ -513,6 +528,163 @@ class Bot:
             lang, "watching_all" if send_all else "watching_flip",
             symbol=symbol, interval=interval, min=every_min))
 
+    # ---------- paper trading ----------
+
+    def cmd_trade(self, chat_id: int, args: list[str]):
+        lang = self.lang(chat_id)
+        key = str(chat_id)
+        if any(a.lower() in ("off", "stop") for a in args):
+            acct = self.paper.pop(key, None)
+            with self.lock:
+                self._save_paper()
+            bal = f"{acct['balance']:.2f}" if acct else f"{PAPER_START:.0f}"
+            self.api.send(chat_id, t(lang, "paper_off", balance=bal))
+            return
+        args = [a for a in args if a.lower() not in ("on", "start")]
+        symbol, interval, rest = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
+        risk = 2.0
+        if rest:
+            try:
+                risk = min(5.0, max(0.5, float(rest[0])))
+            except ValueError:
+                pass
+        with self.lock:
+            self.paper[key] = {
+                "symbol": symbol, "interval": interval, "risk_pct": risk,
+                "balance": PAPER_START, "goal": PAPER_GOAL,
+                "position": None, "wins": 0, "losses": 0, "trades": 0,
+                "next_check": 0,
+            }
+            self._save_paper()
+        self.api.send(chat_id, t(lang, "paper_on", symbol=symbol,
+                                 interval=interval, risk=f"{risk:g}",
+                                 balance=f"{PAPER_START:.0f}",
+                                 goal=f"{PAPER_GOAL:.0f}")
+                      + t(lang, "paper_expect"))
+
+    def cmd_account(self, chat_id: int):
+        lang = self.lang(chat_id)
+        acct = self.paper.get(str(chat_id))
+        if not acct:
+            self.api.send(chat_id, t(lang, "paper_none"))
+            return
+        pos = acct.get("position")
+        if pos:
+            digits = 5 if pos["entry"] < 10 else 2
+            pos_line = t(lang, "account_pos",
+                         dir=i18n.direction(lang, "BULLISH" if pos["dir"] == 1
+                                            else "BEARISH"),
+                         symbol=acct["symbol"],
+                         entry=f"{pos['entry']:.{digits}f}",
+                         stop=f"{pos['stop']:.{digits}f}",
+                         target=f"{pos['target']:.{digits}f}")
+        else:
+            pos_line = t(lang, "account_nopos")
+        pct = acct["balance"] / acct["goal"] * 100
+        self.api.send(chat_id, t(
+            lang, "account", balance=f"{acct['balance']:.2f}",
+            goal=f"{acct['goal']:.0f}", pct=f"{pct:.1f}",
+            n=acct["trades"], wins=acct["wins"], losses=acct["losses"],
+            position=pos_line))
+
+    def _check_paper(self, chat_id: int, acct: dict):
+        key = str(chat_id)
+        lang = self.lang(chat_id)
+        try:
+            candles = fetch_klines(acct["symbol"], acct["interval"], 600)
+            pos = acct.get("position")
+            if pos:
+                self._paper_manage_position(chat_id, acct, candles, lang)
+            elif acct["balance"] >= PAPER_MIN_BALANCE:
+                self._paper_maybe_open(chat_id, acct, candles, lang)
+            with self.lock:
+                if key in self.paper:
+                    self.paper[key] = acct
+                    self.paper[key]["next_check"] = time.time() + 300
+                    self._save_paper()
+        except Exception as e:
+            print(f"[paper] check failed for {chat_id}: {e}")
+            with self.lock:
+                if key in self.paper:
+                    self.paper[key]["next_check"] = time.time() + 300
+                    self._save_paper()
+
+    def _paper_maybe_open(self, chat_id: int, acct: dict, candles, lang: str):
+        pred = engine_for(acct["symbol"]).predict(
+            candles, news_signal(acct["symbol"]))
+        if abs(pred.score) < PAPER_THRESHOLD:
+            return
+        a = atr_indicator(candles, 14)[-1]
+        if not a:
+            return
+        direction = 1 if pred.score > 0 else -1
+        entry = candles[-1].close
+        risk_usd = acct["balance"] * acct["risk_pct"] / 100.0
+        acct["position"] = {
+            "dir": direction, "entry": entry,
+            "stop": entry - direction * 1.5 * a,
+            "target": entry + direction * 3.0 * a,
+            "risk_usd": risk_usd, "opened": candles[-1].open_time,
+        }
+        pos = acct["position"]
+        digits = 5 if entry < 10 else 2
+        self.api.send(chat_id, t(
+            lang, "paper_opened",
+            dir=i18n.direction(lang, "BULLISH" if direction == 1 else "BEARISH"),
+            symbol=acct["symbol"], entry=f"{entry:.{digits}f}",
+            stop=f"{pos['stop']:.{digits}f}",
+            target=f"{pos['target']:.{digits}f}", risk=f"{risk_usd:.2f}"))
+
+    def _paper_manage_position(self, chat_id: int, acct: dict, candles,
+                               lang: str):
+        pos = acct["position"]
+        since = [c for c in candles if c.open_time > pos["opened"]]
+        outcome = None
+        exit_px = None
+        for c in since:  # conservative: stop checked before target
+            if pos["dir"] == 1:
+                if c.low <= pos["stop"]:
+                    outcome, exit_px = "loss", pos["stop"]
+                    break
+                if c.high >= pos["target"]:
+                    outcome, exit_px = "win", pos["target"]
+                    break
+            else:
+                if c.high >= pos["stop"]:
+                    outcome, exit_px = "loss", pos["stop"]
+                    break
+                if c.low <= pos["target"]:
+                    outcome, exit_px = "win", pos["target"]
+                    break
+        if outcome is None and len(since) >= PAPER_MAX_HOLD:
+            outcome, exit_px = "time", since[-1].close
+        if outcome is None:
+            return
+        risk = pos["risk_usd"]
+        r_mult = ((exit_px - pos["entry"]) * pos["dir"]
+                  / abs(pos["entry"] - pos["stop"]))
+        pnl = r_mult * risk
+        acct["balance"] = max(0.0, acct["balance"] + pnl)
+        acct["trades"] += 1
+        acct["wins" if pnl > 0 else "losses"] += 1
+        acct["position"] = None
+        pct = acct["balance"] / acct["goal"] * 100
+        msg_key = {"win": "paper_closed_win", "loss": "paper_closed_loss",
+                   "time": "paper_closed_time"}[outcome]
+        self.api.send(chat_id, t(
+            lang, msg_key, pnl=f"{abs(pnl):.2f}",
+            sign="+" if pnl >= 0 else "−",
+            balance=f"{acct['balance']:.2f}", goal=f"{acct['goal']:.0f}",
+            pct=f"{pct:.1f}"))
+        if acct["balance"] >= acct["goal"]:
+            self.api.send(chat_id, t(lang, "paper_goal",
+                                     balance=f"{acct['balance']:.2f}",
+                                     goal=f"{acct['goal']:.0f}"))
+        elif acct["balance"] < PAPER_MIN_BALANCE:
+            self.api.send(chat_id, t(lang, "paper_blown"))
+
     # ---------- alert loop (background thread) ----------
 
     def alert_loop(self):
@@ -521,8 +693,13 @@ class Bot:
             with self.lock:
                 due = [(cid, dict(sub)) for cid, sub in self.subs.items()
                        if sub["next_check"] <= now]
+                paper_due = [(cid, dict(acct))
+                             for cid, acct in self.paper.items()
+                             if acct["next_check"] <= now]
             for cid, sub in due:
                 self._check_subscription(int(cid), sub)
+            for cid, acct in paper_due:
+                self._check_paper(int(cid), acct)
             time.sleep(20)
 
     def _check_subscription(self, chat_id: int, sub: dict):
