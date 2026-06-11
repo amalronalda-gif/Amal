@@ -387,17 +387,21 @@ Misollar:
     "forecast_prev": {"en": " (f: {f}, p: {p})", "ru": " (прогноз: {f}, пред.: {p})",
                       "uz": " (prognoz: {f}, oldingi: {p})"},
     "plan": {
-        "en": "\n📋 <b>If trading this signal</b>: entry ~<code>{entry}</code> · "
-              "stop <code>{stop}</code> ({sd}%) · target <code>{target}</code> "
-              "({td}%) · R:R 1:2\nSize the position so the stop costs ≤1% of "
-              "your account.",
-        "ru": "\n📋 <b>Если торговать этот сигнал</b>: вход ~<code>{entry}</code> · "
-              "стоп <code>{stop}</code> ({sd}%) · цель <code>{target}</code> "
-              "({td}%) · R:R 1:2\nРазмер позиции — чтобы стоп стоил ≤1% депозита.",
-        "uz": "\n📋 <b>Bu signal bo'yicha savdo qilsangiz</b>: kirish "
-              "~<code>{entry}</code> · stop <code>{stop}</code> ({sd}%) · maqsad "
-              "<code>{target}</code> ({td}%) · R:R 1:2\nPozitsiya hajmini stop "
-              "hisobingizning ≤1% iga teng bo'ladigan qilib tanlang.",
+        "en": "\n📋 <b>Signal: {action} {symbol}</b>\n"
+              "entry <code>{entry}</code> (zone {zlo}–{zhi})\n"
+              "SL <code>{stop}</code> (−1R)\n"
+              "TP1 <code>{tp1}</code> (+1R — close half, move SL to entry)\n"
+              "TP2 <code>{tp2}</code> (+2R)",
+        "ru": "\n📋 <b>Сигнал: {action} {symbol}</b>\n"
+              "вход <code>{entry}</code> (зона {zlo}–{zhi})\n"
+              "SL <code>{stop}</code> (−1R)\n"
+              "TP1 <code>{tp1}</code> (+1R — закрыть половину, стоп в безубыток)\n"
+              "TP2 <code>{tp2}</code> (+2R)",
+        "uz": "\n📋 <b>Signal: {action} {symbol}</b>\n"
+              "kirish <code>{entry}</code> (zona {zlo}–{zhi})\n"
+              "SL <code>{stop}</code> (−1R)\n"
+              "TP1 <code>{tp1}</code> (+1R — yarmini yoping, stopni kirishga suring)\n"
+              "TP2 <code>{tp2}</code> (+2R)",
     },
     "plan_money": {
         "en": "\n💵 For a ${account} account (risk {risk}$): position ≈ "
@@ -492,12 +496,15 @@ Misollar:
     "side_against": {"en": "<b>Against:</b>", "ru": "<b>Против:</b>",
                      "uz": "<b>Qarshi:</b>"},
     "signal_enter": {
-        "en": "🟢 <b>ENTRY</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
-              "stop <code>{stop}</code> · target <code>{target}</code> · R:R 1:2",
-        "ru": "🟢 <b>ТОЧКА ВХОДА</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
-              "стоп <code>{stop}</code> · цель <code>{target}</code> · R:R 1:2",
-        "uz": "🟢 <b>KIRISH NUQTASI</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
-              "stop <code>{stop}</code> · maqsad <code>{target}</code> · R:R 1:2",
+        "en": "🟢 <b>ENTRY — {action} {symbol}</b> ({dir})\n"
+              "entry <code>{entry}</code> · SL <code>{stop}</code> · "
+              "TP1 <code>{tp1}</code> · TP2 <code>{target}</code>",
+        "ru": "🟢 <b>ТОЧКА ВХОДА — {action} {symbol}</b> ({dir})\n"
+              "вход <code>{entry}</code> · SL <code>{stop}</code> · "
+              "TP1 <code>{tp1}</code> · TP2 <code>{target}</code>",
+        "uz": "🟢 <b>KIRISH — {action} {symbol}</b> ({dir})\n"
+              "kirish <code>{entry}</code> · SL <code>{stop}</code> · "
+              "TP1 <code>{tp1}</code> · TP2 <code>{target}</code>",
     },
     "signal_exit_target": {
         "en": "✅ <b>EXIT</b> {symbol}: target reached @ <code>{price}</code> (+2R)",

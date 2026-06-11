@@ -194,13 +194,17 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
     side = force_side if force_side is not None else (
         1 if pred.direction == "BULLISH" else -1)
     stop = entry - side * 1.5 * a
+    tp1 = entry + side * 1.5 * a
     target = entry + side * 3.0 * a
+    zone = sorted((entry - 0.25 * a, entry + 0.25 * a))
     digits = 5 if entry < 10 else 2
     line = t(lang, "plan",
-             entry=f"{entry:.{digits}f}", stop=f"{stop:.{digits}f}",
-             target=f"{target:.{digits}f}",
-             sd=f"{(stop / entry - 1) * 100:+.2f}",
-             td=f"{(target / entry - 1) * 100:+.2f}")
+             action="SELL 🔴" if side == -1 else "BUY 🟢",
+             symbol=display_symbol(symbol) if symbol else "",
+             entry=f"{entry:.{digits}f}",
+             zlo=f"{zone[0]:.{digits}f}", zhi=f"{zone[1]:.{digits}f}",
+             stop=f"{stop:.{digits}f}", tp1=f"{tp1:.{digits}f}",
+             tp2=f"{target:.{digits}f}")
     risk_usd = ACCOUNT_USD * RISK_PCT / 100.0
     units = risk_usd / abs(entry - stop)
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
@@ -629,8 +633,10 @@ class Bot:
             s = sub["signal"]
             self.api.send(chat_id, t(
                 lang, "signal_enter",
+                action="BUY 🟢" if d == 1 else "SELL 🔴",
                 dir=i18n.direction(lang, pred.direction), symbol=sub["symbol"],
                 entry=f"{price:.{digits}f}", stop=f"{s['stop']:.{digits}f}",
+                tp1=f"{price + d * 1.5 * a:.{digits}f}",
                 target=f"{s['target']:.{digits}f}"))
 
     # ---------- alert loop (background thread) ----------
