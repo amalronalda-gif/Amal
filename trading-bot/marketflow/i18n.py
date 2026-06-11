@@ -57,8 +57,6 @@ BOT_PROFILE = {
             ("news", "USD calendar + gold headlines"),
             ("mtf", "15m+1h+4h confluence check"),
             ("stats", "accuracy of past predictions"),
-            ("trade", "paper-trader: virtual $100 -> $1200"),
-            ("account", "paper account balance"),
             ("backtest", "test the strategy on history"),
             ("status", "my subscription"),
             ("unwatch", "stop alerts"),
@@ -82,8 +80,6 @@ BOT_PROFILE = {
             ("news", "календарь USD + новости золота"),
             ("mtf", "сверка 15m+1h+4h"),
             ("stats", "точность прошлых прогнозов"),
-            ("trade", "виртуальный трейдер: $100 -> $1200"),
-            ("account", "баланс виртуального счёта"),
             ("backtest", "проверка стратегии на истории"),
             ("status", "моя подписка"),
             ("unwatch", "остановить оповещения"),
@@ -107,8 +103,6 @@ BOT_PROFILE = {
             ("news", "USD kalendari + oltin yangiliklari"),
             ("mtf", "15m+1h+4h mosligini tekshirish"),
             ("stats", "o'tgan prognozlar aniqligi"),
-            ("trade", "virtual treyder: $100 -> $1200"),
-            ("account", "virtual hisob balansi"),
             ("backtest", "strategiyani tarixda sinash"),
             ("status", "mening obunam"),
             ("unwatch", "xabarlarni to'xtatish"),
@@ -168,8 +162,6 @@ Barcha buyruqlar: /help""",
 /news — USD economic calendar + latest gold headlines
 /mtf [symbol] — 15m+1h+4h confluence check
 /stats — accuracy of my past predictions
-/trade [symbol] [interval] [risk%] — paper-trader: virtual $100, goal $1200
-/account — paper balance · /trade off — stop
 /watch [symbol] [interval] [minutes] — alert when the flow direction flips
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
 /unwatch — stop alerts
@@ -188,8 +180,6 @@ Examples:
 /news — экономкалендарь США + свежие новости по золоту
 /mtf [символ] — сверка 15m+1h+4h
 /stats — точность моих прошлых прогнозов
-/trade [символ] [таймфрейм] [риск%] — виртуальный трейдер: $100, цель $1200
-/account — баланс · /trade off — стоп
 /watch [символ] [таймфрейм] [минуты] — оповещение при смене направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
 /unwatch — остановить оповещения
@@ -208,8 +198,6 @@ Examples:
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
 /mtf [simvol] — 15m+1h+4h mosligini tekshirish
 /stats — o'tgan prognozlarim aniqligi
-/trade [simvol] [interval] [risk%] — virtual treyder: $100, maqsad $1200
-/account — balans · /trade off — to'xtatish
 /watch [simvol] [interval] [daqiqa] — yo'nalish o'zgarganda xabar berish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
 /unwatch — xabarlarni to'xtatish
@@ -449,123 +437,6 @@ Misollar:
         "uz": "📊 Hozircha baholanadigan prognozlar yo'q. Har bir neytral "
               "bo'lmagan /predict va /watch natijasini avtomatik yozib boraman — "
               "keyinroq qayta tekshiring.",
-    },
-    "paper_on": {
-        "en": "🤖 <b>Paper-trader ON</b>: {symbol} {interval}, virtual "
-              "${balance}, risk {risk}%/trade, goal <b>${goal}</b>. I'll open "
-              "and close virtual trades on my own signals and report each one "
-              "here. /account — balance, /trade off — stop.",
-        "ru": "🤖 <b>Виртуальный трейдер ВКЛЮЧЁН</b>: {symbol} {interval}, "
-              "депозит ${balance}, риск {risk}%/сделка, цель <b>${goal}</b>. "
-              "Буду сам открывать и закрывать виртуальные сделки по своим "
-              "сигналам и отчитываться о каждой. /account — баланс, "
-              "/trade off — стоп.",
-        "uz": "🤖 <b>Virtual treyder YOQILDI</b>: {symbol} {interval}, "
-              "depozit ${balance}, risk {risk}%/savdo, maqsad <b>${goal}</b>. "
-              "O'z signallarim bo'yicha virtual savdolarni ochib-yopib, har "
-              "biri haqida xabar beraman. /account — balans, /trade off — "
-              "to'xtatish.",
-    },
-    "paper_expect": {
-        "en": "\n⚠️ Honest math: with the backtested edge (≈+0.2R per trade) "
-              "growing $100 to $1200 takes hundreds of trades — months, not "
-              "days. Higher risk speeds this up AND can wipe the account.",
-        "ru": "\n⚠️ Честная математика: при подтверждённом бэктестом "
-              "преимуществе (≈+0.2R на сделку) путь от $100 до $1200 — это "
-              "сотни сделок, месяцы, а не дни. Повышение риска ускоряет рост "
-              "И может обнулить счёт.",
-        "uz": "\n⚠️ Halol matematika: backtest tasdiqlagan ustunlik bilan "
-              "(savdo boshiga ≈+0.2R) $100 dan $1200 gacha yuzlab savdo kerak "
-              "— kunlar emas, oylar. Yuqori risk buni tezlashtiradi HAM "
-              "hisobni yo'q qilishi mumkin.",
-    },
-    "paper_off": {
-        "en": "Paper-trader stopped. Final balance: <b>${balance}</b>.",
-        "ru": "Виртуальный трейдер остановлен. Итоговый баланс: <b>${balance}</b>.",
-        "uz": "Virtual treyder to'xtatildi. Yakuniy balans: <b>${balance}</b>.",
-    },
-    "paper_none": {
-        "en": "Paper-trader is not running. Start it: "
-              "<code>/trade XAUUSD 1h 2</code> (symbol, interval, risk %).",
-        "ru": "Виртуальный трейдер не запущен. Запуск: "
-              "<code>/trade XAUUSD 1h 2</code> (символ, таймфрейм, риск %).",
-        "uz": "Virtual treyder ishlamayapti. Boshlash: "
-              "<code>/trade XAUUSD 1h 2</code> (simvol, interval, risk %).",
-    },
-    "paper_opened": {
-        "en": "🤖 Paper trade OPENED: <b>{dir}</b> {symbol} @ <code>{entry}</code> "
-              "· stop <code>{stop}</code> · target <code>{target}</code> · "
-              "risk ${risk}",
-        "ru": "🤖 Открыта виртуальная сделка: <b>{dir}</b> {symbol} @ "
-              "<code>{entry}</code> · стоп <code>{stop}</code> · цель "
-              "<code>{target}</code> · риск ${risk}",
-        "uz": "🤖 Virtual savdo OCHILDI: <b>{dir}</b> {symbol} @ "
-              "<code>{entry}</code> · stop <code>{stop}</code> · maqsad "
-              "<code>{target}</code> · risk ${risk}",
-    },
-    "paper_closed_win": {
-        "en": "🤖✅ Target hit: <b>+${pnl}</b>. Balance: <b>${balance}</b> "
-              "({pct}% of the ${goal} goal)",
-        "ru": "🤖✅ Цель сработала: <b>+${pnl}</b>. Баланс: <b>${balance}</b> "
-              "({pct}% от цели ${goal})",
-        "uz": "🤖✅ Maqsadga yetdi: <b>+${pnl}</b>. Balans: <b>${balance}</b> "
-              "(${goal} maqsadning {pct}%)",
-    },
-    "paper_closed_loss": {
-        "en": "🤖❌ Stop hit: <b>−${pnl}</b>. Balance: <b>${balance}</b> "
-              "({pct}% of the ${goal} goal)",
-        "ru": "🤖❌ Сработал стоп: <b>−${pnl}</b>. Баланс: <b>${balance}</b> "
-              "({pct}% от цели ${goal})",
-        "uz": "🤖❌ Stop ishladi: <b>−${pnl}</b>. Balans: <b>${balance}</b> "
-              "(${goal} maqsadning {pct}%)",
-    },
-    "paper_closed_time": {
-        "en": "🤖⏱ Closed by time limit: <b>{sign}${pnl}</b>. Balance: "
-              "<b>${balance}</b>",
-        "ru": "🤖⏱ Закрыто по таймауту: <b>{sign}${pnl}</b>. Баланс: "
-              "<b>${balance}</b>",
-        "uz": "🤖⏱ Vaqt bo'yicha yopildi: <b>{sign}${pnl}</b>. Balans: "
-              "<b>${balance}</b>",
-    },
-    "paper_goal": {
-        "en": "🎉 <b>GOAL REACHED!</b> Balance <b>${balance}</b> ≥ ${goal}, "
-              "starting from $100.",
-        "ru": "🎉 <b>ЦЕЛЬ ДОСТИГНУТА!</b> Баланс <b>${balance}</b> ≥ ${goal}, "
-              "старт был со $100.",
-        "uz": "🎉 <b>MAQSADGA ERISHILDI!</b> Balans <b>${balance}</b> ≥ "
-              "${goal}, $100 dan boshlangan edi.",
-    },
-    "paper_blown": {
-        "en": "💀 Balance fell below $10 — paper-trader stopped opening "
-              "trades. This is exactly why risk management matters.",
-        "ru": "💀 Баланс упал ниже $10 — виртуальный трейдер больше не "
-              "открывает сделки. Именно поэтому риск-менеджмент важен.",
-        "uz": "💀 Balans $10 dan tushib ketdi — virtual treyder endi savdo "
-              "ochmaydi. Risk-menejment aynan shuning uchun muhim.",
-    },
-    "account": {
-        "en": "🤖 <b>Paper account</b>\nbalance <b>${balance}</b> · goal "
-              "${goal} (<b>{pct}%</b>)\ntrades {n} · wins {wins} · losses "
-              "{losses}\n{position}",
-        "ru": "🤖 <b>Виртуальный счёт</b>\nбаланс <b>${balance}</b> · цель "
-              "${goal} (<b>{pct}%</b>)\nсделок {n} · прибыльных {wins} · "
-              "убыточных {losses}\n{position}",
-        "uz": "🤖 <b>Virtual hisob</b>\nbalans <b>${balance}</b> · maqsad "
-              "${goal} (<b>{pct}%</b>)\nsavdolar {n} · foydali {wins} · "
-              "zararli {losses}\n{position}",
-    },
-    "account_pos": {
-        "en": "open: {dir} {symbol} @ <code>{entry}</code> (stop "
-              "<code>{stop}</code> / target <code>{target}</code>)",
-        "ru": "открыта: {dir} {symbol} @ <code>{entry}</code> (стоп "
-              "<code>{stop}</code> / цель <code>{target}</code>)",
-        "uz": "ochiq: {dir} {symbol} @ <code>{entry}</code> (stop "
-              "<code>{stop}</code> / maqsad <code>{target}</code>)",
-    },
-    "account_nopos": {
-        "en": "no open position",
-        "ru": "открытых позиций нет",
-        "uz": "ochiq pozitsiya yo'q",
     },
 }
 
