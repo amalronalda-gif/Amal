@@ -666,10 +666,17 @@ class Bot:
                 chat = msg.get("chat", {}).get("id")
                 tg_lang = (msg.get("from") or {}).get("language_code")
                 if text and chat:
-                    try:
-                        self.handle(chat, text, tg_lang)
-                    except Exception as e:
-                        print(f"[handle] {e}")
+                    # handle in a worker thread: slow commands (backtest,
+                    # mtf) must not block polling for everyone else
+                    threading.Thread(target=self._handle_safe,
+                                     args=(chat, text, tg_lang),
+                                     daemon=True).start()
+
+    def _handle_safe(self, chat_id: int, text: str, tg_lang: str | None):
+        try:
+            self.handle(chat_id, text, tg_lang)
+        except Exception as e:
+            print(f"[handle] {e}")
 
 
 def main():
