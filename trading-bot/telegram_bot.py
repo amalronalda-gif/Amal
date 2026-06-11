@@ -33,8 +33,9 @@ import urllib.request
 from datetime import datetime, timezone
 
 from marketflow.data import (DEFAULT_SYMBOL, INTERVAL_SECONDS, SPOT_QUOTES,
-                             SUPPORTED_MARKETS, SYMBOL_ALIASES, fetch_klines,
-                             fetch_tradingview_quote, fx_market_open)
+                             SUPPORTED_MARKETS, SYMBOL_ALIASES, display_symbol,
+                             fetch_klines, fetch_tradingview_quote,
+                             fx_market_open)
 
 try:
     from zoneinfo import ZoneInfo
@@ -229,21 +230,20 @@ def format_prediction(symbol: str, interval: str, pred: Prediction,
     ]
     ordered = sorted(pred.signals.items(), key=lambda kv: -abs(kv[1].score))
     for name, sig in ordered:
-        if sig.score == 0.0:
-            continue
-        mark = "🟢" if sig.score > 0 else "🔴"
+        mark = ("🟢" if sig.score > 0 else
+                "🔴" if sig.score < 0 else "⚪")
         reason = i18n.translate_reason(sig.reason, lang)
         lines.append(f"{mark} <code>{sig.score:+.2f}</code> "
                      f"<b>{i18n.strategy_name(lang, name)}</b>: "
                      f"{html.escape(reason)}")
-    quiet = sum(1 for s in pred.signals.values() if s.score == 0.0)
-    if quiet:
-        lines.append(t(lang, "neutral_count", n=quiet))
     return "\n".join(lines) + t(lang, "disclaimer")
 
 
 def parse_args_text(parts: list[str]) -> tuple[str, str, list[str]]:
-    """Parse '[symbol] [interval]' in either order; returns (symbol, interval, rest)."""
+    """Parse '[symbol] [interval]' in either order; returns (symbol, interval, rest).
+
+    The returned symbol is the trader-facing display name (e.g. XAUUSD,
+    never the internal PAXGUSDT ticker)."""
     symbol, interval = DEFAULT_SYMBOL, "1h"
     rest = []
     for p in parts:
@@ -253,7 +253,7 @@ def parse_args_text(parts: list[str]) -> tuple[str, str, list[str]]:
             rest.append(p)
         else:
             symbol = p.upper()
-    return symbol, interval, rest
+    return display_symbol(symbol), interval, rest
 
 
 class Bot:
@@ -517,7 +517,8 @@ class Bot:
                 if (fwd > 0) == (e["direction"] == "BULLISH"):
                     hits += 1
             if evaluated:
-                per_market.append(t(lang, "stats_line", symbol=symbol,
+                per_market.append(t(lang, "stats_line",
+                                    symbol=display_symbol(symbol),
                                     interval=interval, hits=hits,
                                     total=evaluated,
                                     pct=f"{hits / evaluated * 100:.0f}"))

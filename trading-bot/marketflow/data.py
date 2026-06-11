@@ -17,7 +17,7 @@ import urllib.request
 from dataclasses import dataclass
 
 BINANCE_DATA_URL = "https://data-api.binance.vision/api/v3/klines"
-DEFAULT_SYMBOL = "PAXGUSDT"
+DEFAULT_SYMBOL = "XAUUSD"  # display name; resolves to PAXGUSDT for data
 
 # Binance spot has no literal XAUUSD market; PAXG (1 token = 1 troy oz of
 # gold) is the tradable gold/USDT pair, so map common gold tickers to it.
@@ -36,6 +36,16 @@ SYMBOL_ALIASES = {
 
 # the only markets this bot serves (resolved Binance symbols)
 SUPPORTED_MARKETS = {"PAXGUSDT", "XAUTUSDT", "BTCUSDT", "EURUSDT"}
+
+# what users see instead of internal Binance tickers
+DISPLAY_NAMES = {"PAXGUSDT": "XAUUSD", "XAUTUSDT": "XAUUSD",
+                 "BTCUSDT": "BTCUSD", "EURUSDT": "EURUSD"}
+
+
+def display_symbol(symbol: str) -> str:
+    """Trader-facing name for any alias (PAXG/GOLD/XAUUSDT -> XAUUSD)."""
+    resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+    return DISPLAY_NAMES.get(resolved, resolved)
 
 # resolved symbol -> (TradingView symbol for live spot quote, display pair).
 # BTC needs no extra quote: its Binance candles ARE the live market.
