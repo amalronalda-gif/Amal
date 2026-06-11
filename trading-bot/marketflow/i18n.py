@@ -35,6 +35,9 @@ STRATEGY_NAMES = {
     "rsi_divergence": {"ru": "дивергенция RSI", "uz": "RSI divergensiyasi"},
     "vwap": {"ru": "VWAP", "uz": "VWAP"},
     "news_sentiment": {"ru": "новостной фон", "uz": "yangiliklar kayfiyati"},
+    "trend_pullback": {"ru": "откат по тренду", "uz": "trend bo'yicha pullback"},
+    "double_top": {"ru": "двойная вершина/дно", "uz": "qo'sh cho'qqi/tub"},
+    "head_shoulders": {"ru": "голова и плечи", "uz": "bosh va yelkalar"},
 }
 
 # Telegram bot profile texts (set via setMyDescription / setMyCommands).
@@ -44,7 +47,7 @@ BOT_PROFILE = {
     "en": {
         "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
                  "signals, news and alerts. Educational, not financial advice.",
-        "full": "I read the gold market (XAUUSD) with 14 classic trading "
+        "full": "I read the gold market (XAUUSD) with 17 classic trading "
                 "strategies — liquidity sweeps, market structure, trend, "
                 "momentum, volumes, Ichimoku and more — and combine them "
                 "into one flow reading with confidence. Live TradingView "
@@ -56,6 +59,8 @@ BOT_PROFILE = {
             ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
             ("news", "USD calendar + gold headlines"),
             ("mtf", "15m+1h+4h confluence check"),
+            ("short", "short-entry analysis, e.g. /short XAUUSD 1h"),
+            ("long", "long-entry analysis"),
             ("stats", "accuracy of past predictions"),
             ("backtest", "test the strategy on history"),
             ("status", "my subscription"),
@@ -67,7 +72,7 @@ BOT_PROFILE = {
     "ru": {
         "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
                  "новости, оповещения. Обучающий, не фин. рекомендация.",
-        "full": "Я анализирую рынок золота (XAUUSD) по 14 классическим "
+        "full": "Я анализирую рынок золота (XAUUSD) по 17 классическим "
                 "стратегиям — снятие ликвидности, структура рынка, тренд, "
                 "моментум, объёмы, Ишимоку и др. — и свожу их в один "
                 "прогноз с уровнем уверенности. Спот-цена TradingView, "
@@ -79,6 +84,8 @@ BOT_PROFILE = {
             ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
             ("news", "календарь USD + новости золота"),
             ("mtf", "сверка 15m+1h+4h"),
+            ("short", "анализ для входа в шорт, напр. /short XAUUSD 1h"),
+            ("long", "анализ для входа в лонг"),
             ("stats", "точность прошлых прогнозов"),
             ("backtest", "проверка стратегии на истории"),
             ("status", "моя подписка"),
@@ -90,7 +97,7 @@ BOT_PROFILE = {
     "uz": {
         "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
                  "yangiliklar, xabarlar. O'quv maqsadida.",
-        "full": "Men oltin bozorini (XAUUSD) 14 ta klassik strategiya bilan "
+        "full": "Men oltin bozorini (XAUUSD) 17 ta klassik strategiya bilan "
                 "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
                 "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
                 "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
@@ -102,6 +109,8 @@ BOT_PROFILE = {
             ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
             ("news", "USD kalendari + oltin yangiliklari"),
             ("mtf", "15m+1h+4h mosligini tekshirish"),
+            ("short", "short uchun kirish tahlili, masalan /short XAUUSD 1h"),
+            ("long", "long uchun kirish tahlili"),
             ("stats", "o'tgan prognozlar aniqligi"),
             ("backtest", "strategiyani tarixda sinash"),
             ("status", "mening obunam"),
@@ -116,39 +125,39 @@ UI = {
     "intro": {
         "en": """👋 Welcome to <b>MarketFlow</b>!
 
-I analyze the <b>gold market (XAUUSD)</b> using 14 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
+I analyze the <b>gold market (XAUUSD)</b> using 17 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
 
 <b>Quick start:</b>
 ▫️ /predict — what gold is doing right now
 ▫️ /predict XAUUSD 4h — bigger picture
 ▫️ /watch XAUUSD 5m 5 all — reading every 5 minutes
-▫️ /predict BTCUSD — Bitcoin
+▫️ /predict BTCUSD · /predict EURUSD — Bitcoin / euro
 ▫️ /news — events that can move gold today
 ▫️ /lang ru | /lang uz — Русский / O'zbekcha
 
 Full command list: /help""",
         "ru": """👋 Добро пожаловать в <b>MarketFlow</b>!
 
-Я анализирую <b>рынок золота (XAUUSD)</b> по 14 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
+Я анализирую <b>рынок золота (XAUUSD)</b> по 17 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
 
 <b>Быстрый старт:</b>
 ▫️ /predict — что происходит с золотом сейчас
 ▫️ /predict XAUUSD 4h — общая картина
 ▫️ /watch XAUUSD 5m 5 all — сводка каждые 5 минут
-▫️ /predict BTCUSD — биткоин
+▫️ /predict BTCUSD · /predict EURUSD — биткоин / евро
 ▫️ /news — события, которые могут двинуть золото
 ▫️ /lang en | /lang uz — English / O'zbekcha
 
 Все команды: /help""",
         "uz": """👋 <b>MarketFlow</b> ga xush kelibsiz!
 
-Men <b>oltin bozorini (XAUUSD)</b> 14 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
+Men <b>oltin bozorini (XAUUSD)</b> 17 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
 
 <b>Tezkor boshlash:</b>
 ▫️ /predict — oltin hozir nima qilmoqda
 ▫️ /predict XAUUSD 4h — kattaroq manzara
 ▫️ /watch XAUUSD 5m 5 all — har 5 daqiqada hisobot
-▫️ /predict BTCUSD — Bitcoin
+▫️ /predict BTCUSD · /predict EURUSD — Bitcoin / yevro
 ▫️ /news — oltinni qimirlatishi mumkin bo'lgan hodisalar
 ▫️ /lang en | /lang ru — English / Русский
 
@@ -161,6 +170,8 @@ Barcha buyruqlar: /help""",
 /backtest [symbol] [interval] — walk-forward backtest
 /news — USD economic calendar + latest gold headlines
 /mtf [symbol] — 15m+1h+4h confluence check
+/short [symbol] [interval] — can I short now? verdict + levels
+/long [symbol] [interval] — can I long now? verdict + levels
 /stats — accuracy of my past predictions
 /watch [symbol] [interval] [minutes] — entry/exit signals + flip alerts
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
@@ -179,6 +190,8 @@ Examples:
 /backtest [символ] [таймфрейм] — бэктест на истории
 /news — экономкалендарь США + свежие новости по золоту
 /mtf [символ] — сверка 15m+1h+4h
+/short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
+/long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
 /stats — точность моих прошлых прогнозов
 /watch [символ] [таймфрейм] [минуты] — сигналы входа/выхода + смена направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
@@ -197,6 +210,8 @@ Examples:
 /backtest [simvol] [interval] — tarixiy ma'lumotlarda backtest
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
 /mtf [simvol] — 15m+1h+4h mosligini tekshirish
+/short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
+/long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
 /stats — o'tgan prognozlarim aniqligi
 /watch [simvol] [interval] [daqiqa] — kirish/chiqish signallari + yo'nalish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
@@ -325,13 +340,14 @@ Misollar:
               "hajmlar kam bo'ladi.",
     },
     "unsupported_symbol": {
-        "en": "I only cover gold and Bitcoin: try <code>/predict XAUUSD</code> "
-              "or <code>/predict BTCUSD</code>.",
-        "ru": "Я работаю только с золотом и биткоином: попробуйте "
-              "<code>/predict XAUUSD</code> или <code>/predict BTCUSD</code>.",
-        "uz": "Men faqat oltin va Bitcoin bilan ishlayman: "
-              "<code>/predict XAUUSD</code> yoki <code>/predict BTCUSD</code> "
-              "ni sinab ko'ring.",
+        "en": "I only cover gold, Bitcoin and EUR/USD: try <code>/predict XAUUSD</code>, "
+              "<code>/predict BTCUSD</code> or <code>/predict EURUSD</code>.",
+        "ru": "Я работаю только с золотом, биткоином и EUR/USD: попробуйте "
+              "<code>/predict XAUUSD</code>, <code>/predict BTCUSD</code> или "
+              "<code>/predict EURUSD</code>.",
+        "uz": "Men faqat oltin, Bitcoin va EUR/USD bilan ishlayman: "
+              "<code>/predict XAUUSD</code>, <code>/predict BTCUSD</code> yoki "
+              "<code>/predict EURUSD</code> ni sinab ko'ring.",
     },
     "risk_now": {"en": "NOW", "ru": "СЕЙЧАС", "uz": "HOZIR"},
     "risk_in": {"en": "in {h}h", "ru": "через {h} ч", "uz": "{h} soatdan keyin"},
@@ -438,6 +454,43 @@ Misollar:
               "bo'lmagan /predict va /watch natijasini avtomatik yozib boraman — "
               "keyinroq qayta tekshiring.",
     },
+    "side_short": {"en": "SHORT", "ru": "ШОРТ", "uz": "SHORT"},
+    "side_long": {"en": "LONG", "ru": "ЛОНГ", "uz": "LONG"},
+    "side_header": {
+        "en": "🎯 <b>{side} — {symbol} {interval}</b>",
+        "ru": "🎯 <b>{side} — {symbol} {interval}</b>",
+        "uz": "🎯 <b>{side} — {symbol} {interval}</b>",
+    },
+    "side_entry_now": {
+        "en": "✅ <b>{side} entry conditions met</b> — score <code>{score}</code>, "
+              "confidence {conf}%.",
+        "ru": "✅ <b>Условия для входа в {side} выполнены</b> — балл "
+              "<code>{score}</code>, уверенность {conf}%.",
+        "uz": "✅ <b>{side} uchun kirish shartlari bajarildi</b> — ball "
+              "<code>{score}</code>, ishonch {conf}%.",
+    },
+    "side_wait": {
+        "en": "⏳ <b>Setup forming — wait.</b> Score <code>{score}</code> has "
+              "not reached the entry threshold <code>{th}</code>. Set /watch "
+              "and I'll send the entry point.",
+        "ru": "⏳ <b>Сетап формируется — ждите.</b> Балл <code>{score}</code> "
+              "ещё не достиг порога входа <code>{th}</code>. Поставьте /watch — "
+              "пришлю точку входа.",
+        "uz": "⏳ <b>Setup shakllanmoqda — kuting.</b> Ball <code>{score}</code> "
+              "hali kirish chegarasi <code>{th}</code> ga yetmadi. /watch "
+              "qo'ying — kirish nuqtasini yuboraman.",
+    },
+    "side_no": {
+        "en": "❌ <b>No {side} entry now</b> — market flow is {dir}. Entering "
+              "would mean trading against the signal.",
+        "ru": "❌ <b>Входа в {side} сейчас нет</b> — поток рынка: {dir}. "
+              "Входить — значит торговать против сигнала.",
+        "uz": "❌ <b>Hozir {side} uchun kirish yo'q</b> — bozor oqimi: {dir}. "
+              "Kirish signalga qarshi savdo bo'lardi.",
+    },
+    "side_for": {"en": "<b>For:</b>", "ru": "<b>За:</b>", "uz": "<b>Tarafdor:</b>"},
+    "side_against": {"en": "<b>Against:</b>", "ru": "<b>Против:</b>",
+                     "uz": "<b>Qarshi:</b>"},
     "signal_enter": {
         "en": "🟢 <b>ENTRY</b>: {dir} <b>{symbol}</b> @ <code>{entry}</code>\n"
               "stop <code>{stop}</code> · target <code>{target}</code> · R:R 1:2",
@@ -586,6 +639,12 @@ FIXED = [
      "VWAP dan ancha past (qaytish kutiladi)"),
     ("price above rolling VWAP", "цена выше VWAP", "narx VWAP dan yuqori"),
     ("price below rolling VWAP", "цена ниже VWAP", "narx VWAP dan past"),
+    ("pullback into EMA zone rejected in downtrend",
+     "откат в зону EMA отбит в нисходящем тренде",
+     "EMA zonasiga pullback pasayish trendida rad etildi"),
+    ("pullback into EMA zone rejected in uptrend",
+     "откат в зону EMA отбит в восходящем тренде",
+     "EMA zonasiga pullback ko'tarilish trendida rad etildi"),
 ]
 
 REGEX = [
@@ -617,6 +676,18 @@ REGEX = [
     (re.compile(r"headlines lean bearish \((\d+)/(\d+)\)"),
      r"заголовки скорее медвежьи (\1/\2)",
      r"sarlavhalar ko'proq bearish (\1/\2)"),
+    (re.compile(r"double top broke neckline \(([\d.]+)\)"),
+     r"двойная вершина: пробита линия шеи (\1)",
+     r"qo'sh cho'qqi: bo'yin chizig'i buzildi (\1)"),
+    (re.compile(r"double bottom broke neckline \(([\d.]+)\)"),
+     r"двойное дно: пробита линия шеи (\1)",
+     r"qo'sh tub: bo'yin chizig'i buzildi (\1)"),
+    (re.compile(r"^head and shoulders broke neckline \(([\d.]+)\)"),
+     r"голова и плечи: пробита линия шеи (\1)",
+     r"bosh va yelkalar: bo'yin chizig'i buzildi (\1)"),
+    (re.compile(r"inverse head and shoulders broke neckline \(([\d.]+)\)"),
+     r"перевёрнутые голова и плечи: пробита линия шеи (\1)",
+     r"teskari bosh va yelkalar: bo'yin chizig'i buzildi (\1)"),
 ]
 
 

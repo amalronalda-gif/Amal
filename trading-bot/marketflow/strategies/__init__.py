@@ -15,6 +15,9 @@ from .support_resistance import SupportResistance
 from .order_block import OrderBlock
 from .rsi_divergence import RsiDivergence
 from .vwap_flow import VwapFlow
+from .trend_pullback import TrendPullback
+from .double_top import DoubleTopBottom
+from .head_shoulders import HeadShoulders
 
 ALL_STRATEGIES: list[type[Strategy]] = [
     LiquiditySweep,
@@ -31,4 +34,7 @@ ALL_STRATEGIES: list[type[Strategy]] = [
     OrderBlock,
     RsiDivergence,
     VwapFlow,
+    TrendPullback,
+    DoubleTopBottom,
+    HeadShoulders,
 ]

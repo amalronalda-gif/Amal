@@ -55,12 +55,13 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
-SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
+SIGNAL_THRESHOLD = 0.21     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
+SIDE_WAIT_T = 0.12          # weak-but-aligned zone for /short and /long
 ACCOUNT_USD = 100.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
-                "BTCUSDT": "BTC"}
+                "BTCUSDT": "BTC", "EURUSDT": "EUR"}
 
 
 def news_signal(symbol: str) -> dict[str, Signal] | None:
@@ -174,20 +175,23 @@ def format_news(lang: str = "en") -> str:
 
 
 def trade_plan_line(candles, pred: Prediction, lang: str = "en",
-                    symbol: str = "") -> str:
+                    symbol: str = "", force_side: int | None = None) -> str:
     """ATR-based entry/stop/target suggestion for non-neutral signals.
 
     Mirrors the backtester's exits (1.5 ATR stop, 3 ATR target = 1:2 R:R)
     so the suggestion matches what the published stats were measured on.
     Position size is computed for a $ACCOUNT_USD account risking RISK_PCT%.
+    `force_side` (+1 long / -1 short) builds the plan for that side even
+    when the ensemble is neutral (used by /short and /long).
     """
-    if pred.direction == "NEUTRAL":
+    if force_side is None and pred.direction == "NEUTRAL":
         return ""
     a = atr_indicator(candles, 14)[-1]
     if not a:
         return ""
     entry = candles[-1].close
-    side = 1 if pred.direction == "BULLISH" else -1
+    side = force_side if force_side is not None else (
+        1 if pred.direction == "BULLISH" else -1)
     stop = entry - side * 1.5 * a
     target = entry + side * 3.0 * a
     digits = 5 if entry < 10 else 2
@@ -333,6 +337,10 @@ class Bot:
             self.api.send(chat_id, format_news(lang))
         elif cmd == "/mtf":
             self.cmd_mtf(chat_id, args)
+        elif cmd == "/short":
+            self.cmd_side(chat_id, args, -1)
+        elif cmd == "/long":
+            self.cmd_side(chat_id, args, 1)
         elif cmd == "/stats":
             self.cmd_stats(chat_id)
         elif cmd == "/watch":
@@ -424,6 +432,57 @@ class Bot:
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
+    def cmd_side(self, chat_id: int, args: list[str], side: int):
+        """Directional analysis: /short or /long. Verdict states whether the
+        requested side is tradable now, forming, or against the flow."""
+        lang = self.lang(chat_id)
+        symbol, interval, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval=interval))
+        try:
+            candles = fetch_klines(symbol, interval, 600)
+            pred = engine_for(symbol).predict(candles, news_signal(symbol))
+            sideword = t(lang, "side_short" if side == -1 else "side_long")
+            lines = [t(lang, "side_header", side=sideword, symbol=symbol,
+                       interval=interval), ""]
+            aligned = pred.score * side  # >0 when flow matches requested side
+            if aligned >= SIGNAL_THRESHOLD:
+                lines.append(t(lang, "side_entry_now", side=sideword,
+                               score=f"{pred.score:+.3f}",
+                               conf=f"{pred.confidence:.0f}"))
+            elif aligned >= SIDE_WAIT_T:
+                lines.append(t(lang, "side_wait", score=f"{pred.score:+.3f}",
+                               th=f"{SIGNAL_THRESHOLD * side:+.2f}"))
+            else:
+                lines.append(t(lang, "side_no", side=sideword,
+                               dir=i18n.direction(lang, pred.direction)))
+            fors = sorted(((n, s) for n, s in pred.signals.items()
+                           if s.score * side > 0),
+                          key=lambda kv: -abs(kv[1].score))[:4]
+            against = sorted(((n, s) for n, s in pred.signals.items()
+                              if s.score * side < 0),
+                             key=lambda kv: -abs(kv[1].score))[:3]
+            for title_key, group in (("side_for", fors),
+                                     ("side_against", against)):
+                if group:
+                    lines.append("")
+                    lines.append(t(lang, title_key))
+                    for name, sig in group:
+                        reason = i18n.translate_reason(sig.reason, lang)
+                        lines.append(f"• <code>{sig.score:+.2f}</code> "
+                                     f"<b>{i18n.strategy_name(lang, name)}</b>: "
+                                     f"{html.escape(reason)}")
+            msg = "\n".join(lines)
+            if aligned >= SIDE_WAIT_T:
+                msg += trade_plan_line(candles, pred, lang, symbol,
+                                       force_side=side)
+            msg += spot_quote_line(symbol, lang) + event_risk_line(lang)
+            self.api.send(chat_id, msg + t(lang, "disclaimer"))
+        except Exception as e:
+            self.api.send(chat_id, t(lang, "failed", error=e))
+
     def cmd_stats(self, chat_id: int):
         lang = self.lang(chat_id)
         with self.lock:
@@ -489,7 +548,7 @@ class Bot:
         try:
             candles = fetch_klines(symbol, interval, 1500)
             result = run_backtest(candles, engine=engine_for(symbol),
-                                  threshold=0.23)
+                                  threshold=0.21)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
                           + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:

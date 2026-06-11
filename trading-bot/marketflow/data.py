@@ -30,16 +30,19 @@ SYMBOL_ALIASES = {
     "BTCUSD": "BTCUSDT",
     "BTC": "BTCUSDT",
     "BITCOIN": "BTCUSDT",
+    "EURUSD": "EURUSDT",
+    "EUR": "EURUSDT",
 }
 
 # the only markets this bot serves (resolved Binance symbols)
-SUPPORTED_MARKETS = {"PAXGUSDT", "XAUTUSDT", "BTCUSDT"}
+SUPPORTED_MARKETS = {"PAXGUSDT", "XAUTUSDT", "BTCUSDT", "EURUSDT"}
 
 # resolved symbol -> (TradingView symbol for live spot quote, display pair).
 # BTC needs no extra quote: its Binance candles ARE the live market.
 SPOT_QUOTES = {
     "PAXGUSDT": ("OANDA:XAUUSD", "XAU/USD"),
     "XAUTUSDT": ("OANDA:XAUUSD", "XAU/USD"),
+    "EURUSDT": ("OANDA:EURUSD", "EUR/USD"),
 }
 
 INTERVAL_SECONDS = {

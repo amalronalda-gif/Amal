@@ -30,16 +30,26 @@ DEFAULT_WEIGHTS = {
     "mean_reversion": 0.8,
     "candlestick": 0.7,
     "news_sentiment": 0.6,  # live-only overlay supplied by the bot
+    "trend_pullback": 1.1,
+    "double_top": 0.9,
+    "head_shoulders": 0.9,
 }
 
-# direction thresholds, recalibrated when the ensemble grew from 11 to 14
-# strategies (larger weight sum dilutes the weighted-mean score ~25%)
-BULLISH_T = 0.14
-BEARISH_T = -0.14
+# direction thresholds, recalibrated as the ensemble grew (a larger weight
+# sum dilutes the weighted-mean score; rescaled 11->14->17 strategies)
+BULLISH_T = 0.12
+BEARISH_T = -0.12
 
-# Per-market weight overrides; gold and BTC both trend, so the default
-# profile fits both and no overrides are currently needed.
-MARKET_PROFILES: dict[str, dict[str, float]] = {}
+# Per-market weight overrides. FX majors are range-bound and mean-reverting:
+# damp trend/breakout signals, boost fades (lifted EURUSDT 1h backtest
+# profit factor 0.74 -> 1.29 when first tuned). Gold and BTC trend, so they
+# keep the defaults.
+MARKET_PROFILES: dict[str, dict[str, float]] = {
+    "EURUSDT": {"trend_following": 0.7, "breakout": 0.5, "momentum": 0.8,
+                "mean_reversion": 1.5, "support_resistance": 1.4,
+                "liquidity_sweep": 1.3, "market_structure": 1.0,
+                "trend_pullback": 0.8},
+}
 
 
 def engine_for(symbol: str) -> "Engine":
