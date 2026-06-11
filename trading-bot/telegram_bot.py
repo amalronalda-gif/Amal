@@ -49,6 +49,7 @@ from marketflow.strategies import Signal
 from marketflow import news as news_mod
 from marketflow import i18n
 from marketflow.i18n import t
+from marketflow.chart import render_chart
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SUBS_FILE = os.path.join(_HERE, "subscriptions.json")
@@ -106,6 +107,31 @@ class TelegramAPI:
             self.call("sendMessage", chat_id=chat_id,
                       text=text[chunk_start:chunk_start + 4000],
                       parse_mode="HTML", disable_web_page_preview=True)
+
+    def send_photo(self, chat_id: int, path: str, caption: str = ""):
+        """Upload a photo via multipart/form-data (stdlib only)."""
+        boundary = "----marketflowboundary7d4a1b"
+        with open(path, "rb") as f:
+            img = f.read()
+        parts = []
+        fields = {"chat_id": str(chat_id), "parse_mode": "HTML"}
+        if caption:
+            fields["caption"] = caption[:1000]
+        for name, value in fields.items():
+            parts.append(f"--{boundary}\r\nContent-Disposition: form-data; "
+                         f"name=\"{name}\"\r\n\r\n{value}\r\n".encode())
+        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; "
+                     f"name=\"photo\"; filename=\"chart.png\"\r\n"
+                     f"Content-Type: image/png\r\n\r\n".encode())
+        body = b"".join(parts) + img + f"\r\n--{boundary}--\r\n".encode()
+        req = urllib.request.Request(
+            f"{self.base}/sendPhoto", data=body,
+            headers={"Content-Type":
+                     f"multipart/form-data; boundary={boundary}"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            payload = json.loads(resp.read().decode())
+        if not payload.get("ok"):
+            raise RuntimeError(f"telegram sendPhoto failed: {payload}")
 
 
 def spot_quote_line(symbol: str, lang: str = "en") -> str:
@@ -377,6 +403,34 @@ class Bot:
         else:
             self.api.send(chat_id, t(self.lang(chat_id), "lang_usage"))
 
+    def _send_chart(self, chat_id: int, candles, symbol: str, interval: str,
+                    pred, lang: str, side: int | None = None):
+        """Best-effort analysis chart; never breaks the text flow."""
+        try:
+            s = side
+            if s is None:
+                s = (1 if pred.direction == "BULLISH"
+                     else -1 if pred.direction == "BEARISH" else None)
+            levels = None
+            if s:
+                a = atr_indicator(candles, 14)[-1]
+                if a:
+                    entry = candles[-1].close
+                    levels = {"entry": entry, "SL": entry - s * 1.5 * a,
+                              "TP1": entry + s * 1.5 * a,
+                              "TP2": entry + s * 3.0 * a}
+            title = (f"{symbol} {interval} — "
+                     f"{i18n.direction(lang, pred.direction)} "
+                     f"({pred.score:+.3f}, {pred.confidence:.0f}%)")
+            path = render_chart(candles, title=title, levels=levels, side=s)
+            if path:
+                try:
+                    self.api.send_photo(chat_id, path)
+                finally:
+                    os.remove(path)
+        except Exception as e:
+            print(f"[chart] {e}")
+
     def _symbol_ok(self, chat_id: int, symbol: str, lang: str) -> bool:
         resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
         if resolved in SUPPORTED_MARKETS:
@@ -401,6 +455,7 @@ class Bot:
                 + trade_plan_line(candles, pred, lang, symbol)
                 + spot_quote_line(symbol, lang)
                 + event_risk_line(lang))
+            self._send_chart(chat_id, candles, symbol, interval, pred, lang)
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
@@ -484,6 +539,8 @@ class Bot:
                                        force_side=side)
             msg += spot_quote_line(symbol, lang) + event_risk_line(lang)
             self.api.send(chat_id, msg + t(lang, "disclaimer"))
+            self._send_chart(chat_id, candles, symbol, interval, pred, lang,
+                             side=side if aligned >= SIDE_WAIT_T else None)
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
@@ -638,6 +695,8 @@ class Bot:
                 entry=f"{price:.{digits}f}", stop=f"{s['stop']:.{digits}f}",
                 tp1=f"{price + d * 1.5 * a:.{digits}f}",
                 target=f"{s['target']:.{digits}f}"))
+            self._send_chart(chat_id, candles, sub["symbol"],
+                             sub["interval"], pred, lang, side=d)
 
     # ---------- alert loop (background thread) ----------
 

@@ -42,7 +42,7 @@ ensemble score, a confidence percentage, and how much the strategies agree.
 
 ## Usage
 
-Requires Python 3.10+. No packages to install.
+Requires Python 3.10+. No packages required for the core bot; for chart images in Telegram, optionally `pip install matplotlib` (without it the bot sends text-only).
 
 ```bash
 cd trading-bot
