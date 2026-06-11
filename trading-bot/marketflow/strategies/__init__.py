@@ -18,6 +18,10 @@ from .vwap_flow import VwapFlow
 from .trend_pullback import TrendPullback
 from .double_top import DoubleTopBottom
 from .head_shoulders import HeadShoulders
+from .trendline import Trendline
+from .rci_reverse import RciReverse
+from .session_manipulation import SessionManipulation
+from .ict_ote import IctOte
 
 ALL_STRATEGIES: list[type[Strategy]] = [
     LiquiditySweep,
@@ -37,4 +41,8 @@ ALL_STRATEGIES: list[type[Strategy]] = [
     TrendPullback,
     DoubleTopBottom,
     HeadShoulders,
+    Trendline,
+    RciReverse,
+    SessionManipulation,
+    IctOte,
 ]

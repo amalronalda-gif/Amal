@@ -38,6 +38,11 @@ STRATEGY_NAMES = {
     "trend_pullback": {"ru": "откат по тренду", "uz": "trend bo'yicha pullback"},
     "double_top": {"ru": "двойная вершина/дно", "uz": "qo'sh cho'qqi/tub"},
     "head_shoulders": {"ru": "голова и плечи", "uz": "bosh va yelkalar"},
+    "trendline": {"ru": "трендовая линия", "uz": "trend chizig'i"},
+    "rci": {"ru": "RCI-разворот", "uz": "RCI burilish"},
+    "session_manipulation": {"ru": "манипуляция сессии (Judas)",
+                             "uz": "sessiya manipulyatsiyasi (Judas)"},
+    "ict_ote": {"ru": "ICT OTE (фибо 62–79%)", "uz": "ICT OTE (fibo 62–79%)"},
 }
 
 # Telegram bot profile texts (set via setMyDescription / setMyCommands).
@@ -47,7 +52,7 @@ BOT_PROFILE = {
     "en": {
         "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
                  "signals, news and alerts. Educational, not financial advice.",
-        "full": "I read the gold market (XAUUSD) with 17 classic trading "
+        "full": "I read the gold market (XAUUSD) with 21 classic trading "
                 "strategies — liquidity sweeps, market structure, trend, "
                 "momentum, volumes, Ichimoku and more — and combine them "
                 "into one flow reading with confidence. Live TradingView "
@@ -61,6 +66,7 @@ BOT_PROFILE = {
             ("mtf", "15m+1h+4h confluence check"),
             ("short", "short-entry analysis, e.g. /short XAUUSD 1h"),
             ("long", "long-entry analysis"),
+            ("scalp", "quick 5m scalp signal with tight exits"),
             ("stats", "accuracy of past predictions"),
             ("backtest", "test the strategy on history"),
             ("status", "my subscription"),
@@ -72,7 +78,7 @@ BOT_PROFILE = {
     "ru": {
         "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
                  "новости, оповещения. Обучающий, не фин. рекомендация.",
-        "full": "Я анализирую рынок золота (XAUUSD) по 17 классическим "
+        "full": "Я анализирую рынок золота (XAUUSD) по 21 классическим "
                 "стратегиям — снятие ликвидности, структура рынка, тренд, "
                 "моментум, объёмы, Ишимоку и др. — и свожу их в один "
                 "прогноз с уровнем уверенности. Спот-цена TradingView, "
@@ -86,6 +92,7 @@ BOT_PROFILE = {
             ("mtf", "сверка 15m+1h+4h"),
             ("short", "анализ для входа в шорт, напр. /short XAUUSD 1h"),
             ("long", "анализ для входа в лонг"),
+            ("scalp", "быстрый скальп-сигнал на 5m"),
             ("stats", "точность прошлых прогнозов"),
             ("backtest", "проверка стратегии на истории"),
             ("status", "моя подписка"),
@@ -97,7 +104,7 @@ BOT_PROFILE = {
     "uz": {
         "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
                  "yangiliklar, xabarlar. O'quv maqsadida.",
-        "full": "Men oltin bozorini (XAUUSD) 17 ta klassik strategiya bilan "
+        "full": "Men oltin bozorini (XAUUSD) 21 ta klassik strategiya bilan "
                 "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
                 "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
                 "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
@@ -111,6 +118,7 @@ BOT_PROFILE = {
             ("mtf", "15m+1h+4h mosligini tekshirish"),
             ("short", "short uchun kirish tahlili, masalan /short XAUUSD 1h"),
             ("long", "long uchun kirish tahlili"),
+            ("scalp", "5m da tezkor skalp signali"),
             ("stats", "o'tgan prognozlar aniqligi"),
             ("backtest", "strategiyani tarixda sinash"),
             ("status", "mening obunam"),
@@ -125,7 +133,7 @@ UI = {
     "intro": {
         "en": """👋 Welcome to <b>MarketFlow</b>!
 
-I analyze the <b>gold market (XAUUSD)</b> using 17 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
+I analyze the <b>gold market (XAUUSD)</b> using 21 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
 
 <b>Quick start:</b>
 ▫️ /predict — what gold is doing right now
@@ -138,7 +146,7 @@ I analyze the <b>gold market (XAUUSD)</b> using 17 classic trading strategies �
 Full command list: /help""",
         "ru": """👋 Добро пожаловать в <b>MarketFlow</b>!
 
-Я анализирую <b>рынок золота (XAUUSD)</b> по 17 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
+Я анализирую <b>рынок золота (XAUUSD)</b> по 21 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
 
 <b>Быстрый старт:</b>
 ▫️ /predict — что происходит с золотом сейчас
@@ -151,7 +159,7 @@ Full command list: /help""",
 Все команды: /help""",
         "uz": """👋 <b>MarketFlow</b> ga xush kelibsiz!
 
-Men <b>oltin bozorini (XAUUSD)</b> 17 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
+Men <b>oltin bozorini (XAUUSD)</b> 21 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
 
 <b>Tezkor boshlash:</b>
 ▫️ /predict — oltin hozir nima qilmoqda
@@ -172,6 +180,7 @@ Barcha buyruqlar: /help""",
 /mtf [symbol] — 15m+1h+4h confluence check
 /short [symbol] [interval] — can I short now? verdict + levels
 /long [symbol] [interval] — can I long now? verdict + levels
+/scalp [symbol] — quick 5m scalp signal (tight SL/TP)
 /stats — accuracy of my past predictions
 /watch [symbol] [interval] [minutes] — entry/exit signals + flip alerts
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
@@ -192,6 +201,7 @@ Examples:
 /mtf [символ] — сверка 15m+1h+4h
 /short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
 /long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
+/scalp [символ] — быстрый скальп-сигнал на 5m (узкие SL/TP)
 /stats — точность моих прошлых прогнозов
 /watch [символ] [таймфрейм] [минуты] — сигналы входа/выхода + смена направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
@@ -212,6 +222,7 @@ Examples:
 /mtf [simvol] — 15m+1h+4h mosligini tekshirish
 /short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
 /long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
+/scalp [simvol] — 5m da tezkor skalp signali (tor SL/TP)
 /stats — o'tgan prognozlarim aniqligi
 /watch [simvol] [interval] [daqiqa] — kirish/chiqish signallari + yo'nalish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
@@ -495,6 +506,30 @@ Misollar:
     "side_for": {"en": "<b>For:</b>", "ru": "<b>За:</b>", "uz": "<b>Tarafdor:</b>"},
     "side_against": {"en": "<b>Against:</b>", "ru": "<b>Против:</b>",
                      "uz": "<b>Qarshi:</b>"},
+    "scalp_header": {
+        "en": "⚡ <b>SCALP {symbol} 5m</b>",
+        "ru": "⚡ <b>СКАЛЬП {symbol} 5m</b>",
+        "uz": "⚡ <b>SKALP {symbol} 5m</b>",
+    },
+    "scalp_no": {
+        "en": "No scalp setup right now — the 5m flow is flat. Try again in "
+              "a few minutes, or <code>/watch {0} 5m 5</code> to get entries "
+              "automatically.".format("XAUUSD"),
+        "ru": "Сетапа для скальпа сейчас нет — на 5m нейтрально. Попробуйте "
+              "через пару минут или поставьте <code>/watch XAUUSD 5m 5</code> — "
+              "входы будут приходить сами.",
+        "uz": "Hozir skalp uchun setup yo'q — 5m da neytral. Bir necha "
+              "daqiqadan keyin urinib ko'ring yoki <code>/watch XAUUSD 5m 5</code> "
+              "qo'ying — kirishlar o'zi keladi.",
+    },
+    "scalp_warn": {
+        "en": "\n⚠️ Scalping has the most noise and the highest relative "
+              "fees; 5m accuracy is the lowest of all timeframes. Risk ≤1%.",
+        "ru": "\n⚠️ Скальпинг — максимум шума и комиссий; точность на 5m "
+              "ниже, чем на старших таймфреймах. Риск ≤1%.",
+        "uz": "\n⚠️ Skalping — eng ko'p shovqin va komissiya; 5m aniqligi "
+              "katta taymfreymlardan past. Risk ≤1%.",
+    },
     "signal_enter": {
         "en": "🟢 <b>ENTRY — {action} {symbol}</b> ({dir})\n"
               "entry <code>{entry}</code> · SL <code>{stop}</code> · "
@@ -652,6 +687,32 @@ FIXED = [
     ("pullback into EMA zone rejected in uptrend",
      "откат в зону EMA отбит в восходящем тренде",
      "EMA zonasiga pullback ko'tarilish trendida rad etildi"),
+    ("broke descending trendline", "пробита нисходящая трендовая линия",
+     "pasayuvchi trend chizig'i buzildi"),
+    ("rejected at descending trendline", "отбой от нисходящей трендовой линии",
+     "pasayuvchi trend chizig'idan rad etildi"),
+    ("broke ascending trendline", "пробита восходящая трендовая линия",
+     "ko'tariluvchi trend chizig'i buzildi"),
+    ("rejected at ascending trendline", "отбой от восходящей трендовой линии",
+     "ko'tariluvchi trend chizig'idan rad etildi"),
+    ("RCI overbought and turning down",
+     "RCI в перекупленности, разворачивается вниз",
+     "RCI o'ta sotib olingan, pastga burilmoqda"),
+    ("RCI oversold and turning up",
+     "RCI в перепроданности, разворачивается вверх",
+     "RCI o'ta sotilgan, yuqoriga burilmoqda"),
+    ("swept Asian session high then returned inside (Judas swing)",
+     "снят максимум азиатской сессии и возврат внутрь (Judas swing)",
+     "Osiyo sessiyasi maksimumi yig'ilib, ichkariga qaytdi (Judas swing)"),
+    ("swept Asian session low then returned inside (Judas swing)",
+     "снят минимум азиатской сессии и возврат внутрь (Judas swing)",
+     "Osiyo sessiyasi minimumi yig'ilib, ichkariga qaytdi (Judas swing)"),
+    ("price in OTE zone (62-79% retracement) of bullish impulse",
+     "цена в зоне OTE (откат 62–79%) бычьего импульса",
+     "narx bullish impulsning OTE zonasida (62–79% qaytish)"),
+    ("price in OTE zone (62-79% retracement) of bearish impulse",
+     "цена в зоне OTE (откат 62–79%) медвежьего импульса",
+     "narx bearish impulsning OTE zonasida (62–79% qaytish)"),
 ]
 
 REGEX = [

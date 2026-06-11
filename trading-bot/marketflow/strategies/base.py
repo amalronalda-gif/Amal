@@ -54,6 +54,10 @@ class Context:
         self.swing_highs, self.swing_lows = ta.swing_points(candles, self.swing_strength)
         # rolling 96-bar VWAP from cumulative sums (O(1) per bar)
         self.vwap = self._rolling_vwap(candles, 96)
+        # candle spacing in ms (None for a single candle); lets time-of-day
+        # strategies know the timeframe
+        self.step_ms = (candles[1].open_time - candles[0].open_time
+                        if len(candles) > 1 else None)
 
     @staticmethod
     def _rolling_vwap(candles: list[Candle], window: int) -> list[float | None]:

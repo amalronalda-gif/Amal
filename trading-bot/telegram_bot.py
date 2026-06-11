@@ -57,9 +57,11 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
-SIGNAL_THRESHOLD = 0.21     # |score| that fires an ENTRY signal on /watch
+SIGNAL_THRESHOLD = 0.17     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
-SIDE_WAIT_T = 0.12          # weak-but-aligned zone for /short and /long
+SIDE_WAIT_T = 0.10          # weak-but-aligned zone for /short and /long
+SCALP_STOP_ATR = 1.0        # tighter exits for /scalp on 5m
+SCALP_TP2_ATR = 2.0
 ACCOUNT_USD = 100.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
@@ -202,7 +204,8 @@ def format_news(lang: str = "en") -> str:
 
 
 def trade_plan_line(candles, pred: Prediction, lang: str = "en",
-                    symbol: str = "", force_side: int | None = None) -> str:
+                    symbol: str = "", force_side: int | None = None,
+                    stop_mult: float = 1.5, tp2_mult: float = 3.0) -> str:
     """ATR-based entry/stop/target suggestion for non-neutral signals.
 
     Mirrors the backtester's exits (1.5 ATR stop, 3 ATR target = 1:2 R:R)
@@ -219,9 +222,9 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
     entry = candles[-1].close
     side = force_side if force_side is not None else (
         1 if pred.direction == "BULLISH" else -1)
-    stop = entry - side * 1.5 * a
-    tp1 = entry + side * 1.5 * a
-    target = entry + side * 3.0 * a
+    stop = entry - side * stop_mult * a
+    tp1 = entry + side * stop_mult * a
+    target = entry + side * tp2_mult * a
     zone = sorted((entry - 0.25 * a, entry + 0.25 * a))
     digits = 5 if entry < 10 else 2
     line = t(lang, "plan",
@@ -371,6 +374,8 @@ class Bot:
             self.cmd_side(chat_id, args, -1)
         elif cmd == "/long":
             self.cmd_side(chat_id, args, 1)
+        elif cmd == "/scalp":
+            self.cmd_scalp(chat_id, args)
         elif cmd == "/stats":
             self.cmd_stats(chat_id)
         elif cmd == "/watch":
@@ -544,6 +549,42 @@ class Bot:
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
+    def cmd_scalp(self, chat_id: int, args: list[str]):
+        """Quick 5m scalp read: direction verdict with tight 1 ATR / 2 ATR
+        exits instead of the swing-sized defaults."""
+        lang = self.lang(chat_id)
+        symbol, _, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval="5m"))
+        try:
+            candles = fetch_klines(symbol, "5m", 600)
+            pred = engine_for(symbol).predict(candles, news_signal(symbol))
+            lines = [t(lang, "scalp_header", symbol=symbol), ""]
+            if pred.direction == "NEUTRAL" or abs(pred.score) < SIDE_WAIT_T:
+                lines.append(t(lang, "scalp_no"))
+                msg = "\n".join(lines)
+                side = None
+            else:
+                side = 1 if pred.score > 0 else -1
+                sideword = t(lang, "side_long" if side == 1 else "side_short")
+                lines.append(t(lang, "side_entry_now", side=sideword,
+                               score=f"{pred.score:+.3f}",
+                               conf=f"{pred.confidence:.0f}"))
+                msg = "\n".join(lines)
+                msg += trade_plan_line(candles, pred, lang, symbol,
+                                       force_side=side,
+                                       stop_mult=SCALP_STOP_ATR,
+                                       tp2_mult=SCALP_TP2_ATR)
+            msg += t(lang, "scalp_warn") + event_risk_line(lang)
+            self.api.send(chat_id, msg + t(lang, "disclaimer"))
+            if side:
+                self._send_chart(chat_id, candles, symbol, "5m", pred, lang,
+                                 side=side)
+        except Exception as e:
+            self.api.send(chat_id, t(lang, "failed", error=e))
+
     def cmd_stats(self, chat_id: int):
         lang = self.lang(chat_id)
         with self.lock:
@@ -610,7 +651,7 @@ class Bot:
         try:
             candles = fetch_klines(symbol, interval, 1500)
             result = run_backtest(candles, engine=engine_for(symbol),
-                                  threshold=0.21)
+                                  threshold=0.17)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
                           + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:

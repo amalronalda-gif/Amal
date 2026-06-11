@@ -33,12 +33,16 @@ DEFAULT_WEIGHTS = {
     "trend_pullback": 1.1,
     "double_top": 0.9,
     "head_shoulders": 0.9,
+    "trendline": 1.0,
+    "rci": 0.9,
+    "session_manipulation": 1.0,
+    "ict_ote": 1.0,
 }
 
 # direction thresholds, recalibrated as the ensemble grew (a larger weight
-# sum dilutes the weighted-mean score; rescaled 11->14->17 strategies)
-BULLISH_T = 0.12
-BEARISH_T = -0.12
+# sum dilutes the weighted-mean score; rescaled 11->14->17->21 strategies)
+BULLISH_T = 0.10
+BEARISH_T = -0.10
 
 # Per-market weight overrides. FX majors are range-bound and mean-reverting:
 # damp trend/breakout signals, boost fades (lifted EURUSDT 1h backtest
