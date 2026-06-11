@@ -31,6 +31,10 @@ STRATEGY_NAMES = {
     "volume_flow": {"ru": "объёмы (OBV)", "uz": "hajm oqimi (OBV)"},
     "ichimoku": {"ru": "Ишимоку", "uz": "Ichimoku"},
     "support_resistance": {"ru": "поддержка/сопротивление", "uz": "tayanch/qarshilik"},
+    "order_block": {"ru": "ордер-блок", "uz": "order-blok"},
+    "rsi_divergence": {"ru": "дивергенция RSI", "uz": "RSI divergensiyasi"},
+    "vwap": {"ru": "VWAP", "uz": "VWAP"},
+    "news_sentiment": {"ru": "новостной фон", "uz": "yangiliklar kayfiyati"},
 }
 
 # Telegram bot profile texts (set via setMyDescription / setMyCommands).
@@ -40,7 +44,7 @@ BOT_PROFILE = {
     "en": {
         "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
                  "signals, news and alerts. Educational, not financial advice.",
-        "full": "I read the gold market (XAUUSD) with 11 classic trading "
+        "full": "I read the gold market (XAUUSD) with 14 classic trading "
                 "strategies — liquidity sweeps, market structure, trend, "
                 "momentum, volumes, Ichimoku and more — and combine them "
                 "into one flow reading with confidence. Live TradingView "
@@ -63,7 +67,7 @@ BOT_PROFILE = {
     "ru": {
         "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
                  "новости, оповещения. Обучающий, не фин. рекомендация.",
-        "full": "Я анализирую рынок золота (XAUUSD) по 11 классическим "
+        "full": "Я анализирую рынок золота (XAUUSD) по 14 классическим "
                 "стратегиям — снятие ликвидности, структура рынка, тренд, "
                 "моментум, объёмы, Ишимоку и др. — и свожу их в один "
                 "прогноз с уровнем уверенности. Спот-цена TradingView, "
@@ -86,7 +90,7 @@ BOT_PROFILE = {
     "uz": {
         "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
                  "yangiliklar, xabarlar. O'quv maqsadida.",
-        "full": "Men oltin bozorini (XAUUSD) 11 ta klassik strategiya bilan "
+        "full": "Men oltin bozorini (XAUUSD) 14 ta klassik strategiya bilan "
                 "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
                 "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
                 "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
@@ -112,7 +116,7 @@ UI = {
     "intro": {
         "en": """👋 Welcome to <b>MarketFlow</b>!
 
-I analyze the <b>gold market (XAUUSD)</b> using 11 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
+I analyze the <b>gold market (XAUUSD)</b> using 14 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
 
 <b>Quick start:</b>
 ▫️ /predict — what gold is doing right now
@@ -125,7 +129,7 @@ I analyze the <b>gold market (XAUUSD)</b> using 11 classic trading strategies �
 Full command list: /help""",
         "ru": """👋 Добро пожаловать в <b>MarketFlow</b>!
 
-Я анализирую <b>рынок золота (XAUUSD)</b> по 11 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
+Я анализирую <b>рынок золота (XAUUSD)</b> по 14 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
 
 <b>Быстрый старт:</b>
 ▫️ /predict — что происходит с золотом сейчас
@@ -138,7 +142,7 @@ Full command list: /help""",
 Все команды: /help""",
         "uz": """👋 <b>MarketFlow</b> ga xush kelibsiz!
 
-Men <b>oltin bozorini (XAUUSD)</b> 11 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
+Men <b>oltin bozorini (XAUUSD)</b> 14 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
 
 <b>Tezkor boshlash:</b>
 ▫️ /predict — oltin hozir nima qilmoqda
@@ -379,6 +383,17 @@ Misollar:
               "<code>{target}</code> ({td}%) · R:R 1:2\nPozitsiya hajmini stop "
               "hisobingizning ≤1% iga teng bo'ladigan qilib tanlang.",
     },
+    "plan_money": {
+        "en": "\n💵 For a ${account} account (risk {risk}$): position ≈ "
+              "<code>{units}</code> {asset} (~${notional}); stop hit = "
+              "−${loss}, target hit = +${win}.",
+        "ru": "\n💵 Для депозита ${account} (риск {risk}$): объём ≈ "
+              "<code>{units}</code> {asset} (~${notional}); сработал стоп = "
+              "−${loss}, сработала цель = +${win}.",
+        "uz": "\n💵 ${account} hisob uchun (risk {risk}$): hajm ≈ "
+              "<code>{units}</code> {asset} (~${notional}); stop ishlasa = "
+              "−${loss}, maqsadga yetsa = +${win}.",
+    },
     "mtf_header": {
         "en": "🔭 <b>{symbol} — multi-timeframe view</b>",
         "ru": "🔭 <b>{symbol} — мультитаймфрейм</b>",
@@ -523,6 +538,20 @@ FIXED = [
     ("Tenkan above Kijun", "Тенкан выше Киджун", "Tenkan Kijundan yuqori"),
     ("Tenkan below Kijun", "Тенкан ниже Киджун", "Tenkan Kijundan past"),
     ("no setup", "нет сетапа", "setup yo'q"),
+    ("bullish RSI divergence: lower low in price, higher low in RSI",
+     "бычья дивергенция RSI: цена ниже, RSI выше",
+     "bullish RSI divergensiya: narx pastroq, RSI yuqoriroq"),
+    ("bearish RSI divergence: higher high in price, lower high in RSI",
+     "медвежья дивергенция RSI: цена выше, RSI ниже",
+     "bearish RSI divergensiya: narx yuqoriroq, RSI pastroq"),
+    ("stretched far above VWAP (mean-revert)",
+     "сильно выше VWAP (ожидается возврат)",
+     "VWAP dan ancha yuqori (qaytish kutiladi)"),
+    ("stretched far below VWAP (mean-revert)",
+     "сильно ниже VWAP (ожидается возврат)",
+     "VWAP dan ancha past (qaytish kutiladi)"),
+    ("price above rolling VWAP", "цена выше VWAP", "narx VWAP dan yuqori"),
+    ("price below rolling VWAP", "цена ниже VWAP", "narx VWAP dan past"),
 ]
 
 REGEX = [
@@ -542,6 +571,18 @@ REGEX = [
      r"у поддержки \1 (касаний: \2)", r"tayanchda \1 (tegishlar: \2)"),
     (re.compile(r"at resistance ([\d.]+) \((\d+) touches\)"),
      r"у сопротивления \1 (касаний: \2)", r"qarshilikda \1 (tegishlar: \2)"),
+    (re.compile(r"price inside bullish order block \(([\d.]+)-([\d.]+)\)"),
+     r"цена в бычьем ордер-блоке (\1–\2)",
+     r"narx bullish order-blok ichida (\1–\2)"),
+    (re.compile(r"price inside bearish order block \(([\d.]+)-([\d.]+)\)"),
+     r"цена в медвежьем ордер-блоке (\1–\2)",
+     r"narx bearish order-blok ichida (\1–\2)"),
+    (re.compile(r"headlines lean bullish \((\d+)/(\d+)\)"),
+     r"заголовки скорее бычьи (\1/\2)",
+     r"sarlavhalar ko'proq bullish (\1/\2)"),
+    (re.compile(r"headlines lean bearish \((\d+)/(\d+)\)"),
+     r"заголовки скорее медвежьи (\1/\2)",
+     r"sarlavhalar ko'proq bearish (\1/\2)"),
 ]
 
 

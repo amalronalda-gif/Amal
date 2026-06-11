@@ -19,17 +19,23 @@ DEFAULT_WEIGHTS = {
     "market_structure": 1.3,
     "liquidity_sweep": 1.2,
     "momentum": 1.1,
+    "rsi_divergence": 1.1,
+    "order_block": 1.0,
     "volume_flow": 1.0,
     "breakout": 1.0,
+    "vwap": 0.9,
     "ichimoku": 0.9,
     "fair_value_gap": 0.9,
     "support_resistance": 0.9,
     "mean_reversion": 0.8,
     "candlestick": 0.7,
+    "news_sentiment": 0.6,  # live-only overlay supplied by the bot
 }
 
-BULLISH_T = 0.18
-BEARISH_T = -0.18
+# direction thresholds, recalibrated when the ensemble grew from 11 to 14
+# strategies (larger weight sum dilutes the weighted-mean score ~25%)
+BULLISH_T = 0.14
+BEARISH_T = -0.14
 
 # Per-market weight overrides; gold and BTC both trend, so the default
 # profile fits both and no overrides are currently needed.
@@ -72,8 +78,11 @@ class Engine:
             self.weights.update(weights)
         self.strategies = [cls() for cls in ALL_STRATEGIES]
 
-    def predict_at(self, ctx: Context, i: int) -> Prediction:
+    def predict_at(self, ctx: Context, i: int,
+                   extra_signals: dict[str, Signal] | None = None) -> Prediction:
         signals = {s.name: s.evaluate(ctx, i) for s in self.strategies}
+        if extra_signals:
+            signals.update(extra_signals)
 
         # regime damping: don't let mean reversion fight a strong trend
         trend = signals["trend_following"].score
@@ -105,9 +114,10 @@ class Engine:
         return Prediction(direction, score, min(confidence, 99.0),
                           agreement, signals)
 
-    def predict(self, candles: list[Candle]) -> Prediction:
+    def predict(self, candles: list[Candle],
+                extra_signals: dict[str, Signal] | None = None) -> Prediction:
         if len(candles) < Context.MIN_BARS:
             raise ValueError(f"need at least {Context.MIN_BARS} candles, "
                              f"got {len(candles)}")
         ctx = Context(candles)
-        return self.predict_at(ctx, len(candles) - 1)
+        return self.predict_at(ctx, len(candles) - 1, extra_signals)

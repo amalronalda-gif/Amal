@@ -44,6 +44,7 @@ except Exception:
 from marketflow.engine import Prediction, engine_for
 from marketflow.backtest import run_backtest
 from marketflow.indicators import atr as atr_indicator
+from marketflow.strategies import Signal
 from marketflow import news as news_mod
 from marketflow import i18n
 from marketflow.i18n import t
@@ -54,6 +55,26 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
+ACCOUNT_USD = 100.0         # reference deposit for position sizing
+RISK_PCT = 1.0              # % of the account risked per trade
+ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
+                "BTCUSDT": "BTC"}
+
+
+def news_signal(symbol: str) -> dict[str, Signal] | None:
+    """Headline sentiment as an extra ensemble input (live only)."""
+    resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+    res = news_mod.sentiment_for(resolved)
+    if not res:
+        return None
+    score, pos, total = res
+    if score > 0:
+        reason = f"headlines lean bullish ({pos}/{total})"
+    elif score < 0:
+        reason = f"headlines lean bearish ({total - pos}/{total})"
+    else:
+        return None
+    return {"news_sentiment": Signal(score * 0.8, reason)}
 
 
 class TelegramAPI:
@@ -150,11 +171,13 @@ def format_news(lang: str = "en") -> str:
     return "\n".join(lines) + t(lang, "disclaimer")
 
 
-def trade_plan_line(candles, pred: Prediction, lang: str = "en") -> str:
+def trade_plan_line(candles, pred: Prediction, lang: str = "en",
+                    symbol: str = "") -> str:
     """ATR-based entry/stop/target suggestion for non-neutral signals.
 
     Mirrors the backtester's exits (1.5 ATR stop, 3 ATR target = 1:2 R:R)
     so the suggestion matches what the published stats were measured on.
+    Position size is computed for a $ACCOUNT_USD account risking RISK_PCT%.
     """
     if pred.direction == "NEUTRAL":
         return ""
@@ -166,11 +189,21 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en") -> str:
     stop = entry - side * 1.5 * a
     target = entry + side * 3.0 * a
     digits = 5 if entry < 10 else 2
-    return t(lang, "plan",
+    line = t(lang, "plan",
              entry=f"{entry:.{digits}f}", stop=f"{stop:.{digits}f}",
              target=f"{target:.{digits}f}",
              sd=f"{(stop / entry - 1) * 100:+.2f}",
              td=f"{(target / entry - 1) * 100:+.2f}")
+    risk_usd = ACCOUNT_USD * RISK_PCT / 100.0
+    units = risk_usd / abs(entry - stop)
+    resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+    line += t(lang, "plan_money",
+              account=f"{ACCOUNT_USD:.0f}", risk=f"{risk_usd:.2f}",
+              units=f"{units:.4g}",
+              asset=ASSET_LABELS.get(resolved, resolved),
+              notional=f"{units * entry:.0f}",
+              loss=f"{risk_usd:.2f}", win=f"{risk_usd * 2:.2f}")
+    return line
 
 
 def format_prediction(symbol: str, interval: str, pred: Prediction,
@@ -346,12 +379,12 @@ class Bot:
                                  interval=interval))
         try:
             candles = fetch_klines(symbol, interval, 600)
-            pred = engine_for(symbol).predict(candles)
+            pred = engine_for(symbol).predict(candles, news_signal(symbol))
             self._log_prediction(symbol, interval, candles, pred)
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
                 candles[-1].open_time, lang)
-                + trade_plan_line(candles, pred, lang)
+                + trade_plan_line(candles, pred, lang, symbol)
                 + spot_quote_line(symbol, lang)
                 + event_risk_line(lang))
         except Exception as e:
@@ -454,7 +487,7 @@ class Bot:
         try:
             candles = fetch_klines(symbol, interval, 1500)
             result = run_backtest(candles, engine=engine_for(symbol),
-                                  threshold=0.3)
+                                  threshold=0.23)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
                           + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:
@@ -497,7 +530,8 @@ class Bot:
         lang = self.lang(chat_id)
         try:
             candles = fetch_klines(sub["symbol"], sub["interval"], 600)
-            pred = engine_for(sub["symbol"]).predict(candles)
+            pred = engine_for(sub["symbol"]).predict(
+                candles, news_signal(sub["symbol"]))
             self._log_prediction(sub["symbol"], sub["interval"], candles, pred)
             prev = sub.get("last_direction")
             flipped = prev is not None and pred.direction != prev
@@ -512,7 +546,8 @@ class Bot:
                                   sub["symbol"], sub["interval"], pred,
                                   candles[-1].close, candles[-1].open_time,
                                   lang)
-                              + trade_plan_line(candles, pred, lang)
+                              + trade_plan_line(candles, pred, lang,
+                                                sub["symbol"])
                               + spot_quote_line(sub["symbol"], lang)
                               + event_risk_line(lang))
             with self.lock:

@@ -52,6 +52,23 @@ class Context:
         # only use swings with index <= i - strength to avoid look-ahead
         self.swing_strength = 3
         self.swing_highs, self.swing_lows = ta.swing_points(candles, self.swing_strength)
+        # rolling 96-bar VWAP from cumulative sums (O(1) per bar)
+        self.vwap = self._rolling_vwap(candles, 96)
+
+    @staticmethod
+    def _rolling_vwap(candles: list[Candle], window: int) -> list[float | None]:
+        cum_pv = [0.0]
+        cum_v = [0.0]
+        for c in candles:
+            typical = (c.high + c.low + c.close) / 3.0
+            cum_pv.append(cum_pv[-1] + typical * c.volume)
+            cum_v.append(cum_v[-1] + c.volume)
+        out: list[float | None] = [None] * len(candles)
+        for i in range(window - 1, len(candles)):
+            vol = cum_v[i + 1] - cum_v[i + 1 - window]
+            if vol > 0:
+                out[i] = (cum_pv[i + 1] - cum_pv[i + 1 - window]) / vol
+        return out
 
     def confirmed_swings(self, i: int) -> tuple[list[int], list[int]]:
         """Swing highs/lows already confirmed as of bar i."""

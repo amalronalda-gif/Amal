@@ -12,6 +12,9 @@ from .candlestick import Candlestick
 from .volume_flow import VolumeFlow
 from .ichimoku_cloud import IchimokuCloud
 from .support_resistance import SupportResistance
+from .order_block import OrderBlock
+from .rsi_divergence import RsiDivergence
+from .vwap_flow import VwapFlow
 
 ALL_STRATEGIES: list[type[Strategy]] = [
     LiquiditySweep,
@@ -25,4 +28,7 @@ ALL_STRATEGIES: list[type[Strategy]] = [
     VolumeFlow,
     IchimokuCloud,
     SupportResistance,
+    OrderBlock,
+    RsiDivergence,
+    VwapFlow,
 ]

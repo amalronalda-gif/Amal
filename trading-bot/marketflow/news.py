@@ -20,7 +20,14 @@ from datetime import datetime, timezone
 
 CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 HEADLINES_URL = ("https://feeds.finance.yahoo.com/rss/2.0/headline"
-                 "?s=GC=F&region=US&lang=en-US")
+                 "?s={feed}&region=US&lang=en-US")
+
+# resolved market symbol -> Yahoo news feed ticker
+NEWS_FEEDS = {
+    "PAXGUSDT": "GC=F",
+    "XAUTUSDT": "GC=F",
+    "BTCUSDT": "BTC-USD",
+}
 
 # countries whose data moves XAU/USD; "All" covers OPEC/G7-style events
 RELEVANT_COUNTRIES = {"USD", "All"}
@@ -99,9 +106,9 @@ def upcoming_events(hours_ahead: float = 24.0,
     return out
 
 
-def gold_headlines(limit: int = 6) -> list[Headline]:
+def headlines(feed: str = "GC=F", limit: int = 6) -> list[Headline]:
     def fetch():
-        root = ET.fromstring(_http_get(HEADLINES_URL))
+        root = ET.fromstring(_http_get(HEADLINES_URL.format(feed=feed)))
         items = []
         for item in root.iter("item"):
             title = (item.findtext("title") or "").strip()
@@ -110,7 +117,32 @@ def gold_headlines(limit: int = 6) -> list[Headline]:
                 items.append(Headline(title, link, _sentiment(title)))
         return items
 
-    return _cached("headlines", fetch)[:limit]
+    return _cached(f"headlines:{feed}", fetch)[:limit]
+
+
+def gold_headlines(limit: int = 6) -> list[Headline]:
+    return headlines("GC=F", limit)
+
+
+def sentiment_for(resolved_symbol: str) -> tuple[float, int, int] | None:
+    """Net headline sentiment for a market.
+
+    Returns (score in [-1, 1], positive_count, total_scored) or None when
+    the feed is unavailable or has no opinionated headlines.
+    """
+    feed = NEWS_FEEDS.get(resolved_symbol)
+    if not feed:
+        return None
+    try:
+        heads = headlines(feed)
+    except Exception:
+        return None
+    scored = [h.sentiment for h in heads if h.sentiment != 0]
+    if not scored:
+        return None
+    net = sum(scored) / len(scored)
+    pos = sum(1 for s in scored if s > 0)
+    return max(-1.0, min(1.0, net)), pos, len(scored)
 
 
 def _sentiment(text: str) -> int:

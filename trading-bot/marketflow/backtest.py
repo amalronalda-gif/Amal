@@ -94,7 +94,7 @@ class BacktestResult:
 
 
 def run_backtest(candles: list[Candle], engine: Engine | None = None,
-                 threshold: float = 0.25, stop_atr: float = 1.5,
+                 threshold: float = 0.23, stop_atr: float = 1.5,
                  target_atr: float = 3.0, max_hold: int = 24,
                  risk_pct: float = 1.0, horizon: int = 12) -> BacktestResult:
     engine = engine or Engine()
