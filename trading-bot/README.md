@@ -117,6 +117,32 @@ ask @userinfobot for your ID). Subscriptions persist across restarts in
 `subscriptions.json`. To keep it running on a server:
 `nohup python3 telegram_bot.py >> bot.log 2>&1 &` (or a systemd unit).
 
+## Run 24/7 on a server
+
+One command on any Ubuntu/Debian VPS (DigitalOcean, Hetzner, etc., ~$4-5/mo):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amalronalda-gif/Amal/claude/xauusdt-liquidity-sweeps-xehad0/trading-bot/deploy/install.sh | bash
+```
+
+It asks for your bot token, installs everything to `/opt/marketflow`,
+registers a systemd service (`marketflow-bot`) with auto-restart on crash
+and on reboot, and starts it. Logs: `journalctl -u marketflow-bot -f`.
+
+**No VPS? Run it on an Android phone** with the free Termux app:
+
+```bash
+pkg update && pkg install python git
+git clone https://github.com/amalronalda-gif/Amal.git
+cd Amal && git checkout claude/xauusdt-liquidity-sweeps-xehad0 && cd trading-bot
+export TELEGRAM_BOT_TOKEN="your-token"
+python telegram_bot.py
+```
+
+Disable battery optimization for Termux so Android doesn't kill it; the
+bot runs as long as the phone is on and online (charts need
+`pip install matplotlib`, which may take a while on a phone — optional).
+
 ## Tuning
 
 - Weights: `marketflow/engine.py` → `DEFAULT_WEIGHTS`

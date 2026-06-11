@@ -1,0 +1,14 @@
+[Unit]
+Description=MarketFlow Telegram trading-analysis bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/marketflow/trading-bot
+EnvironmentFile=/etc/marketflow.env
+ExecStart=/usr/bin/python3 telegram_bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
