@@ -57,16 +57,16 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
-SIGNAL_THRESHOLD = 0.17     # |score| that fires an ENTRY signal on /watch
+SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
-SIDE_WAIT_T = 0.10          # weak-but-aligned zone for /short and /long
+SIDE_WAIT_T = 0.14          # weak-but-aligned zone for /short and /long
 SCALP_STOP_ATR = 1.0        # tighter exits for /scalp on 5m
 SCALP_TP2_ATR = 2.0
 
 # autonomous confluence scanner: runs for everyone, no subscription needed
 SCAN_MARKETS = ("XAUUSD", "BTCUSD", "EURUSD")
 SCAN_EVERY = 300            # seconds between scans
-PREMIUM_SCORE = 0.28        # 1h ensemble strength required
+PREMIUM_SCORE = 0.38        # 1h ensemble strength required
 PREMIUM_AGREE = 0.75        # fraction of active strategies agreeing
 PREMIUM_CONFIRM = 0.10      # 4h must lean the same way at least this much
 PREMIUM_COOLDOWN = 6 * 3600  # per market+direction, seconds
@@ -665,7 +665,7 @@ class Bot:
         try:
             candles = fetch_klines(symbol, interval, 1500)
             result = run_backtest(candles, engine=engine_for(symbol),
-                                  threshold=0.17)
+                                  threshold=0.23)
             self.api.send(chat_id, "<pre>" + html.escape(result.summary())
                           + "</pre>" + t(lang, "disclaimer"))
         except Exception as e:

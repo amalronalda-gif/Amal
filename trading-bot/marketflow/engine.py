@@ -26,23 +26,17 @@ DEFAULT_WEIGHTS = {
     "vwap": 0.9,
     "ichimoku": 0.9,
     "fair_value_gap": 0.9,
-    "support_resistance": 0.9,
     "mean_reversion": 0.8,
-    "candlestick": 0.7,
     "news_sentiment": 0.6,  # live-only overlay supplied by the bot
-    "trend_pullback": 1.1,
     "double_top": 0.9,
     "head_shoulders": 0.9,
     "trendline": 1.0,
-    "rci": 0.9,
-    "session_manipulation": 1.0,
-    "ict_ote": 1.0,
 }
 
-# direction thresholds, recalibrated as the ensemble grew (a larger weight
-# sum dilutes the weighted-mean score; rescaled 11->14->17->21 strategies)
-BULLISH_T = 0.10
-BEARISH_T = -0.10
+# direction thresholds, recalibrated whenever the registered ensemble
+# changes (the weight sum scales the weighted-mean score)
+BULLISH_T = 0.14
+BEARISH_T = -0.14
 
 # Per-market weight overrides. FX majors are range-bound and mean-reverting:
 # damp trend/breakout signals, boost fades (lifted EURUSDT 1h backtest
@@ -50,9 +44,8 @@ BEARISH_T = -0.10
 # keep the defaults.
 MARKET_PROFILES: dict[str, dict[str, float]] = {
     "EURUSDT": {"trend_following": 0.7, "breakout": 0.5, "momentum": 0.8,
-                "mean_reversion": 1.5, "support_resistance": 1.4,
-                "liquidity_sweep": 1.3, "market_structure": 1.0,
-                "trend_pullback": 0.8},
+                "mean_reversion": 1.5,
+                "liquidity_sweep": 1.3, "market_structure": 1.0},
 }
 
 

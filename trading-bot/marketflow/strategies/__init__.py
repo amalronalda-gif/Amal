@@ -1,4 +1,11 @@
-"""Strategy registry."""
+"""Strategy registry.
+
+Ablation-tested (4 markets, ~7 months of data): strategies that consistently
+hurt results or never fire are kept on disk but NOT registered:
+candlestick (-7.6R), support_resistance (-7.0R), trend_pullback (-4.7R),
+ict_ote (-4.1R), session_manipulation (-2.6R), rci (-0.4R, fires 2% of bars).
+Re-add an import + list entry to re-enable one.
+"""
 
 from .base import Context, Signal, Strategy, NEUTRAL
 from .liquidity_sweep import LiquiditySweep
@@ -8,20 +15,14 @@ from .mean_reversion import MeanReversion
 from .market_structure import MarketStructure
 from .fair_value_gap import FairValueGap
 from .breakout import Breakout
-from .candlestick import Candlestick
 from .volume_flow import VolumeFlow
 from .ichimoku_cloud import IchimokuCloud
-from .support_resistance import SupportResistance
 from .order_block import OrderBlock
 from .rsi_divergence import RsiDivergence
 from .vwap_flow import VwapFlow
-from .trend_pullback import TrendPullback
 from .double_top import DoubleTopBottom
 from .head_shoulders import HeadShoulders
 from .trendline import Trendline
-from .rci_reverse import RciReverse
-from .session_manipulation import SessionManipulation
-from .ict_ote import IctOte
 
 ALL_STRATEGIES: list[type[Strategy]] = [
     LiquiditySweep,
@@ -31,18 +32,12 @@ ALL_STRATEGIES: list[type[Strategy]] = [
     MarketStructure,
     FairValueGap,
     Breakout,
-    Candlestick,
     VolumeFlow,
     IchimokuCloud,
-    SupportResistance,
     OrderBlock,
     RsiDivergence,
     VwapFlow,
-    TrendPullback,
     DoubleTopBottom,
     HeadShoulders,
     Trendline,
-    RciReverse,
-    SessionManipulation,
-    IctOte,
 ]

@@ -52,7 +52,7 @@ BOT_PROFILE = {
     "en": {
         "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
                  "signals, news and alerts. Educational, not financial advice.",
-        "full": "I read the gold market (XAUUSD) with 21 classic trading "
+        "full": "I read the gold market (XAUUSD) with 15 battle-tested trading "
                 "strategies — liquidity sweeps, market structure, trend, "
                 "momentum, volumes, Ichimoku and more — and combine them "
                 "into one flow reading with confidence. Live TradingView "
@@ -78,7 +78,7 @@ BOT_PROFILE = {
     "ru": {
         "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
                  "новости, оповещения. Обучающий, не фин. рекомендация.",
-        "full": "Я анализирую рынок золота (XAUUSD) по 21 классическим "
+        "full": "Я анализирую рынок золота (XAUUSD) по 15 проверенным "
                 "стратегиям — снятие ликвидности, структура рынка, тренд, "
                 "моментум, объёмы, Ишимоку и др. — и свожу их в один "
                 "прогноз с уровнем уверенности. Спот-цена TradingView, "
@@ -104,7 +104,7 @@ BOT_PROFILE = {
     "uz": {
         "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
                  "yangiliklar, xabarlar. O'quv maqsadida.",
-        "full": "Men oltin bozorini (XAUUSD) 21 ta klassik strategiya bilan "
+        "full": "Men oltin bozorini (XAUUSD) 15 ta sinovdan o'tgan strategiya bilan "
                 "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
                 "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
                 "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
@@ -133,7 +133,7 @@ UI = {
     "intro": {
         "en": """👋 Welcome to <b>MarketFlow</b>!
 
-I analyze the <b>gold market (XAUUSD)</b> using 21 classic trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
+I analyze the <b>gold market (XAUUSD)</b> using 15 battle-tested trading strategies — liquidity sweeps, market structure, trend, momentum, volume flow, Ichimoku and more — and combine them into one market-flow reading with a confidence score. I also watch the USD news calendar and the live TradingView spot price.
 
 <b>Quick start:</b>
 ▫️ /predict — what gold is doing right now
@@ -146,7 +146,7 @@ I analyze the <b>gold market (XAUUSD)</b> using 21 classic trading strategies �
 Full command list: /help""",
         "ru": """👋 Добро пожаловать в <b>MarketFlow</b>!
 
-Я анализирую <b>рынок золота (XAUUSD)</b> по 21 классическим торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
+Я анализирую <b>рынок золота (XAUUSD)</b> по 15 проверенным торговым стратегиям — снятие ликвидности, структура рынка, тренд, моментум, объёмы, Ишимоку и др. — и свожу их в единый прогноз потока рынка с уровнем уверенности. Также слежу за календарём новостей USD и спот-ценой TradingView.
 
 <b>Быстрый старт:</b>
 ▫️ /predict — что происходит с золотом сейчас
@@ -159,7 +159,7 @@ Full command list: /help""",
 Все команды: /help""",
         "uz": """👋 <b>MarketFlow</b> ga xush kelibsiz!
 
-Men <b>oltin bozorini (XAUUSD)</b> 21 ta klassik savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
+Men <b>oltin bozorini (XAUUSD)</b> 15 ta sinovdan o'tgan savdo strategiyasi bilan tahlil qilaman — likvidlik yig'ish, bozor strukturasi, trend, momentum, hajm oqimi, Ichimoku va boshqalar — va ularni ishonch darajasi bilan yagona bozor oqimi prognoziga birlashtiraman. Shuningdek, USD yangiliklar kalendari va TradingView jonli narxini kuzataman.
 
 <b>Tezkor boshlash:</b>
 ▫️ /predict — oltin hozir nima qilmoqda
