@@ -62,6 +62,14 @@ SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
 SIDE_WAIT_T = 0.10          # weak-but-aligned zone for /short and /long
 SCALP_STOP_ATR = 1.0        # tighter exits for /scalp on 5m
 SCALP_TP2_ATR = 2.0
+
+# autonomous confluence scanner: runs for everyone, no subscription needed
+SCAN_MARKETS = ("XAUUSD", "BTCUSD", "EURUSD")
+SCAN_EVERY = 300            # seconds between scans
+PREMIUM_SCORE = 0.28        # 1h ensemble strength required
+PREMIUM_AGREE = 0.75        # fraction of active strategies agreeing
+PREMIUM_CONFIRM = 0.10      # 4h must lean the same way at least this much
+PREMIUM_COOLDOWN = 6 * 3600  # per market+direction, seconds
 ACCOUNT_USD = 100.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
@@ -301,6 +309,7 @@ class Bot:
                 self.pred_log: list[dict] = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             self.pred_log = []
+        self.premium_state: dict[str, dict] = {}
 
     # ---------- persistence ----------
 
@@ -342,13 +351,12 @@ class Bot:
 
     def handle(self, chat_id: int, text: str, tg_lang: str | None = None):
         key = str(chat_id)
-        # first contact: adopt the user's Telegram client language if we
-        # support it and they haven't chosen one explicitly
-        if key not in self.langs and tg_lang:
-            code = tg_lang.split("-")[0].lower()
-            if code in i18n.LANGS:
-                self.langs[key] = code
-                self._save_langs()
+        # first contact: register the chat (this doubles as the recipient
+        # list for confluence alerts) and adopt the client language
+        if key not in self.langs:
+            code = (tg_lang or "").split("-")[0].lower()
+            self.langs[key] = code if code in i18n.LANGS else "en"
+            self._save_langs()
         lang = self.lang(chat_id)
         if self.allowed and chat_id not in self.allowed:
             self.api.send(chat_id, t(lang, "private"))
@@ -745,6 +753,63 @@ class Bot:
             self._send_chart(chat_id, candles, sub["symbol"],
                              sub["interval"], pred, lang, side=d)
 
+    # ---------- autonomous confluence scanner ----------
+
+    def scanner_loop(self):
+        """Continuously scans all markets; broadcasts a premium alert to
+        every known chat when conditions align maximally."""
+        while True:
+            try:
+                self._scan_once()
+            except Exception as e:
+                print(f"[scanner] {e}")
+            time.sleep(SCAN_EVERY)
+
+    def _scan_once(self):
+        for symbol in SCAN_MARKETS:
+            try:
+                c1 = fetch_klines(symbol, "1h", 600)
+                p1 = engine_for(symbol).predict(c1, news_signal(symbol))
+                if (abs(p1.score) < PREMIUM_SCORE
+                        or p1.agreement < PREMIUM_AGREE
+                        or p1.direction == "NEUTRAL"):
+                    continue
+                side = 1 if p1.score > 0 else -1
+                c4 = fetch_klines(symbol, "4h", 400)
+                p4 = engine_for(symbol).predict(c4, news_signal(symbol))
+                if p4.score * side < PREMIUM_CONFIRM:
+                    continue  # higher timeframe does not confirm
+                if news_mod.event_risk(window_hours=2.0):
+                    continue  # too close to a high-impact release
+                state = self.premium_state.get(symbol)
+                if (state and state["side"] == side
+                        and time.time() - state["ts"] < PREMIUM_COOLDOWN):
+                    continue  # already alerted this setup recently
+                self.premium_state[symbol] = {"side": side, "ts": time.time()}
+                self._broadcast_premium(symbol, side, p1, p4, c1)
+            except Exception as e:
+                print(f"[scanner] {symbol}: {e}")
+
+    def _broadcast_premium(self, symbol: str, side: int, p1, p4, candles):
+        action = "BUY 🟢" if side == 1 else "SELL 🔴"
+        with self.lock:
+            chats = list(self.langs.keys())
+        for key in chats:
+            chat_id = int(key)
+            lang = self.lang(chat_id)
+            try:
+                msg = (t(lang, "premium", action=action, symbol=symbol,
+                         s1=f"{p1.score:+.3f}", s4=f"{p4.score:+.3f}",
+                         agr=f"{p1.agreement * 100:.0f}")
+                       + trade_plan_line(candles, p1, lang, symbol,
+                                         force_side=side)
+                       + event_risk_line(lang))
+                self.api.send(chat_id, msg + t(lang, "disclaimer"))
+                self._send_chart(chat_id, candles, symbol, "1h", p1, lang,
+                                 side=side)
+            except Exception as e:
+                print(f"[premium] {chat_id}: {e}")  # blocked bot etc.
+
     # ---------- alert loop (background thread) ----------
 
     def alert_loop(self):
@@ -823,6 +888,7 @@ class Bot:
         self.setup_profile()
         print(f"running as @{me['username']} — press Ctrl-C to stop")
         threading.Thread(target=self.alert_loop, daemon=True).start()
+        threading.Thread(target=self.scanner_loop, daemon=True).start()
         offset = None
         while True:
             try:

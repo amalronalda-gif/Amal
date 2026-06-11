@@ -181,6 +181,7 @@ Barcha buyruqlar: /help""",
 /short [symbol] [interval] — can I short now? verdict + levels
 /long [symbol] [interval] — can I long now? verdict + levels
 /scalp [symbol] — quick 5m scalp signal (tight SL/TP)
+💎 Strong-confluence alerts (1h+4h aligned, no news risk) arrive automatically — nothing to enable.
 /stats — accuracy of my past predictions
 /watch [symbol] [interval] [minutes] — entry/exit signals + flip alerts
 /watch [symbol] [interval] [minutes] all — send the reading on EVERY check
@@ -202,6 +203,7 @@ Examples:
 /short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
 /long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
 /scalp [символ] — быстрый скальп-сигнал на 5m (узкие SL/TP)
+💎 Сильные сигналы (совпадение 1h+4h, без новостного риска) приходят автоматически — включать ничего не нужно.
 /stats — точность моих прошлых прогнозов
 /watch [символ] [таймфрейм] [минуты] — сигналы входа/выхода + смена направления
 /watch [символ] [таймфрейм] [минуты] all — сводка при КАЖДОЙ проверке
@@ -223,6 +225,7 @@ Examples:
 /short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
 /long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
 /scalp [simvol] — 5m da tezkor skalp signali (tor SL/TP)
+💎 Kuchli signallar (1h+4h mos, yangilik riski yo'q) avtomatik keladi — hech narsa yoqish shart emas.
 /stats — o'tgan prognozlarim aniqligi
 /watch [simvol] [interval] [daqiqa] — kirish/chiqish signallari + yo'nalish
 /watch [simvol] [interval] [daqiqa] all — HAR tekshiruvda hisobot yuborish
@@ -532,6 +535,25 @@ Misollar:
               "ниже, чем на старших таймфреймах. Риск ≤1%.",
         "uz": "\n⚠️ Skalping — eng ko'p shovqin va komissiya; 5m aniqligi "
               "katta taymfreymlardan past. Risk ≤1%.",
+    },
+    "premium": {
+        "en": "💎 <b>STRONG SIGNAL — {action} {symbol}</b>\n"
+              "Maximum confluence: 1h <code>{s1}</code> + 4h <code>{s4}</code> "
+              "agree, strategy agreement {agr}%, no high-impact news nearby.\n"
+              "This is the highest-grade setup the bot can detect — still "
+              "not a guarantee. Risk ≤1%.",
+        "ru": "💎 <b>СИЛЬНЫЙ СИГНАЛ — {action} {symbol}</b>\n"
+              "Максимальное совпадение: 1h <code>{s1}</code> + 4h "
+              "<code>{s4}</code> в одну сторону, согласие стратегий {agr}%, "
+              "важных новостей рядом нет.\n"
+              "Это высший класс сетапа, который бот умеет находить — но не "
+              "гарантия. Риск ≤1%.",
+        "uz": "💎 <b>KUCHLI SIGNAL — {action} {symbol}</b>\n"
+              "Maksimal moslik: 1h <code>{s1}</code> + 4h <code>{s4}</code> "
+              "bir tomonda, strategiyalar mosligi {agr}%, yaqinda muhim "
+              "yangiliklar yo'q.\n"
+              "Bu bot topa oladigan eng yuqori darajadagi setup — lekin "
+              "kafolat emas. Risk ≤1%.",
     },
     "signal_enter": {
         "en": "🟢 <b>ENTRY — {action} {symbol}</b> ({dir})\n"
