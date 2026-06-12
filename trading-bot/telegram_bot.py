@@ -57,6 +57,10 @@ LANGS_FILE = os.path.join(_HERE, "user_langs.json")
 PRED_LOG_FILE = os.path.join(_HERE, "predictions_log.json")
 STATS_HORIZON = 12          # bars ahead a prediction is judged against
 MTF_INTERVALS = ("15m", "1h", "4h")
+# 15M's job in the top-down view: setup-type strategies (zones/patterns)
+SETUP_STRATEGIES = {"liquidity_sweep", "order_block", "fair_value_gap",
+                    "double_top", "head_shoulders", "trendline",
+                    "rsi_divergence", "breakout"}
 SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
 SIDE_WAIT_T = 0.14          # weak-but-aligned zone for /short and /long
@@ -489,40 +493,76 @@ class Bot:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
     def cmd_mtf(self, chat_id: int, args: list[str]):
+        """Top-down timeframe analysis — each timeframe has a job:
+        4H = direction, 1H = context, 15M = setup, 5M = entry timing."""
         lang = self.lang(chat_id)
         symbol, _, _ = parse_args_text(args)
         if not self._symbol_ok(chat_id, symbol, lang):
             return
         self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
-                                 interval="+".join(MTF_INTERVALS)))
+                                 interval="4h→1h→15m→5m"))
         try:
             engine = engine_for(symbol)
-            lines = [t(lang, "mtf_header", symbol=symbol)]
-            directions = []
-            last_candles = None
-            for interval in MTF_INTERVALS:
-                candles = fetch_klines(symbol, interval, 600)
-                if interval == "15m":
-                    lines.append(movement_line(candles, interval,
-                                               lang).strip())
-                    lines.append("")
-                last_candles = candles
-                pred = engine.predict(candles)
-                directions.append(pred.direction)
-                icon = {"BULLISH": "📈", "BEARISH": "📉",
-                        "NEUTRAL": "➖"}[pred.direction]
-                lines.append(f"{icon} <code>{interval:>3}</code> "
-                             f"<b>{i18n.direction(lang, pred.direction)}</b> "
-                             f"(<code>{pred.score:+.3f}</code>, "
-                             f"{pred.confidence:.0f}%)")
-            lines.append("")
-            non_neutral = [d for d in directions if d != "NEUTRAL"]
-            if non_neutral and len(set(directions)) == 1:
-                lines.append(t(lang, "mtf_aligned",
-                               dir=i18n.direction(lang, directions[0])))
+            preds, candles = {}, {}
+            for iv in ("4h", "1h", "15m", "5m"):
+                candles[iv] = fetch_klines(symbol, iv, 600)
+                preds[iv] = engine.predict(candles[iv])
+            p4, p1, p15, p5 = (preds[iv] for iv in ("4h", "1h", "15m", "5m"))
+            side = (1 if p4.direction == "BULLISH"
+                    else -1 if p4.direction == "BEARISH" else 0)
+
+            lines = [t(lang, "mtf_header", symbol=symbol),
+                     movement_line(candles["15m"], "15m", lang).strip(), ""]
+            lines.append(t(lang, "mtf_role4",
+                           dir=i18n.direction(lang, p4.direction),
+                           score=f"{p4.score:+.3f}"))
+
+            if side and p1.score * side >= SIDE_WAIT_T:
+                desc = t(lang, "mtf_desc_cont")
+            elif side and p1.score * side <= -SIDE_WAIT_T:
+                desc = t(lang, "mtf_desc_pull")
             else:
-                lines.append(t(lang, "mtf_mixed"))
-            self.api.send(chat_id, "\n".join(lines) + t(lang, "disclaimer"))
+                desc = t(lang, "mtf_desc_flat")
+            lines.append(t(lang, "mtf_role1", desc=desc,
+                           score=f"{p1.score:+.3f}"))
+
+            setups = [i18n.strategy_name(lang, n)
+                      for n, s in p15.signals.items()
+                      if n in SETUP_STRATEGIES and s.score * side > 0]
+            lines.append(t(lang, "mtf_role15",
+                           setups=html.escape(", ".join(setups))
+                           if setups else t(lang, "mtf_no_setup")))
+
+            entry_ok = side != 0 and p5.score * side >= SIDE_WAIT_T
+            lines.append(t(lang, "mtf_role5",
+                           ans=t(lang, "mtf_yes" if entry_ok else "mtf_not_yet"),
+                           score=f"{p5.score:+.3f}"))
+            lines.append("")
+
+            if side == 0:
+                lines.append(t(lang, "mtf_no_dir"))
+                final_side = None
+            elif setups and entry_ok:
+                sideword = t(lang, "side_long" if side == 1 else "side_short")
+                lines.append(t(lang, "mtf_go", side=sideword))
+                final_side = side
+            else:
+                what = (t(lang, "mtf_what_setup") if not setups
+                        else t(lang, "mtf_what_5m"))
+                lines.append(t(lang, "mtf_wait2",
+                               dir=i18n.direction(lang, p4.direction),
+                               what=what))
+                final_side = None
+
+            msg = "\n".join(lines)
+            if final_side:
+                msg += trade_plan_line(candles["15m"], p15, lang, symbol,
+                                       force_side=final_side)
+            msg += event_risk_line(lang)
+            self.api.send(chat_id, msg + t(lang, "disclaimer"))
+            if final_side:
+                self._send_chart(chat_id, candles["15m"], symbol, "15m",
+                                 p15, lang, side=final_side)
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 

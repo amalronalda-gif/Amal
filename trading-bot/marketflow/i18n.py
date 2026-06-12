@@ -63,7 +63,7 @@ BOT_PROFILE = {
             ("predict", "market flow now, e.g. /predict XAUUSD 4h"),
             ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
             ("news", "USD calendar + gold headlines"),
-            ("mtf", "15m+1h+4h confluence check"),
+            ("mtf", "top-down: 4H direction -> 1H context -> 15M setup -> 5M entry"),
             ("short", "short-entry analysis, e.g. /short XAUUSD 1h"),
             ("long", "long-entry analysis"),
             ("scalp", "quick 5m scalp signal with tight exits"),
@@ -89,7 +89,7 @@ BOT_PROFILE = {
             ("predict", "поток рынка сейчас, напр. /predict XAUUSD 4h"),
             ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
             ("news", "календарь USD + новости золота"),
-            ("mtf", "сверка 15m+1h+4h"),
+            ("mtf", "сверху вниз: 4H направление -> 1H контекст -> 15M сетап -> 5M вход"),
             ("short", "анализ для входа в шорт, напр. /short XAUUSD 1h"),
             ("long", "анализ для входа в лонг"),
             ("scalp", "быстрый скальп-сигнал на 5m"),
@@ -115,7 +115,7 @@ BOT_PROFILE = {
             ("predict", "hozirgi bozor oqimi, masalan /predict XAUUSD 4h"),
             ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
             ("news", "USD kalendari + oltin yangiliklari"),
-            ("mtf", "15m+1h+4h mosligini tekshirish"),
+            ("mtf", "yuqoridan pastga: 4H -> 1H -> 15M -> 5M"),
             ("short", "short uchun kirish tahlili, masalan /short XAUUSD 1h"),
             ("long", "long uchun kirish tahlili"),
             ("scalp", "5m da tezkor skalp signali"),
@@ -177,7 +177,7 @@ Barcha buyruqlar: /help""",
 /predict [symbol] [interval] — current prediction with strategy breakdown
 /backtest [symbol] [interval] — walk-forward backtest
 /news — USD economic calendar + latest gold headlines
-/mtf [symbol] — 15m+1h+4h confluence check
+/mtf [symbol] — top-down: 4H direction, 1H context, 15M setup, 5M entry
 /short [symbol] [interval] — can I short now? verdict + levels
 /long [symbol] [interval] — can I long now? verdict + levels
 /scalp [symbol] — quick 5m scalp signal (tight SL/TP)
@@ -199,7 +199,7 @@ Examples:
 /predict [символ] [таймфрейм] — текущий прогноз с разбором по стратегиям
 /backtest [символ] [таймфрейм] — бэктест на истории
 /news — экономкалендарь США + свежие новости по золоту
-/mtf [символ] — сверка 15m+1h+4h
+/mtf [символ] — сверху вниз: 4H направление, 1H контекст, 15M сетап, 5M вход
 /short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
 /long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
 /scalp [символ] — быстрый скальп-сигнал на 5m (узкие SL/TP)
@@ -221,7 +221,7 @@ Examples:
 /predict [simvol] [interval] — strategiyalar tahlili bilan joriy prognoz
 /backtest [simvol] [interval] — tarixiy ma'lumotlarda backtest
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
-/mtf [simvol] — 15m+1h+4h mosligini tekshirish
+/mtf [simvol] — yuqoridan pastga: 4H yo'nalish, 1H kontekst, 15M setup, 5M kirish
 /short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
 /long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
 /scalp [simvol] — 5m da tezkor skalp signali (tor SL/TP)
@@ -432,6 +432,64 @@ Misollar:
         "uz": "\n💵 ${account} hisob uchun (risk {risk}$): hajm ≈ "
               "<code>{units}</code> {asset} (~${notional}); stop ishlasa = "
               "−${loss}, maqsadga yetsa = +${win}.",
+    },
+    "mtf_role4": {
+        "en": "4H — where is price going: <b>{dir}</b> (<code>{score}</code>)",
+        "ru": "4H — куда идёт цена: <b>{dir}</b> (<code>{score}</code>)",
+        "uz": "4H — narx qayoqqa ketmoqda: <b>{dir}</b> (<code>{score}</code>)",
+    },
+    "mtf_role1": {
+        "en": "1H — what is price doing: {desc} (<code>{score}</code>)",
+        "ru": "1H — что делает цена: {desc} (<code>{score}</code>)",
+        "uz": "1H — narx nima qilmoqda: {desc} (<code>{score}</code>)",
+    },
+    "mtf_desc_cont": {"en": "moving with the 4H direction",
+                      "ru": "движение по направлению 4H",
+                      "uz": "4H yo'nalishi bo'yicha harakat"},
+    "mtf_desc_pull": {"en": "pullback against the 4H direction",
+                      "ru": "откат против направления 4H",
+                      "uz": "4H yo'nalishiga qarshi pullback"},
+    "mtf_desc_flat": {"en": "consolidating", "ru": "консолидация",
+                      "uz": "konsolidatsiya"},
+    "mtf_role15": {
+        "en": "15M — is there a setup: {setups}",
+        "ru": "15M — есть ли сетап: {setups}",
+        "uz": "15M — setup bormi: {setups}",
+    },
+    "mtf_no_setup": {"en": "not yet", "ru": "пока нет", "uz": "hozircha yo'q"},
+    "mtf_role5": {
+        "en": "5M — can I enter: {ans} (<code>{score}</code>)",
+        "ru": "5M — можно ли входить: {ans} (<code>{score}</code>)",
+        "uz": "5M — kirsam bo'ladimi: {ans} (<code>{score}</code>)",
+    },
+    "mtf_yes": {"en": "YES — momentum agrees", "ru": "ДА — импульс совпадает",
+                "uz": "HA — impuls mos"},
+    "mtf_not_yet": {"en": "not yet — wait for alignment",
+                    "ru": "нет — ждать совпадения",
+                    "uz": "yo'q — moslikni kuting"},
+    "mtf_go": {
+        "en": "✅ <b>Every timeframe did its job — {side} entry allowed.</b>",
+        "ru": "✅ <b>Все таймфреймы сошлись — вход {side} разрешён.</b>",
+        "uz": "✅ <b>Barcha taymfreymlar mos — {side} kirishga ruxsat.</b>",
+    },
+    "mtf_wait2": {
+        "en": "⏳ 4H direction is {dir}, but {what} — wait. /watch will ping "
+              "you when it lines up.",
+        "ru": "⏳ Направление 4H — {dir}, но {what} — ждите. /watch пришлёт "
+              "сигнал, когда всё сойдётся.",
+        "uz": "⏳ 4H yo'nalishi — {dir}, lekin {what} — kuting. Hammasi mos "
+              "kelganda /watch xabar beradi.",
+    },
+    "mtf_what_setup": {"en": "there is no 15M setup",
+                       "ru": "сетапа на 15M нет",
+                       "uz": "15M da setup yo'q"},
+    "mtf_what_5m": {"en": "5M does not confirm the entry",
+                    "ru": "5M не подтверждает вход",
+                    "uz": "5M kirishni tasdiqlamayapti"},
+    "mtf_no_dir": {
+        "en": "➖ <b>4H has no direction — by the timeframe rule, no trades.</b>",
+        "ru": "➖ <b>4H без направления — по правилу таймфреймов сделок нет.</b>",
+        "uz": "➖ <b>4H da yo'nalish yo'q — taymfreym qoidasiga ko'ra savdo yo'q.</b>",
     },
     "mtf_header": {
         "en": "🔭 <b>{symbol} — multi-timeframe view</b>",
