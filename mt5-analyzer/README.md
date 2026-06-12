@@ -27,6 +27,22 @@ python main.py run                    :: живой анализ, сигнал �
 Терминал MT5 должен быть установлен и залогинен в счёт брокера с символом
 XAUUSD (если символ называется иначе, напр. XAUUSD.m — поменяйте в config).
 
+## Запуск на телефоне / без MT5 (источник Binance)
+
+MT5 не нужен — данные берутся с публичного API Binance (золото = PAXGUSDT,
+1 токен = 1 унция, повторяет XAU/USD). Работает на Android в Termux:
+
+```bash
+pkg update && pkg install python git
+git clone https://github.com/amalronalda-gif/Amal.git
+cd Amal && git checkout claude/xauusdt-liquidity-sweeps-xehad0 && cd mt5-analyzer
+python main.py backtest --source binance          # проверка стратегии
+python main.py run --source binance               # живые сигналы
+```
+
+Впишите telegram_token/chat_id в config.json — сигналы будут приходить в
+Telegram. Отключите оптимизацию батареи для Termux.
+
 ## Бэктест без MT5 (любая ОС)
 
 ```bash

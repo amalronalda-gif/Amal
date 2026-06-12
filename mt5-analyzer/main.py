@@ -23,12 +23,22 @@ from backtest import run_backtest
 from notifier import log_csv, notify_telegram, signals_today
 
 
+def _fetch(args, cfg, tf: str, count: int):
+    if args.source == "binance":
+        return d.get_bars_binance(cfg["symbol"], tf, count)
+    return d.get_bars(cfg["symbol"], tf, count)
+
+
 def cmd_backtest(args, cfg):
     if args.csv:
         h1 = d.load_csv(args.csv)
         h4 = d.resample(h1, "H1", "H4")
         print(f"loaded {len(h1)} H1 bars from {args.csv} "
               f"(H4 resampled: {len(h4)})")
+    elif args.source == "binance":
+        h1 = d.get_bars_binance(cfg["symbol"], "H1", args.bars)
+        h4 = d.get_bars_binance(cfg["symbol"], "H4", args.bars // 4 + 60)
+        print(f"fetched {len(h1)} H1 / {len(h4)} H4 bars from Binance")
     else:
         d.mt5_connect(cfg)
         try:
@@ -43,15 +53,19 @@ def cmd_backtest(args, cfg):
 
 
 def cmd_run(args, cfg):
-    d.mt5_connect(cfg)
-    print(f"connected to MT5; analyzing {cfg['symbol']} "
-          f"(H1 signal / H4 trend), Ctrl-C to stop")
+    if args.source == "mt5":
+        d.mt5_connect(cfg)
+        print(f"connected to MT5; analyzing {cfg['symbol']} "
+              f"(H1 signal / H4 trend), Ctrl-C to stop")
+    else:
+        print(f"analyzing {cfg['symbol']} via Binance data "
+              f"(H1 signal / H4 trend), Ctrl-C to stop")
     last_bar_time = None
     try:
         while True:
             try:
-                h1 = d.get_bars(cfg["symbol"], "H1", 400)
-                h4 = d.get_bars(cfg["symbol"], "H4", 300)
+                h1 = _fetch(args, cfg, "H1", 400)
+                h4 = _fetch(args, cfg, "H4", 300)
             except Exception as e:
                 print(f"[data] {e}; retrying")
                 time.sleep(cfg.get("poll_seconds", 30))
@@ -80,19 +94,24 @@ def cmd_run(args, cfg):
     except KeyboardInterrupt:
         pass
     finally:
-        d.mt5_disconnect()
+        if args.source == "mt5":
+            d.mt5_disconnect()
 
 
 def main():
-    p = argparse.ArgumentParser(description="MT5 XAUUSD signal analyzer")
+    p = argparse.ArgumentParser(description="MT5/Binance XAUUSD signal analyzer")
     p.add_argument("--config", default=None, help="path to config.json")
     sub = p.add_subparsers(dest="cmd", required=True)
-    sp = sub.add_parser("run", help="live analysis loop (Windows + MT5)")
+    sp = sub.add_parser("run", help="live analysis loop")
+    sp.add_argument("--source", choices=("mt5", "binance"), default="mt5",
+                    help="data source: mt5 (Windows terminal) or binance "
+                         "(works anywhere incl. phones)")
     sp.set_defaults(func=cmd_run)
     sp = sub.add_parser("backtest", help="walk-forward backtest")
     sp.add_argument("--bars", type=int, default=None,
-                    help="H1 bars to fetch from MT5")
-    sp.add_argument("--csv", help="H1 CSV file instead of MT5")
+                    help="H1 bars to fetch")
+    sp.add_argument("--csv", help="H1 CSV file instead of a live source")
+    sp.add_argument("--source", choices=("mt5", "binance"), default="mt5")
     sp.set_defaults(func=cmd_backtest)
     args = p.parse_args()
     cfg = d.load_config(args.config)

@@ -122,3 +122,43 @@ def resample(bars: list[Bar], from_tf: str, to_tf: str) -> list[Bar]:
                        max(x.high for x in group),
                        min(x.low for x in group), group[-1].close))
     return out
+
+
+# ---------------------------------------------------------------------------
+# Binance source: lets the analyzer run anywhere (phone/Termux/Linux) with
+# no MT5 terminal. Gold = PAXGUSDT (tokenized gold, tracks XAU/USD).
+# ---------------------------------------------------------------------------
+
+BINANCE_URL = "https://data-api.binance.vision/api/v3/klines"
+BINANCE_SYMBOLS = {"XAUUSD": "PAXGUSDT", "BTCUSD": "BTCUSDT",
+                   "EURUSD": "EURUSDT"}
+BINANCE_TF = {"M15": "15m", "M30": "30m", "H1": "1h", "H4": "4h", "D1": "1d"}
+
+
+def get_bars_binance(symbol: str, timeframe: str, count: int,
+                     drop_forming: bool = True) -> list[Bar]:
+    import urllib.request
+    bsym = BINANCE_SYMBOLS.get(symbol.upper(), symbol.upper())
+    bars: list[Bar] = []
+    end = None
+    remaining = count + 1  # +1 so we can drop the forming bar
+    while remaining > 0:
+        page = min(remaining, 1000)
+        url = (f"{BINANCE_URL}?symbol={bsym}"
+               f"&interval={BINANCE_TF[timeframe]}&limit={page}")
+        if end is not None:
+            url += f"&endTime={end}"
+        req = urllib.request.Request(url,
+                                     headers={"User-Agent": "mt5-analyzer"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            rows = json.loads(resp.read().decode())
+        if not rows:
+            break
+        batch = [Bar(int(r[0]) // 1000, float(r[1]), float(r[2]),
+                     float(r[3]), float(r[4])) for r in rows]
+        bars = batch + bars
+        remaining -= len(batch)
+        end = rows[0][0] - 1
+        if len(batch) < page:
+            break
+    return bars[:-1] if drop_forming and bars else bars
