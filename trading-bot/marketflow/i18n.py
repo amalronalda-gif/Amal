@@ -363,6 +363,11 @@ Misollar:
               "<code>/predict XAUUSD</code>, <code>/predict BTCUSD</code> yoki "
               "<code>/predict EURUSD</code> ni sinab ko'ring.",
     },
+    "movement": {
+        "en": "📊 price move: {moves}",
+        "ru": "📊 движение цены: {moves}",
+        "uz": "📊 narx harakati: {moves}",
+    },
     "risk_now": {"en": "NOW", "ru": "СЕЙЧАС", "uz": "HOZIR"},
     "risk_in": {"en": "in {h}h", "ru": "через {h} ч", "uz": "{h} soatdan keyin"},
     "risk_line": {

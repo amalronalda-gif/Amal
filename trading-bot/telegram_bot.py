@@ -144,6 +144,21 @@ class TelegramAPI:
             raise RuntimeError(f"telegram sendPhoto failed: {payload}")
 
 
+def movement_line(candles, interval: str, lang: str = "en") -> str:
+    """Recent price change so 'NEUTRAL' is never mistaken for 'flat'."""
+    step = INTERVAL_SECONDS.get(interval, 3600)
+    last = candles[-1].close
+    parts = []
+    for label_h in (1, 4, 24):
+        bars = max(1, label_h * 3600 // step)
+        if bars < len(candles):
+            chg = (last / candles[-bars - 1].close - 1) * 100
+            parts.append(f"{label_h}h <code>{chg:+.2f}%</code>")
+    if not parts:
+        return ""
+    return "\n" + t(lang, "movement", moves=" · ".join(parts))
+
+
 def spot_quote_line(symbol: str, lang: str = "en") -> str:
     """Live spot quote from TradingView for markets we have a feed for."""
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
@@ -465,6 +480,7 @@ class Bot:
             self.api.send(chat_id, format_prediction(
                 symbol, interval, pred, candles[-1].close,
                 candles[-1].open_time, lang)
+                + movement_line(candles, interval, lang)
                 + trade_plan_line(candles, pred, lang, symbol)
                 + spot_quote_line(symbol, lang)
                 + event_risk_line(lang))
@@ -481,10 +497,16 @@ class Bot:
                                  interval="+".join(MTF_INTERVALS)))
         try:
             engine = engine_for(symbol)
-            lines = [t(lang, "mtf_header", symbol=symbol), ""]
+            lines = [t(lang, "mtf_header", symbol=symbol)]
             directions = []
+            last_candles = None
             for interval in MTF_INTERVALS:
                 candles = fetch_klines(symbol, interval, 600)
+                if interval == "15m":
+                    lines.append(movement_line(candles, interval,
+                                               lang).strip())
+                    lines.append("")
+                last_candles = candles
                 pred = engine.predict(candles)
                 directions.append(pred.direction)
                 icon = {"BULLISH": "📈", "BEARISH": "📉",
@@ -553,6 +575,7 @@ class Bot:
                 lines.append(t(lang, "side_neutral") + " "
                              + html.escape(", ".join(neutral)))
             msg = "\n".join(lines)
+            msg += movement_line(candles, interval, lang)
             if aligned >= SIDE_WAIT_T:
                 msg += trade_plan_line(candles, pred, lang, symbol,
                                        force_side=side)
