@@ -65,7 +65,7 @@ BOT_PROFILE = {
             ("predict", "market flow now, e.g. /predict XAUUSD 4h"),
             ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
             ("news", "USD calendar + gold headlines"),
-            ("mtf", "top-down: 4H direction -> 1H context -> 15M setup -> 5M entry"),
+            ("mtf", "top-down: 1H direction -> 30M setup -> 5M entry"),
             ("short", "short-entry analysis, e.g. /short XAUUSD 1h"),
             ("long", "long-entry analysis"),
             ("scalp", "quick 5m scalp signal with tight exits"),
@@ -91,7 +91,7 @@ BOT_PROFILE = {
             ("predict", "поток рынка сейчас, напр. /predict XAUUSD 4h"),
             ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
             ("news", "календарь USD + новости золота"),
-            ("mtf", "сверху вниз: 4H направление -> 1H контекст -> 15M сетап -> 5M вход"),
+            ("mtf", "сверху вниз: 1H направление -> 30M сетап -> 5M вход"),
             ("short", "анализ для входа в шорт, напр. /short XAUUSD 1h"),
             ("long", "анализ для входа в лонг"),
             ("scalp", "быстрый скальп-сигнал на 5m"),
@@ -117,7 +117,7 @@ BOT_PROFILE = {
             ("predict", "hozirgi bozor oqimi, masalan /predict XAUUSD 4h"),
             ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
             ("news", "USD kalendari + oltin yangiliklari"),
-            ("mtf", "yuqoridan pastga: 4H -> 1H -> 15M -> 5M"),
+            ("mtf", "yuqoridan pastga: 1H -> 30M -> 5M"),
             ("short", "short uchun kirish tahlili, masalan /short XAUUSD 1h"),
             ("long", "long uchun kirish tahlili"),
             ("scalp", "5m da tezkor skalp signali"),
@@ -179,7 +179,7 @@ Barcha buyruqlar: /help""",
 /predict [symbol] [interval] — current prediction with strategy breakdown
 /backtest [symbol] [interval] — walk-forward backtest
 /news — USD economic calendar + latest gold headlines
-/mtf [symbol] — top-down: 4H direction, 1H context, 15M setup, 5M entry
+/mtf [symbol] — top-down: 1H direction → 30M setup → 5M entry
 /short [symbol] [interval] — can I short now? verdict + levels
 /long [symbol] [interval] — can I long now? verdict + levels
 /scalp [symbol] — quick 5m scalp signal (tight SL/TP)
@@ -201,7 +201,7 @@ Examples:
 /predict [символ] [таймфрейм] — текущий прогноз с разбором по стратегиям
 /backtest [символ] [таймфрейм] — бэктест на истории
 /news — экономкалендарь США + свежие новости по золоту
-/mtf [символ] — сверху вниз: 4H направление, 1H контекст, 15M сетап, 5M вход
+/mtf [символ] — сверху вниз: 1H направление → 30M сетап → 5M вход
 /short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
 /long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
 /scalp [символ] — быстрый скальп-сигнал на 5m (узкие SL/TP)
@@ -223,7 +223,7 @@ Examples:
 /predict [simvol] [interval] — strategiyalar tahlili bilan joriy prognoz
 /backtest [simvol] [interval] — tarixiy ma'lumotlarda backtest
 /news — AQSH iqtisodiy kalendari + oltin bo'yicha yangiliklar
-/mtf [simvol] — yuqoridan pastga: 4H yo'nalish, 1H kontekst, 15M setup, 5M kirish
+/mtf [simvol] — yuqoridan pastga: 1H yo'nalish → 30M setup → 5M kirish
 /short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
 /long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
 /scalp [simvol] — 5m da tezkor skalp signali (tor SL/TP)
@@ -454,6 +454,21 @@ Misollar:
               "<code>{units}</code> {asset} (~${notional}); stop ishlasa = "
               "−${loss}, maqsadga yetsa = +${win}.",
     },
+    "tf_dir": {
+        "en": "1️⃣ <b>1H — direction:</b> {dir} (<code>{score}</code>)",
+        "ru": "1️⃣ <b>1H — направление:</b> {dir} (<code>{score}</code>)",
+        "uz": "1️⃣ <b>1H — yo'nalish:</b> {dir} (<code>{score}</code>)",
+    },
+    "tf_setup": {
+        "en": "2️⃣ <b>30M — setup:</b> {setups}",
+        "ru": "2️⃣ <b>30M — сетап:</b> {setups}",
+        "uz": "2️⃣ <b>30M — setup:</b> {setups}",
+    },
+    "tf_entry": {
+        "en": "3️⃣ <b>5M — entry:</b> {ans} (<code>{score}</code>)",
+        "ru": "3️⃣ <b>5M — вход:</b> {ans} (<code>{score}</code>)",
+        "uz": "3️⃣ <b>5M — kirish:</b> {ans} (<code>{score}</code>)",
+    },
     "mtf_role4": {
         "en": "4H — where is price going: <b>{dir}</b> (<code>{score}</code>)",
         "ru": "4H — куда идёт цена: <b>{dir}</b> (<code>{score}</code>)",
@@ -507,6 +522,11 @@ Misollar:
     "mtf_what_5m": {"en": "5M does not confirm the entry",
                     "ru": "5M не подтверждает вход",
                     "uz": "5M kirishni tasdiqlamayapti"},
+    "mtf_no_dir1": {
+        "en": "➖ <b>1H has no direction — no entry. Wait for a clear 1H bias.</b>",
+        "ru": "➖ <b>1H без направления — входа нет. Ждём чёткий уклон на 1H.</b>",
+        "uz": "➖ <b>1H da yo'nalish yo'q — kirish yo'q. 1H aniq bo'lishini kuting.</b>",
+    },
     "mtf_no_dir": {
         "en": "➖ <b>4H has no direction — by the timeframe rule, no trades.</b>",
         "ru": "➖ <b>4H без направления — по правилу таймфреймов сделок нет.</b>",

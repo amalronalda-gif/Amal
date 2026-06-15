@@ -537,54 +537,48 @@ class Bot:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
     def cmd_mtf(self, chat_id: int, args: list[str]):
-        """Top-down timeframe analysis — each timeframe has a job:
-        4H = direction, 1H = context, 15M = setup, 5M = entry timing."""
+        """Top-down cascade — analyse 1H direction, then the 30M setup, then
+        time the entry on 5M. Entry is allowed only when all three line up."""
         lang = self.lang(chat_id)
         symbol, _, _ = parse_args_text(args)
         if not self._symbol_ok(chat_id, symbol, lang):
             return
         self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
-                                 interval="4h→1h→15m→5m"))
+                                 interval="1h→30m→5m"))
         try:
             engine = engine_for(symbol)
-            preds, candles = {}, {}
-            for iv in ("4h", "1h", "15m", "5m"):
-                candles[iv] = fetch_klines(symbol, iv, 600)
-                preds[iv] = engine.predict(candles[iv])
-            p4, p1, p15, p5 = (preds[iv] for iv in ("4h", "1h", "15m", "5m"))
-            side = (1 if p4.direction == "BULLISH"
-                    else -1 if p4.direction == "BEARISH" else 0)
+            c1 = fetch_klines(symbol, "1h", 600)
+            c30 = fetch_klines(symbol, "30m", 600)
+            c5 = fetch_klines(symbol, "5m", 600)
+            p1 = engine.predict(c1, news_signal(symbol))
+            p30 = engine.predict(c30)
+            p5 = engine.predict(c5)
+            side = (1 if p1.direction == "BULLISH"
+                    else -1 if p1.direction == "BEARISH" else 0)
 
             lines = [t(lang, "mtf_header", symbol=symbol),
-                     movement_line(candles["15m"], "15m", lang).strip(), ""]
-            lines.append(t(lang, "mtf_role4",
-                           dir=i18n.direction(lang, p4.direction),
-                           score=f"{p4.score:+.3f}"))
-
-            if side and p1.score * side >= SIDE_WAIT_T:
-                desc = t(lang, "mtf_desc_cont")
-            elif side and p1.score * side <= -SIDE_WAIT_T:
-                desc = t(lang, "mtf_desc_pull")
-            else:
-                desc = t(lang, "mtf_desc_flat")
-            lines.append(t(lang, "mtf_role1", desc=desc,
+                     movement_line(c5, "5m", lang).strip(), "",
+                     regime_line(p1, lang).strip()]
+            # 1) 1H direction
+            lines.append(t(lang, "tf_dir",
+                           dir=i18n.direction(lang, p1.direction),
                            score=f"{p1.score:+.3f}"))
-
+            # 2) 30M setup aligned with the 1H direction
             setups = [i18n.strategy_name(lang, n)
-                      for n, s in p15.signals.items()
-                      if n in SETUP_STRATEGIES and s.score * side > 0]
-            lines.append(t(lang, "mtf_role15",
+                      for n, s in p30.signals.items()
+                      if n in SETUP_STRATEGIES and side and s.score * side > 0]
+            lines.append(t(lang, "tf_setup",
                            setups=html.escape(", ".join(setups))
                            if setups else t(lang, "mtf_no_setup")))
-
+            # 3) 5M entry timing
             entry_ok = side != 0 and p5.score * side >= SIDE_WAIT_T
-            lines.append(t(lang, "mtf_role5",
+            lines.append(t(lang, "tf_entry",
                            ans=t(lang, "mtf_yes" if entry_ok else "mtf_not_yet"),
                            score=f"{p5.score:+.3f}"))
             lines.append("")
 
             if side == 0:
-                lines.append(t(lang, "mtf_no_dir"))
+                lines.append(t(lang, "mtf_no_dir1"))
                 final_side = None
             elif setups and entry_ok:
                 sideword = t(lang, "side_long" if side == 1 else "side_short")
@@ -594,19 +588,20 @@ class Bot:
                 what = (t(lang, "mtf_what_setup") if not setups
                         else t(lang, "mtf_what_5m"))
                 lines.append(t(lang, "mtf_wait2",
-                               dir=i18n.direction(lang, p4.direction),
+                               dir=i18n.direction(lang, p1.direction),
                                what=what))
                 final_side = None
 
             msg = "\n".join(lines)
             if final_side:
-                msg += trade_plan_line(candles["15m"], p15, lang, symbol,
+                # entry levels are timed on the 5M chart
+                msg += trade_plan_line(c5, p5, lang, symbol,
                                        force_side=final_side)
             msg += event_risk_line(lang)
             self.api.send(chat_id, msg + t(lang, "disclaimer"))
             if final_side:
-                self._send_chart(chat_id, candles["15m"], symbol, "15m",
-                                 p15, lang, side=final_side)
+                self._send_chart(chat_id, c5, symbol, "5m", p5, lang,
+                                 side=final_side)
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 
