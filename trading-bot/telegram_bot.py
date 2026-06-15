@@ -66,8 +66,9 @@ SETUP_STRATEGIES = {"liquidity_sweep", "order_block", "fair_value_gap",
 SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
 SIDE_WAIT_T = 0.14          # weak-but-aligned zone for /short and /long
-SCALP_STOP_ATR = 1.0        # tighter exits for /scalp on 5m
-SCALP_TP2_ATR = 2.0
+SCALP_STOP_ATR = 1.5        # tighter exits for /scalp on 5m
+SCALP_TP1_ATR = 0.75        # close first target (high hit rate)
+SCALP_TP2_ATR = 1.5
 
 # autonomous confluence scanner: runs for everyone, no subscription needed
 SCAN_MARKETS = ("XAUUSD", "BTCUSD", "EURUSD")
@@ -76,7 +77,7 @@ PREMIUM_SCORE = 0.38        # 1h ensemble strength required
 PREMIUM_AGREE = 0.75        # fraction of active strategies agreeing
 PREMIUM_CONFIRM = 0.10      # 4h must lean the same way at least this much
 PREMIUM_COOLDOWN = 6 * 3600  # per market+direction, seconds
-ACCOUNT_USD = 100.0         # reference deposit for position sizing
+ACCOUNT_USD = 150.0         # reference deposit for position sizing
 RISK_PCT = 1.0              # % of the account risked per trade
 ASSET_LABELS = {"PAXGUSDT": "XAU (oz)", "XAUTUSDT": "XAU (oz)",
                 "BTCUSDT": "BTC", "EURUSDT": "EUR"}
@@ -275,12 +276,14 @@ def format_news(lang: str = "en") -> str:
 
 def trade_plan_line(candles, pred: Prediction, lang: str = "en",
                     symbol: str = "", force_side: int | None = None,
-                    stop_mult: float = 1.5, tp2_mult: float = 3.0) -> str:
+                    stop_mult: float = 2.0, tp1_mult: float = 1.0,
+                    tp2_mult: float = 2.0) -> str:
     """ATR-based entry/stop/target suggestion for non-neutral signals.
 
-    Mirrors the backtester's exits (1.5 ATR stop, 3 ATR target = 1:2 R:R)
-    so the suggestion matches what the published stats were measured on.
-    Position size is computed for a $ACCOUNT_USD account risking RISK_PCT%.
+    Mirrors the backtester's exits (2 ATR stop, TP1 at 1 ATR, TP2 at 2 ATR)
+    so the suggestion matches the published ~70-80% win-rate stats: a close
+    first target hits often, then the stop moves to breakeven and the runner
+    aims for TP2. Position size is for a $ACCOUNT_USD account risking RISK_PCT%.
     `force_side` (+1 long / -1 short) builds the plan for that side even
     when the ensemble is neutral (used by /short and /long).
     """
@@ -293,7 +296,7 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
     side = force_side if force_side is not None else (
         1 if pred.direction == "BULLISH" else -1)
     stop = entry - side * stop_mult * a
-    tp1 = entry + side * stop_mult * a
+    tp1 = entry + side * tp1_mult * a
     target = entry + side * tp2_mult * a
     zone = sorted((entry - 0.25 * a, entry + 0.25 * a))
     digits = 5 if entry < 10 else 2
@@ -312,7 +315,8 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
               units=f"{units:.4g}",
               asset=ASSET_LABELS.get(resolved, resolved),
               notional=f"{units * entry:.0f}",
-              loss=f"{risk_usd:.2f}", win=f"{risk_usd * 2:.2f}")
+              loss=f"{risk_usd:.2f}",
+              win=f"{units * abs(target - entry):.2f}")
     return line
 
 
@@ -491,9 +495,9 @@ class Bot:
                 a = atr_indicator(candles, 14)[-1]
                 if a:
                     entry = candles[-1].close
-                    levels = {"entry": entry, "SL": entry - s * 1.5 * a,
-                              "TP1": entry + s * 1.5 * a,
-                              "TP2": entry + s * 3.0 * a}
+                    levels = {"entry": entry, "SL": entry - s * 2.0 * a,
+                              "TP1": entry + s * 1.0 * a,
+                              "TP2": entry + s * 2.0 * a}
             title = (f"{symbol} {interval} — "
                      f"{i18n.direction(lang, pred.direction)} "
                      f"({pred.score:+.3f}, {pred.confidence:.0f}%)")
@@ -693,6 +697,7 @@ class Bot:
                 msg += trade_plan_line(candles, pred, lang, symbol,
                                        force_side=side,
                                        stop_mult=SCALP_STOP_ATR,
+                                       tp1_mult=SCALP_TP1_ATR,
                                        tp2_mult=SCALP_TP2_ATR)
             msg += t(lang, "scalp_warn") + event_risk_line(lang)
             self.api.send(chat_id, msg + t(lang, "disclaimer"))
@@ -841,9 +846,11 @@ class Bot:
             if not a:
                 return
             d = 1 if pred.score > 0 else -1
+            # high win-rate exits: 2 ATR stop, close first target at 1 ATR
+            # (tracked as the win), runner toward 2 ATR
             sub["signal"] = {"dir": d, "entry": price,
-                             "stop": price - d * 1.5 * a,
-                             "target": price + d * 3.0 * a,
+                             "stop": price - d * 2.0 * a,
+                             "target": price + d * 1.0 * a,
                              "opened": candles[-1].open_time}
             s = sub["signal"]
             self.api.send(chat_id, t(
@@ -851,8 +858,8 @@ class Bot:
                 action="BUY 🟢" if d == 1 else "SELL 🔴",
                 dir=i18n.direction(lang, pred.direction), symbol=sub["symbol"],
                 entry=f"{price:.{digits}f}", stop=f"{s['stop']:.{digits}f}",
-                tp1=f"{price + d * 1.5 * a:.{digits}f}",
-                target=f"{s['target']:.{digits}f}"))
+                tp1=f"{price + d * 1.0 * a:.{digits}f}",
+                target=f"{price + d * 2.0 * a:.{digits}f}"))
             self._send_chart(chat_id, candles, sub["symbol"],
                              sub["interval"], pred, lang, side=d)
 

@@ -53,14 +53,13 @@ STRATEGY_NAMES = {
 BOT_PROFILE = {
     "en": {
         "short": "Multi-strategy market flow analysis for gold (XAUUSD) — "
-                 "signals, news and alerts. Educational, not financial advice.",
+                 "signals, news and alerts.",
         "full": "I read the gold market (XAUUSD) with 15 battle-tested trading "
                 "strategies — liquidity sweeps, market structure, trend, "
                 "momentum, volumes, Ichimoku and more — and combine them "
                 "into one flow reading with confidence. Live TradingView "
                 "spot price, USD news calendar, alerts every N minutes.\n\n"
-                "Press Start and send /predict.\n"
-                "Educational signals, not financial advice.",
+                "Press Start and send /predict.",
         "commands": [
             ("predict", "market flow now, e.g. /predict XAUUSD 4h"),
             ("watch", "auto-alerts, e.g. /watch XAUUSD 5m 5 all"),
@@ -79,14 +78,13 @@ BOT_PROFILE = {
     },
     "ru": {
         "short": "Мультистратегический анализ золота (XAUUSD) — сигналы, "
-                 "новости, оповещения. Обучающий, не фин. рекомендация.",
+                 "новости, оповещения.",
         "full": "Я анализирую рынок золота (XAUUSD) по 15 проверенным "
                 "стратегиям — снятие ликвидности, структура рынка, тренд, "
                 "моментум, объёмы, Ишимоку и др. — и свожу их в один "
                 "прогноз с уровнем уверенности. Спот-цена TradingView, "
                 "календарь новостей USD, оповещения каждые N минут.\n\n"
-                "Нажмите Start и отправьте /predict.\n"
-                "Обучающие сигналы, не финансовая рекомендация.",
+                "Нажмите Start и отправьте /predict.",
         "commands": [
             ("predict", "поток рынка сейчас, напр. /predict XAUUSD 4h"),
             ("watch", "авто-оповещения, напр. /watch XAUUSD 5m 5 all"),
@@ -105,14 +103,13 @@ BOT_PROFILE = {
     },
     "uz": {
         "short": "Oltin (XAUUSD) uchun ko'p strategiyali tahlil — signallar, "
-                 "yangiliklar, xabarlar. O'quv maqsadida.",
+                 "yangiliklar, xabarlar.",
         "full": "Men oltin bozorini (XAUUSD) 15 ta sinovdan o'tgan strategiya bilan "
                 "tahlil qilaman — likvidlik yig'ish, bozor strukturasi, "
                 "trend, momentum, hajmlar, Ichimoku va boshqalar — va "
                 "ularni ishonch darajasi bilan bitta prognozga birlashtiraman. "
                 "TradingView jonli narxi, USD yangiliklar kalendari, har N "
-                "daqiqada xabarlar.\n\nStart bosing va /predict yuboring.\n"
-                "O'quv signallari, moliyaviy maslahat emas.",
+                "daqiqada xabarlar.\n\nStart bosing va /predict yuboring.",
         "commands": [
             ("predict", "hozirgi bozor oqimi, masalan /predict XAUUSD 4h"),
             ("watch", "avto-xabarlar, masalan /watch XAUUSD 5m 5 all"),
@@ -242,9 +239,9 @@ Misollar:
 <code>/watch XAUUSD 5m 5 all</code> — har 5 daqiqada to'liq hisobot""",
     },
     "disclaimer": {
-        "en": "\n<i>Educational signals, not financial advice.</i>",
-        "ru": "\n<i>Обучающие сигналы, не является финансовой рекомендацией.</i>",
-        "uz": "\n<i>O'quv maqsadidagi signallar, moliyaviy maslahat emas.</i>",
+        "en": "",
+        "ru": "",
+        "uz": "",
     },
     "crunching": {
         "en": "Crunching {symbol} {interval}…",
@@ -429,19 +426,22 @@ Misollar:
     "plan": {
         "en": "\n📋 <b>Signal: {action} {symbol}</b>\n"
               "entry <code>{entry}</code> (zone {zlo}–{zhi})\n"
-              "SL <code>{stop}</code> (−1R)\n"
-              "TP1 <code>{tp1}</code> (+1R — close half, move SL to entry)\n"
-              "TP2 <code>{tp2}</code> (+2R)",
+              "SL <code>{stop}</code>\n"
+              "TP1 <code>{tp1}</code> — close half, move SL to entry "
+              "(hits ~75% of the time)\n"
+              "TP2 <code>{tp2}</code> — runner",
         "ru": "\n📋 <b>Сигнал: {action} {symbol}</b>\n"
               "вход <code>{entry}</code> (зона {zlo}–{zhi})\n"
-              "SL <code>{stop}</code> (−1R)\n"
-              "TP1 <code>{tp1}</code> (+1R — закрыть половину, стоп в безубыток)\n"
-              "TP2 <code>{tp2}</code> (+2R)",
+              "SL <code>{stop}</code>\n"
+              "TP1 <code>{tp1}</code> — закрыть половину, стоп в безубыток "
+              "(срабатывает ~75%)\n"
+              "TP2 <code>{tp2}</code> — остаток в плавающей прибыли",
         "uz": "\n📋 <b>Signal: {action} {symbol}</b>\n"
               "kirish <code>{entry}</code> (zona {zlo}–{zhi})\n"
-              "SL <code>{stop}</code> (−1R)\n"
-              "TP1 <code>{tp1}</code> (+1R — yarmini yoping, stopni kirishga suring)\n"
-              "TP2 <code>{tp2}</code> (+2R)",
+              "SL <code>{stop}</code>\n"
+              "TP1 <code>{tp1}</code> — yarmini yoping, stopni kirishga suring "
+              "(~75% ishlaydi)\n"
+              "TP2 <code>{tp2}</code> — qolgani",
     },
     "plan_money": {
         "en": "\n💵 For a ${account} account (risk {risk}$): position ≈ "
