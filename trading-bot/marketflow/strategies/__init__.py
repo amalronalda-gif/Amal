@@ -3,7 +3,9 @@
 Ablation-tested (4 markets, ~7 months of data): strategies that consistently
 hurt results or never fire are kept on disk but NOT registered:
 candlestick (-7.6R), support_resistance (-7.0R), trend_pullback (-4.7R),
-ict_ote (-4.1R), session_manipulation (-2.6R), rci (-0.4R, fires 2% of bars).
+ict_ote (-4.1R), session_manipulation (-2.6R), rci (-0.4R, fires 2% of bars),
+amd_phase (-7.2R: a fade signal that overlaps liquidity_sweep/order_block
+and suppresses borderline trend trades — combined edge dropped +37.7->+30.5R).
 Re-add an import + list entry to re-enable one.
 """
 
