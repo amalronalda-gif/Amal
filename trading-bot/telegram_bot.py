@@ -26,8 +26,10 @@ import argparse
 import html
 import json
 import os
+import re
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -104,8 +106,18 @@ class TelegramAPI:
         data = urllib.parse.urlencode(
             {k: v for k, v in params.items() if v is not None}).encode()
         req = urllib.request.Request(f"{self.base}/{method}", data=data)
-        with urllib.request.urlopen(req, timeout=http_timeout) as resp:
-            payload = json.loads(resp.read().decode())
+        try:
+            with urllib.request.urlopen(req, timeout=http_timeout) as resp:
+                payload = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            # surface Telegram's reason (e.g. "can't parse entities") so the
+            # log is actionable instead of a bare "400 Bad Request"
+            try:
+                payload = json.loads(e.read().decode())
+            except Exception:
+                raise
+            raise RuntimeError(f"telegram {method} {e.code}: "
+                               f"{payload.get('description', '?')}")
         if not payload.get("ok"):
             raise RuntimeError(f"telegram {method} failed: {payload}")
         return payload["result"]
@@ -118,9 +130,18 @@ class TelegramAPI:
     def send(self, chat_id: int, text: str):
         # Telegram hard limit is 4096 chars per message
         for chunk_start in range(0, len(text), 4000):
-            self.call("sendMessage", chat_id=chat_id,
-                      text=text[chunk_start:chunk_start + 4000],
-                      parse_mode="HTML", disable_web_page_preview=True)
+            chunk = text[chunk_start:chunk_start + 4000]
+            try:
+                self.call("sendMessage", chat_id=chat_id, text=chunk,
+                          parse_mode="HTML", disable_web_page_preview=True)
+            except RuntimeError as e:
+                # malformed HTML (e.g. a stray tag in a news title): retry as
+                # plain text so the user still gets the message
+                if "parse" not in str(e).lower():
+                    raise
+                plain = re.sub(r"<[^>]+>", "", chunk)
+                self.call("sendMessage", chat_id=chat_id, text=plain,
+                          disable_web_page_preview=True)
 
     def send_photo(self, chat_id: int, path: str, caption: str = ""):
         """Upload a photo via multipart/form-data (stdlib only)."""
