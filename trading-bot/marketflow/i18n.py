@@ -363,6 +363,20 @@ Misollar:
               "<code>/predict XAUUSD</code>, <code>/predict BTCUSD</code> yoki "
               "<code>/predict EURUSD</code> ni sinab ko'ring.",
     },
+    "regime_line": {
+        "en": "🧭 trend strength: {label} (ADX {adx})",
+        "ru": "🧭 сила тренда: {label} (ADX {adx})",
+        "uz": "🧭 trend kuchi: {label} (ADX {adx})",
+    },
+    "regime_trending": {"en": "strong trend — follow direction",
+                        "ru": "сильный тренд — идти по направлению",
+                        "uz": "kuchli trend — yo'nalish bo'yicha"},
+    "regime_ranging": {"en": "flat/range — fade extremes, expect chop",
+                       "ru": "флэт/боковик — играть от границ, возможна пила",
+                       "uz": "flet/yon harakat — chegaralardan, arra bo'lishi mumkin"},
+    "regime_transitional": {"en": "transitional — mixed conditions",
+                            "ru": "переходный — смешанные условия",
+                            "uz": "o'tish davri — aralash sharoit"},
     "movement": {
         "en": "📊 price move: {moves}",
         "ru": "📊 движение цены: {moves}",

@@ -193,6 +193,45 @@ def ichimoku(candles: list[Candle], tenkan_p: int = 9, kijun_p: int = 26,
             "senkou_a": senkou_a, "senkou_b": senkou_b}
 
 
+def adx(candles: list[Candle], period: int = 14) -> list[float | None]:
+    """Wilder's Average Directional Index — trend-strength gauge (0-100).
+    ADX > ~25 = trending market, < ~20 = ranging/choppy. Used by the engine
+    to decide whether to favour trend strategies or mean-reversion ones."""
+    n = len(candles)
+    out: list[float | None] = [None] * n
+    if n <= 2 * period:
+        return out
+    plus_dm, minus_dm, trs = [0.0], [0.0], [candles[0].range]
+    for i in range(1, n):
+        c, p = candles[i], candles[i - 1]
+        up_move = c.high - p.high
+        down_move = p.low - c.low
+        plus_dm.append(up_move if up_move > down_move and up_move > 0 else 0.0)
+        minus_dm.append(down_move if down_move > up_move and down_move > 0 else 0.0)
+        trs.append(max(c.high - c.low, abs(c.high - p.close), abs(c.low - p.close)))
+    # Wilder smoothing
+    atr_s = sum(trs[1:period + 1])
+    pdm_s = sum(plus_dm[1:period + 1])
+    mdm_s = sum(minus_dm[1:period + 1])
+    dxs: list[float] = []
+    for i in range(period + 1, n):
+        atr_s = atr_s - atr_s / period + trs[i]
+        pdm_s = pdm_s - pdm_s / period + plus_dm[i]
+        mdm_s = mdm_s - mdm_s / period + minus_dm[i]
+        if atr_s == 0:
+            dxs.append(0.0)
+            continue
+        pdi = 100 * pdm_s / atr_s
+        mdi = 100 * mdm_s / atr_s
+        dx = 100 * abs(pdi - mdi) / (pdi + mdi) if (pdi + mdi) else 0.0
+        dxs.append(dx)
+        if len(dxs) == period:
+            out[i] = sum(dxs) / period
+        elif len(dxs) > period:
+            out[i] = (out[i - 1] * (period - 1) + dx) / period
+    return out
+
+
 def linreg_slope(values: list[float]) -> float:
     """Least-squares slope of values vs index, normalized by mean value."""
     n = len(values)

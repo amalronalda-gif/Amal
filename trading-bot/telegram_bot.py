@@ -148,6 +148,16 @@ class TelegramAPI:
             raise RuntimeError(f"telegram sendPhoto failed: {payload}")
 
 
+def regime_line(pred, lang: str = "en") -> str:
+    """Informational ADX trend-strength / regime label."""
+    if pred.adx is None:
+        return ""
+    label = t(lang, "regime_" + pred.regime) if pred.regime != "unknown" else ""
+    if not label:
+        return ""
+    return "\n" + t(lang, "regime_line", label=label, adx=f"{pred.adx:.0f}")
+
+
 def movement_line(candles, interval: str, lang: str = "en") -> str:
     """Recent price change so 'NEUTRAL' is never mistaken for 'flat'."""
     step = INTERVAL_SECONDS.get(interval, 3600)
@@ -485,6 +495,7 @@ class Bot:
                 symbol, interval, pred, candles[-1].close,
                 candles[-1].open_time, lang)
                 + movement_line(candles, interval, lang)
+                + regime_line(pred, lang)
                 + trade_plan_line(candles, pred, lang, symbol)
                 + spot_quote_line(symbol, lang)
                 + event_risk_line(lang))
@@ -616,6 +627,7 @@ class Bot:
                              + html.escape(", ".join(neutral)))
             msg = "\n".join(lines)
             msg += movement_line(candles, interval, lang)
+            msg += regime_line(pred, lang)
             if aligned >= SIDE_WAIT_T:
                 msg += trade_plan_line(candles, pred, lang, symbol,
                                        force_side=side)

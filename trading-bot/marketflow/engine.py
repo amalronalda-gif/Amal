@@ -38,6 +38,11 @@ DEFAULT_WEIGHTS = {
 BULLISH_T = 0.14
 BEARISH_T = -0.14
 
+# ADX trend-strength bands for the informational regime label (not used to
+# re-weight signals: backtests showed weight-shifting by ADX hurt the edge).
+ADX_TREND = 25.0   # >= strong directional trend
+ADX_RANGE = 18.0   # <= flat/choppy
+
 # Per-market weight overrides. FX majors are range-bound and mean-reverting:
 # damp trend/breakout signals, boost fades (lifted EURUSDT 1h backtest
 # profit factor 0.74 -> 1.29 when first tuned). Gold and BTC trend, so they
@@ -63,6 +68,18 @@ class Prediction:
     confidence: float         # 0..100
     agreement: float          # fraction of non-neutral strategies agreeing
     signals: dict[str, Signal]
+    adx: float | None = None  # trend strength at the evaluated bar
+
+    @property
+    def regime(self) -> str:
+        """trending / ranging / transitional from ADX (informational)."""
+        if self.adx is None:
+            return "unknown"
+        if self.adx >= ADX_TREND:
+            return "trending"
+        if self.adx <= ADX_RANGE:
+            return "ranging"
+        return "transitional"
 
     def summary(self) -> str:
         lines = [
@@ -118,8 +135,9 @@ class Engine:
             direction = "NEUTRAL"
 
         confidence = min(abs(score) * 120, 70) + agreement * 30 if active else 0.0
+        adx = ctx.adx14[i] if i < len(ctx.adx14) else None
         return Prediction(direction, score, min(confidence, 99.0),
-                          agreement, signals)
+                          agreement, signals, adx)
 
     def predict(self, candles: list[Candle],
                 extra_signals: dict[str, Signal] | None = None) -> Prediction:

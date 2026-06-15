@@ -47,6 +47,7 @@ class Context:
         self.stoch_k, self.stoch_d = ta.stochastic(candles)
         self.obv = ta.obv(candles)
         self.donchian_hi, self.donchian_lo = ta.donchian(candles, 20)
+        self.adx14 = ta.adx(candles, 14)
         self.ichimoku = ta.ichimoku(candles)
         # swing points are confirmed `strength` bars late; strategies must
         # only use swings with index <= i - strength to avoid look-ahead
