@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import re
 import time
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -27,6 +28,32 @@ NEWS_FEEDS = {
     "PAXGUSDT": "GC=F",
     "XAUTUSDT": "GC=F",
     "BTCUSDT": "BTC-USD",
+}
+
+# Major-media coverage. Google News aggregates Reuters, Bloomberg, FT, WSJ,
+# AP etc. (each item tagged with its real <source>); CNBC, CNN Money and
+# Investing.com are pulled directly and filtered by keywords.
+GOOGLE_NEWS_URL = ("https://news.google.com/rss/search?q={query}"
+                   "&hl=en-US&gl=US&ceid=US:en")
+DIRECT_MEDIA_FEEDS = [
+    ("CNBC", "https://search.cnbc.com/rs/search/combinedcms/view.xml"
+             "?partnerId=wrss01&id=100003114"),
+    ("CNN", "http://rss.cnn.com/rss/money_latest.rss"),
+    ("Investing.com", "https://www.investing.com/rss/news_301.rss"),
+]
+
+# per-market Google News query + relevance keywords for the direct feeds
+MEDIA_TOPICS = {
+    "PAXGUSDT": ('gold price OR XAUUSD OR "federal reserve" OR inflation '
+                 'OR "interest rates"',
+                 ("gold", "xau", "fed", "inflation", "dollar", "treasury",
+                  "rate")),
+    "XAUTUSDT": ('gold price OR XAUUSD OR "federal reserve" OR inflation',
+                 ("gold", "xau", "fed", "inflation", "dollar", "treasury")),
+    "BTCUSDT": ("bitcoin price OR BTC OR crypto market OR ethereum",
+                ("bitcoin", "btc", "crypto", "ether")),
+    "EURUSDT": ('EURUSD OR "euro dollar" OR ECB OR eurozone',
+                ("euro", "ecb", "eurozone", "dollar", "fed")),
 }
 
 # countries whose data moves XAU/USD; "All" covers OPEC/G7-style events
@@ -79,6 +106,7 @@ class Headline:
     title: str
     link: str
     sentiment: int       # +1 bullish-ish, -1 bearish-ish, 0 neutral
+    source: str = ""
 
 
 def upcoming_events(hours_ahead: float = 24.0,
@@ -124,19 +152,66 @@ def gold_headlines(limit: int = 6) -> list[Headline]:
     return headlines("GC=F", limit)
 
 
+def media_headlines(resolved_symbol: str, limit: int = 8) -> list[Headline]:
+    """Market-relevant headlines from major outlets (Reuters/Bloomberg/FT/WSJ
+    via Google News, plus CNBC, CNN and Investing.com), deduplicated."""
+    topic = MEDIA_TOPICS.get(resolved_symbol)
+    if not topic:
+        return []
+    query, keywords = topic
+
+    def fetch():
+        items: list[Headline] = []
+        try:
+            url = GOOGLE_NEWS_URL.format(query=urllib.parse.quote(query))
+            root = ET.fromstring(_http_get(url))
+            for item in root.iter("item"):
+                title = (item.findtext("title") or "").strip()
+                source = (item.findtext("source") or "").strip()
+                link = (item.findtext("link") or "").strip()
+                if source and title.endswith(f" - {source}"):
+                    title = title[: -len(source) - 3]
+                if title:
+                    items.append(Headline(title, link, _sentiment(title),
+                                          source or "Google News"))
+        except Exception:
+            pass
+        for name, url in DIRECT_MEDIA_FEEDS:
+            try:
+                root = ET.fromstring(_http_get(url))
+                for item in root.iter("item"):
+                    title = (item.findtext("title") or "").strip()
+                    link = (item.findtext("link") or "").strip()
+                    if title and any(k in title.lower() for k in keywords):
+                        items.append(Headline(title, link,
+                                              _sentiment(title), name))
+            except Exception:
+                pass
+        seen, unique = set(), []
+        for h in items:
+            key = h.title.lower()[:60]
+            if key not in seen:
+                seen.add(key)
+                unique.append(h)
+        return unique
+
+    return _cached(f"media:{resolved_symbol}", fetch)[:limit]
+
+
 def sentiment_for(resolved_symbol: str) -> tuple[float, int, int] | None:
-    """Net headline sentiment for a market.
+    """Net headline sentiment for a market, from Yahoo + major media.
 
     Returns (score in [-1, 1], positive_count, total_scored) or None when
-    the feed is unavailable or has no opinionated headlines.
+    no opinionated headlines are available.
     """
+    heads: list[Headline] = []
     feed = NEWS_FEEDS.get(resolved_symbol)
-    if not feed:
-        return None
-    try:
-        heads = headlines(feed)
-    except Exception:
-        return None
+    if feed:
+        try:
+            heads += headlines(feed)
+        except Exception:
+            pass
+    heads += media_headlines(resolved_symbol)
     scored = [h.sentiment for h in heads if h.sentiment != 0]
     if not scored:
         return None

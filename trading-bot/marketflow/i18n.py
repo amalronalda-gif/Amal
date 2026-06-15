@@ -411,6 +411,11 @@ Misollar:
         "ru": "<b>Свежие заголовки по золоту</b> (грубая оценка по ключевым словам: {mood}):",
         "uz": "<b>Oltin bo'yicha so'nggi sarlavhalar</b> (kalit so'zlar bo'yicha taxminiy kayfiyat: {mood}):",
     },
+    "news_media_header": {
+        "en": "<b>Major media (Reuters, Bloomberg, CNBC, CNN, FT…):</b>",
+        "ru": "<b>Мировые СМИ (Reuters, Bloomberg, CNBC, CNN, FT…):</b>",
+        "uz": "<b>Yirik OAV (Reuters, Bloomberg, CNBC, CNN, FT…):</b>",
+    },
     "news_heads_unavail": {"en": "headlines unavailable: {error}",
                            "ru": "новости недоступны: {error}",
                            "uz": "yangiliklar mavjud emas: {error}"},

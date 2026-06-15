@@ -237,6 +237,18 @@ def format_news(lang: str = "en") -> str:
                              f"{html.escape(h.title)}</a>")
     except Exception as ex:
         lines.append(t(lang, "news_heads_unavail", error=ex))
+    try:
+        media = news_mod.media_headlines("PAXGUSDT")
+        if media:
+            lines.append("")
+            lines.append(t(lang, "news_media_header"))
+            for h in media:
+                mark = {1: "🟢", -1: "🔴", 0: "⚪"}[h.sentiment]
+                src = f"<b>{html.escape(h.source)}</b>: " if h.source else ""
+                lines.append(f"{mark} {src}<a href=\"{h.link}\">"
+                             f"{html.escape(h.title)}</a>")
+    except Exception as ex:
+        lines.append(t(lang, "news_heads_unavail", error=ex))
     return "\n".join(lines) + t(lang, "disclaimer")
 
 
