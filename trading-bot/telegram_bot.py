@@ -170,6 +170,22 @@ class TelegramAPI:
             raise RuntimeError(f"telegram sendPhoto failed: {payload}")
 
 
+def live_price(symbol: str, fallback: float) -> float:
+    """Price to anchor entry/SL/TP on, matching what the trader actually sees.
+
+    For gold/EUR we use the live spot quote (TradingView OANDA) — the Binance
+    PAXG candles the engine analyses can sit several dollars off spot and the
+    last closed candle is stale. Falls back to the candle close if no spot
+    feed (e.g. BTC, where 24/7 candles already track the live price)."""
+    resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
+    feed = SPOT_QUOTES.get(resolved)
+    if feed:
+        q = fetch_tradingview_quote(feed[0])
+        if q and q.get("close"):
+            return float(q["close"])
+    return fallback
+
+
 def regime_line(pred, lang: str = "en") -> str:
     """Informational ADX trend-strength / regime label."""
     if pred.adx is None:
@@ -292,7 +308,7 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
     a = atr_indicator(candles, 14)[-1]
     if not a:
         return ""
-    entry = candles[-1].close
+    entry = live_price(symbol, candles[-1].close)
     side = force_side if force_side is not None else (
         1 if pred.direction == "BULLISH" else -1)
     stop = entry - side * stop_mult * a
@@ -494,7 +510,7 @@ class Bot:
             if s:
                 a = atr_indicator(candles, 14)[-1]
                 if a:
-                    entry = candles[-1].close
+                    entry = live_price(symbol, candles[-1].close)
                     levels = {"entry": entry, "SL": entry - s * 2.0 * a,
                               "TP1": entry + s * 1.0 * a,
                               "TP2": entry + s * 2.0 * a}
@@ -837,8 +853,10 @@ class Bot:
             if outcome:
                 key = {"target": "signal_exit_target", "stop": "signal_exit_stop",
                        "flip": "signal_exit_flip", "time": "signal_exit_time"}[outcome]
+                # display on the spot scale the trader sees
+                shown = exit_px + sig.get("basis", 0.0)
                 self.api.send(chat_id, t(lang, key, symbol=sub["symbol"],
-                                         price=f"{exit_px:.{digits}f}"))
+                                         price=f"{shown:.{digits}f}"))
                 sub["signal"] = None
             return
         if pred.direction != "NEUTRAL" and abs(pred.score) >= SIGNAL_THRESHOLD:
@@ -846,20 +864,25 @@ class Bot:
             if not a:
                 return
             d = 1 if pred.score > 0 else -1
+            # exit detection runs on the analysed (PAXG) candles, so keep
+            # stop/target on that scale; display on the spot scale via basis
+            basis = live_price(sub["symbol"], price) - price
             # high win-rate exits: 2 ATR stop, close first target at 1 ATR
             # (tracked as the win), runner toward 2 ATR
             sub["signal"] = {"dir": d, "entry": price,
                              "stop": price - d * 2.0 * a,
                              "target": price + d * 1.0 * a,
+                             "basis": basis,
                              "opened": candles[-1].open_time}
             s = sub["signal"]
             self.api.send(chat_id, t(
                 lang, "signal_enter",
                 action="BUY 🟢" if d == 1 else "SELL 🔴",
                 dir=i18n.direction(lang, pred.direction), symbol=sub["symbol"],
-                entry=f"{price:.{digits}f}", stop=f"{s['stop']:.{digits}f}",
-                tp1=f"{price + d * 1.0 * a:.{digits}f}",
-                target=f"{price + d * 2.0 * a:.{digits}f}"))
+                entry=f"{price + basis:.{digits}f}",
+                stop=f"{price - d * 2.0 * a + basis:.{digits}f}",
+                tp1=f"{price + d * 1.0 * a + basis:.{digits}f}",
+                target=f"{price + d * 2.0 * a + basis:.{digits}f}"))
             self._send_chart(chat_id, candles, sub["symbol"],
                              sub["interval"], pred, lang, side=d)
 
