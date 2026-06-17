@@ -47,11 +47,13 @@ def display_symbol(symbol: str) -> str:
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
     return DISPLAY_NAMES.get(resolved, resolved)
 
-# resolved symbol -> (TradingView symbol for live spot quote, display pair).
+# resolved symbol -> (TradingView symbol for the live anchor quote, label).
+# Gold is anchored to COMEX front-month futures (GC1!) — what most brokers
+# and TradingView show for "gold" — which trades a few $ above spot (carry).
 # BTC needs no extra quote: its Binance candles ARE the live market.
 SPOT_QUOTES = {
-    "PAXGUSDT": ("OANDA:XAUUSD", "XAU/USD"),
-    "XAUTUSDT": ("OANDA:XAUUSD", "XAU/USD"),
+    "PAXGUSDT": ("COMEX:GC1!", "XAU/USD fut (GC)"),
+    "XAUTUSDT": ("COMEX:GC1!", "XAU/USD fut (GC)"),
     "EURUSDT": ("OANDA:EURUSD", "EUR/USD"),
 }
 
