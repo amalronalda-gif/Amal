@@ -290,18 +290,22 @@ def format_news(lang: str = "en") -> str:
     return "\n".join(lines) + t(lang, "disclaimer")
 
 
+TP_STEP_ATR = 0.5    # spacing between the seven take-profit rungs
+SL_ATR = 2.0         # stop distance (the verified high-win-rate stop)
+ZONE_ATR = 0.15      # half-width of the entry zone
+
+
 def trade_plan_line(candles, pred: Prediction, lang: str = "en",
                     symbol: str = "", force_side: int | None = None,
-                    stop_mult: float = 2.0, tp1_mult: float = 1.0,
-                    tp2_mult: float = 2.0) -> str:
-    """ATR-based entry/stop/target suggestion for non-neutral signals.
+                    stop_mult: float = SL_ATR, tp_step: float = TP_STEP_ATR
+                    ) -> str:
+    """Channel-style signal card: entry zone, a 7-rung TP ladder and SL.
 
-    Mirrors the backtester's exits (2 ATR stop, TP1 at 1 ATR, TP2 at 2 ATR)
-    so the suggestion matches the published ~70-80% win-rate stats: a close
-    first target hits often, then the stop moves to breakeven and the runner
-    aims for TP2. Position size is for a $ACCOUNT_USD account risking RISK_PCT%.
-    `force_side` (+1 long / -1 short) builds the plan for that side even
-    when the ensemble is neutral (used by /short and /long).
+    Levels are ATR-based so they adapt to current volatility (TP rungs every
+    `tp_step` ATR, stop at `stop_mult` ATR — the same 2 ATR stop the
+    ~70-80% win-rate stats were measured on; TP1/TP2 are the high-probability
+    rungs, TP3+ are runner extensions). Entry is anchored to the live futures
+    price. `force_side` builds the card for /short and /long when neutral.
     """
     if force_side is None and pred.direction == "NEUTRAL":
         return ""
@@ -312,17 +316,15 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
     side = force_side if force_side is not None else (
         1 if pred.direction == "BULLISH" else -1)
     stop = entry - side * stop_mult * a
-    tp1 = entry + side * tp1_mult * a
-    target = entry + side * tp2_mult * a
-    zone = sorted((entry - 0.25 * a, entry + 0.25 * a))
+    tps = [entry + side * tp_step * a * k for k in range(1, 8)]
+    zone = sorted((entry - ZONE_ATR * a, entry + ZONE_ATR * a))
     digits = 5 if entry < 10 else 2
     line = t(lang, "plan",
-             action="SELL 🔴" if side == -1 else "BUY 🟢",
+             action="BUY ⬆️" if side == 1 else "SELL ⬇️",
              symbol=display_symbol(symbol) if symbol else "",
-             entry=f"{entry:.{digits}f}",
              zlo=f"{zone[0]:.{digits}f}", zhi=f"{zone[1]:.{digits}f}",
-             stop=f"{stop:.{digits}f}", tp1=f"{tp1:.{digits}f}",
-             tp2=f"{target:.{digits}f}")
+             stop=f"{stop:.{digits}f}",
+             **{f"tp{k}": f"{tps[k - 1]:.{digits}f}" for k in range(1, 8)})
     risk_usd = ACCOUNT_USD * RISK_PCT / 100.0
     units = risk_usd / abs(entry - stop)
     resolved = SYMBOL_ALIASES.get(symbol.upper(), symbol.upper())
@@ -332,7 +334,7 @@ def trade_plan_line(candles, pred: Prediction, lang: str = "en",
               asset=ASSET_LABELS.get(resolved, resolved),
               notional=f"{units * entry:.0f}",
               loss=f"{risk_usd:.2f}",
-              win=f"{units * abs(target - entry):.2f}")
+              win=f"{units * abs(tps[1] - entry):.2f}")
     return line
 
 

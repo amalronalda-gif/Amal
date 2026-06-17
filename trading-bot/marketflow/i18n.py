@@ -424,24 +424,33 @@ Misollar:
     "forecast_prev": {"en": " (f: {f}, p: {p})", "ru": " (прогноз: {f}, пред.: {p})",
                       "uz": " (prognoz: {f}, oldingi: {p})"},
     "plan": {
-        "en": "\n📋 <b>Signal: {action} {symbol}</b>\n"
-              "entry <code>{entry}</code> (zone {zlo}–{zhi})\n"
-              "SL <code>{stop}</code>\n"
-              "TP1 <code>{tp1}</code> — close half, move SL to entry "
-              "(hits ~75% of the time)\n"
-              "TP2 <code>{tp2}</code> — runner",
-        "ru": "\n📋 <b>Сигнал: {action} {symbol}</b>\n"
-              "вход <code>{entry}</code> (зона {zlo}–{zhi})\n"
-              "SL <code>{stop}</code>\n"
-              "TP1 <code>{tp1}</code> — закрыть половину, стоп в безубыток "
-              "(срабатывает ~75%)\n"
-              "TP2 <code>{tp2}</code> — остаток в плавающей прибыли",
-        "uz": "\n📋 <b>Signal: {action} {symbol}</b>\n"
-              "kirish <code>{entry}</code> (zona {zlo}–{zhi})\n"
-              "SL <code>{stop}</code>\n"
-              "TP1 <code>{tp1}</code> — yarmini yoping, stopni kirishga suring "
-              "(~75% ishlaydi)\n"
-              "TP2 <code>{tp2}</code> — qolgani",
+        "en": "\n💹 <b>{symbol} SIGNAL</b> 🚀\n"
+              "⚡ Action: <b>{action}</b>\n\n"
+              "🎯 Entry: <code>{zhi}</code> / <code>{zlo}</code>\n"
+              "💎 Take Profit:\n"
+              "✅ TP1 <code>{tp1}</code>\n✅ TP2 <code>{tp2}</code>\n"
+              "✅ TP3 <code>{tp3}</code>\n✅ TP4 <code>{tp4}</code>\n"
+              "✅ TP5 <code>{tp5}</code>\n✅ TP6 <code>{tp6}</code>\n"
+              "✅ TP7 <code>{tp7}</code>\n\n"
+              "❌ Stop Loss: <code>{stop}</code>",
+        "ru": "\n💹 <b>{symbol} СИГНАЛ</b> 🚀\n"
+              "⚡ Действие: <b>{action}</b>\n\n"
+              "🎯 Вход: <code>{zhi}</code> / <code>{zlo}</code>\n"
+              "💎 Тейк-профит:\n"
+              "✅ TP1 <code>{tp1}</code>\n✅ TP2 <code>{tp2}</code>\n"
+              "✅ TP3 <code>{tp3}</code>\n✅ TP4 <code>{tp4}</code>\n"
+              "✅ TP5 <code>{tp5}</code>\n✅ TP6 <code>{tp6}</code>\n"
+              "✅ TP7 <code>{tp7}</code>\n\n"
+              "❌ Стоп-лосс: <code>{stop}</code>",
+        "uz": "\n💹 <b>{symbol} SIGNAL</b> 🚀\n"
+              "⚡ Harakat: <b>{action}</b>\n\n"
+              "🎯 Kirish: <code>{zhi}</code> / <code>{zlo}</code>\n"
+              "💎 Take Profit:\n"
+              "✅ TP1 <code>{tp1}</code>\n✅ TP2 <code>{tp2}</code>\n"
+              "✅ TP3 <code>{tp3}</code>\n✅ TP4 <code>{tp4}</code>\n"
+              "✅ TP5 <code>{tp5}</code>\n✅ TP6 <code>{tp6}</code>\n"
+              "✅ TP7 <code>{tp7}</code>\n\n"
+              "❌ Stop Loss: <code>{stop}</code>",
     },
     "plan_money": {
         "en": "\n💵 For a ${account} account (risk {risk}$): position ≈ "
