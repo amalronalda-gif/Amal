@@ -152,6 +152,32 @@ Klar ist: Homeoffice wird nicht wieder verschwinden. Viele Firmen bieten heute e
         { q: "Viele Firmen kombinieren heute Büro und Homeoffice.", opts: ["Richtig", "Falsch"], a: 0, why: "„Viele Firmen bieten heute eine Mischung an.“" }
       ]
     },
+    reading2: {
+      title: "Leseverstehen üben: eine Stellenanzeige (Acushnet GmbH)",
+      text: `Stellenanzeige: Buchhalter/-in (Befristeter Vertrag, 18 Monate)
+Arbeitgeber: Acushnet GmbH | Standort: Idstein | Gehalt: 45.000–50.000 € brutto p.a.
+
+Titleist und FootJoy – Namen, die jeder Golfspieler kennt. Diese Marken gehören zu Acushnet, dem weltgrößten Hersteller von Golfausrüstung mit Hauptsitz in Fairhaven, USA.
+
+Für unser Büro in Idstein suchen wir für ein Projekt befristet auf 18 Monate eine/-n Buchhalter/-in. In enger Zusammenarbeit mit der Teamleitung Buchhaltung und dem Finanzchef unterstützen Sie das Team.
+
+Ihre Aufgaben:
+Kreditoren: Verarbeitung von Eingangsrechnungen externer Lieferanten (Systeme AS/400 und Rillion) sowie interner Rechnungen; Unterstützung bei der Reisekostenabrechnung.
+Debitoren: Verbuchung von Kontoauszügen, Verwaltung des Bestellfreigabeprozesses, Erstellung von Lastschriftdateien, Unterstützung beim Forderungsmanagement.
+
+Ihr Profil: Sehr gute Englischkenntnisse in Wort und Schrift, Erfahrung mit AS/400, sichere MS-Office-Kenntnisse (insbesondere Excel), strukturierte und sorgfältige Arbeitsweise.
+
+Wir bieten: Angenehme Arbeitsatmosphäre in einem freundlichen Team, flexible Homeoffice-Möglichkeit, regelmäßige Mitarbeiterevents, Betriebskantine mit subventioniertem Essen.
+
+Bewerbung: Lebenslauf auf Englisch per E-Mail. Der Auswahlprozess findet teilweise auf Deutsch, teilweise auf Englisch statt.`,
+      questions: [
+        { q: "Acushnet GmbH ist ein Hersteller von Golfausrüstung.", opts: ["Richtig", "Falsch"], a: 0, why: "„Acushnet, dem weltgrößten Hersteller von Golfausrüstung“." },
+        { q: "Die Stelle in Idstein ist unbefristet.", opts: ["Richtig", "Falsch"], a: 1, why: "„befristet auf 18 Monate“ — die Stelle ist also befristet, nicht unbefristet." },
+        { q: "Für die Stelle sind Excel-Kenntnisse erforderlich.", opts: ["Richtig", "Falsch"], a: 0, why: "„sichere MS-Office-Kenntnisse (insbesondere Excel)“ sind im Profil gefordert." },
+        { q: "Der Lebenslauf soll auf Deutsch geschickt werden.", opts: ["Richtig", "Falsch"], a: 1, why: "„Lebenslauf auf Englisch per E-Mail“ — also auf Englisch, nicht auf Deutsch." },
+        { q: "Die Stelle bietet auch die Möglichkeit, von zu Hause zu arbeiten.", opts: ["Richtig", "Falsch"], a: 0, why: "„flexible Homeoffice-Möglichkeit“ wird im Angebot erwähnt." }
+      ]
+    },
     writing: {
       title: "Schreiben üben",
       prompts: [
@@ -182,6 +208,17 @@ Ich freue mich schon riesig auf die Feier!
 
 Liebe Grüße
 Amal`
+        },
+        {
+          task: "Halbformelle E-Mail – Bewerbung (ca. 60 Wörter): Sie haben eine Stellenanzeige für eine Buchhalter/-in-Position bei der Acushnet GmbH in Idstein gelesen. Schreiben Sie eine kurze Bewerbungs-E-Mail: 1) Nennen Sie die Stelle, auf die Sie sich bewerben. 2) Erklären Sie kurz Ihre Erfahrung. 3) Sagen Sie, dass Sie Ihren Lebenslauf anhängen.",
+          model: `Sehr geehrte Frau Focken,
+
+mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Buchhalter/-in gelesen. Ich verfüge über mehrere Jahre Erfahrung in der Kreditoren- und Debitorenbuchhaltung sowie sehr gute MS-Office-Kenntnisse. Ich freue mich darüber, mich bei Ihnen bewerben zu können.
+
+Meinen Lebenslauf auf Englisch habe ich dieser E-Mail beigefügt.
+
+Mit freundlichen Grüßen
+Amal Ronalda`
         }
       ]
     },

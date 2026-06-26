@@ -547,8 +547,7 @@ function examTabContent(lv, ex) {
   }
 
   if (examTab === "lesen") {
-    const r = ex.reading;
-    return `
+    const renderReading = (r, base) => `
       <div class="card">
         <h2>${r.title}</h2>
         <p class="sub">Read the text, then answer Richtig or Falsch — exactly like in the exam.</p>
@@ -557,11 +556,12 @@ function examTabContent(lv, ex) {
           <div style="margin-bottom:14px">
             <div class="quiz-q" style="font-size:1rem">${i + 1}. ${esc(q.q)}</div>
             ${q.opts.map((o, j) => `
-              <button class="quiz-opt ${cls(i, j, q)}" style="display:inline-block;width:auto;margin-right:8px"
-                onclick="answerReading(${i}, ${j})" ${examReadingAnswers[i] != null ? "disabled" : ""}>${o}</button>`).join("")}
-            ${examReadingAnswers[i] != null ? `<div class="quiz-explain">${examReadingAnswers[i] === q.a ? "✅" : "❌"} ${esc(q.why)}</div>` : ""}
+              <button class="quiz-opt ${cls(base + i, j, q)}" style="display:inline-block;width:auto;margin-right:8px"
+                onclick="answerReading(${base + i}, ${j})" ${examReadingAnswers[base + i] != null ? "disabled" : ""}>${o}</button>`).join("")}
+            ${examReadingAnswers[base + i] != null ? `<div class="quiz-explain">${examReadingAnswers[base + i] === q.a ? "✅" : "❌"} ${esc(q.why)}</div>` : ""}
           </div>`).join("")}
       </div>`;
+    return renderReading(ex.reading, 0) + (ex.reading2 ? renderReading(ex.reading2, 100) : "");
   }
 
   if (examTab === "schreiben") {

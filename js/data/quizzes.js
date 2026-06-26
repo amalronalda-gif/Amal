@@ -52,6 +52,11 @@ const QUIZZES = {
     { q: "Die Anmeldung muss bis Freitag ___ . (Passiv mit Modalverb)", opts: ["geschickt werden", "schicken werden", "geschickt worden", "werden geschickt"], a: 0, why: "Modal + Passiv: muss + Partizip II + werden." },
     { q: "Er bewirbt sich ___ eine Stelle bei BMW.", opts: ["für", "um", "auf", "an"], a: 1, why: "sich bewerben um + Akkusativ." },
     { q: "___ ist es teuer, ___ sehr praktisch.", opts: ["Entweder / oder", "Einerseits / andererseits", "Sowohl / als auch", "Weder / noch"], a: 1, why: "einerseits … andererseits = on the one hand … on the other hand." },
-    { q: "Das Buch gehört dem Mann, ___ wir geholfen haben.", opts: ["der", "den", "dem", "dessen"], a: 2, why: "helfen takes the dative → relative pronoun dem." }
+    { q: "Das Buch gehört dem Mann, ___ wir geholfen haben.", opts: ["der", "den", "dem", "dessen"], a: 2, why: "helfen takes the dative → relative pronoun dem." },
+    { q: "Die Rechnungen ___ täglich von der Buchhaltung ___. (Passiv Präsens)", opts: ["werden / geprüft", "sind / geprüft", "haben / geprüft", "werden / prüfen"], a: 0, why: "Vorgangspassiv Präsens: werden + Partizip II → werden geprüft." },
+    { q: "Die Unterlagen ___ bis Freitag ___ . (Passiv + Modalverb)", opts: ["müssen / eingereicht werden", "müssen / einzureichen sein", "sollen / eingereicht haben", "können / einreichen"], a: 0, why: "Modal + Passiv: Modalverb + Partizip II + werden → müssen … eingereicht werden." },
+    { q: "Die Stelle ist ___ 18 Monate befristet.", opts: ["für", "auf", "um", "zu"], a: 1, why: "befristet auf + Akkusativ: die Stelle ist auf 18 Monate befristet." },
+    { q: "Wir ___ Sie bitten, Ihren Lebenslauf auf Englisch zu schicken. (höfliche Bitte)", opts: ["würden", "wären", "hätten", "sollten"], a: 0, why: "Konjunktiv II: würden … bitten — the standard polite form in formal correspondence." },
+    { q: "Wir suchen eine Buchhalterin, ___ Erfahrung in der Kreditorenbuchhaltung hat.", opts: ["der", "die", "das", "dem"], a: 1, why: "die Buchhalterin is feminine → relative pronoun in nominative: die." }
   ]
 };

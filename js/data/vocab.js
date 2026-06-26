@@ -150,6 +150,20 @@ const VOCAB = {
     { de: "die Maßnahme", en: "measure / action", ex: "Die Stadt plant neue Maßnahmen gegen den Lärm." },
     { de: "es kommt darauf an", en: "it depends", ex: "Es kommt darauf an, wie viel Zeit du hast." },
     { de: "einerseits … andererseits", en: "on the one hand … on the other", ex: "Einerseits ist es teuer, andererseits sehr praktisch." },
-    { de: "die Prüfung ablegen", en: "to take an exam", ex: "Ich lege im Juni die B1-Prüfung ab." }
+    { de: "die Prüfung ablegen", en: "to take an exam", ex: "Ich lege im Juni die B1-Prüfung ab." },
+    { de: "die Buchhaltung", en: "accounting / bookkeeping dept.", ex: "Sie leitet die Abteilung Buchhaltung." },
+    { de: "der Buchhalter / die Buchhalterin", en: "accountant (m/f)", ex: "Ich arbeite als Buchhalterin bei einer GmbH." },
+    { de: "die Rechnung / abrechnen", en: "invoice / to settle accounts", ex: "Die Rechnung muss bis Montag bezahlt werden." },
+    { de: "die Kreditoren (Pl.)", en: "accounts payable", ex: "Sie bearbeitet täglich die Kreditoren." },
+    { de: "die Debitoren (Pl.)", en: "accounts receivable", ex: "Die Debitoren werden wöchentlich geprüft." },
+    { de: "der Lieferant / die Lieferantin", en: "supplier (m/f)", ex: "Wir haben viele zuverlässige Lieferanten." },
+    { de: "die Zahlung / überweisen", en: "payment / to transfer (money)", ex: "Die Zahlung erfolgt per Banküberweisung." },
+    { de: "der Kontoauszug", en: "bank statement", ex: "Ich prüfe jeden Monat den Kontoauszug." },
+    { de: "die Lastschrift", en: "direct debit", ex: "Die Miete wird per Lastschrift eingezogen." },
+    { de: "befristet / unbefristet", en: "fixed-term / permanent", ex: "Es ist eine befristete Stelle auf 18 Monate." },
+    { de: "das Unternehmen / der Betrieb", en: "company / business", ex: "Das Unternehmen hat 500 Mitarbeiter weltweit." },
+    { de: "die Abteilung", en: "department", ex: "Ich arbeite in der Finanzabteilung." },
+    { de: "das Mahnwesen / mahnen", en: "debt collection / to send a reminder", ex: "Das Mahnwesen liegt in meiner Verantwortung." },
+    { de: "die Reisekostenabrechnung", en: "travel expense report", ex: "Alle Reisekostenabrechnungen müssen bis Ende des Monats eingereicht werden." }
   ]
 };

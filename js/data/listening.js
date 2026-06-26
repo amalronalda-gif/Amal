@@ -86,6 +86,17 @@ const LISTENING = {
           { q: "Wo wohnt sie zuerst?", opts: ["In einem Hotel", "Bei ihrer Schwester", "In ihrer neuen Wohnung"], a: 1, why: "„Zuerst wohne ich bei meiner Schwester.“" },
           { q: "Was stimmt über ihre alte Wohnung?", opts: ["Sie hat sie schon gekündigt", "Sie verkauft sie", "Ihre Schwester übernimmt sie"], a: 0, why: "„Die habe ich schon gekündigt.“" }
         ]
+      },
+      {
+        title: "Telefonat: Bewerbung als Buchhalterin",
+        intro: "A job seeker calls a company about an accounting position. Listen carefully — formal German, typical for B1 Hören.",
+        text: "Guten Morgen, Acushnet GmbH, Frauke Focken. — Guten Morgen, mein Name ist Amal Ronalda. Ich rufe wegen Ihrer Stellenanzeige für die Position als Buchhalterin an. Ich habe mehrere Jahre Erfahrung in der Kreditorenbuchhaltung und sehr gute Kenntnisse in Excel. — Das klingt gut! Schicken Sie uns bitte Ihren Lebenslauf auf Englisch per E-Mail. Der Auswahlprozess findet teilweise auf Deutsch und teilweise auf Englisch statt. — Vielen Dank. Darf ich fragen, bis wann Bewerbungen möglich sind? — Am besten noch in dieser Woche. — Sehr gut, dann schicke ich Ihnen die Unterlagen noch heute. Auf Wiederhören! — Auf Wiederhören!",
+        questions: [
+          { q: "Warum ruft Frau Ronalda an?", opts: ["Um einen Termin abzusagen", "Wegen einer Stellenanzeige", "Um Informationen über Produkte zu erhalten"], a: 1, why: "\u201eIch rufe wegen Ihrer Stellenanzeige für die Position als Buchhalterin an.\u201c" },
+          { q: "In welchem Bereich hat die Bewerberin Erfahrung?", opts: ["Im Marketing", "In der Debitorenbuchhaltung", "In der Kreditorenbuchhaltung"], a: 2, why: "\u201eIch habe mehrere Jahre Erfahrung in der Kreditorenbuchhaltung.\u201c" },
+          { q: "In welcher Sprache soll der Lebenslauf sein?", opts: ["Auf Deutsch", "Auf Englisch", "Auf Englisch und Deutsch"], a: 1, why: "\u201eSchicken Sie uns bitte Ihren Lebenslauf auf Englisch per E-Mail.\u201c" },
+          { q: "Wann soll die Bewerbung eintreffen?", opts: ["Bis Ende des Monats", "Noch in dieser Woche", "Bis nächsten Montag"], a: 1, why: "\u201eAm besten noch in dieser Woche.\u201c" }
+        ]
       }
     ],
     dictation: [
@@ -93,7 +104,9 @@ const LISTENING = {
       "Obwohl es geregnet hat, sind wir spazieren gegangen.",
       "Wenn ich mehr Zeit hätte, würde ich öfter Sport machen.",
       "Nachdem ich die Prüfung bestanden hatte, habe ich gefeiert.",
-      "Er bewirbt sich um eine Stelle bei einer großen Firma."
+      "Er bewirbt sich um eine Stelle bei einer großen Firma.",
+      "Die Rechnungen werden täglich von der Buchhaltung geprüft.",
+      "Ich freue mich darüber, mich bei Ihnen bewerben zu können."
     ]
   }
 };
