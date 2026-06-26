@@ -213,7 +213,7 @@ Amal`
           task: "Halbformelle E-Mail – Bewerbung (ca. 70 Wörter): Sie haben eine Stellenanzeige für eine Buchhalter/-in-Position bei der Acushnet GmbH in Idstein gelesen. Schreiben Sie eine kurze Bewerbungs-E-Mail: 1) Nennen Sie die Stelle, auf die Sie sich bewerben. 2) Beschreiben Sie kurz Ihre relevanten Kenntnisse (z. B. Finanzunterlagen, Excel, 1C, Englisch). 3) Sagen Sie, dass Sie Ihren Lebenslauf anhängen.",
           model: `Sehr geehrte Frau Focken,
 
-mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Buchhalter/-in gelesen. Im Rahmen meiner bisherigen Tätigkeiten habe ich Erfahrungen in der Verwaltung von Finanzunterlagen und der Zahlungsabwicklung gesammelt sowie Buchhaltungsaufgaben teilweise in 1C und Excel ausgeführt. Zudem verfüge ich über sehr gute Englischkenntnisse (C1) und bin sicher im Umgang mit MS Office.
+mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Buchhalter/-in gelesen. In meiner Tätigkeit als Hostel-Administrator habe ich Finanzunterlagen verwaltet, und als Call-Center-Mitarbeiter bei Beeline habe ich abrechnungsbezogene Vorgänge und Zahlungsabwicklungen bearbeitet. Darüber hinaus habe ich Buchhaltungsaufgaben teilweise in 1C und Excel ausgeführt und verfüge über sehr gute Englischkenntnisse (C1).
 
 Meinen Lebenslauf auf Englisch habe ich dieser E-Mail beigefügt.
 
