@@ -210,10 +210,10 @@ Liebe Grüße
 Amal`
         },
         {
-          task: "Halbformelle E-Mail – Bewerbung (ca. 60 Wörter): Sie haben eine Stellenanzeige für eine Buchhalter/-in-Position bei der Acushnet GmbH in Idstein gelesen. Schreiben Sie eine kurze Bewerbungs-E-Mail: 1) Nennen Sie die Stelle, auf die Sie sich bewerben. 2) Erklären Sie kurz Ihre Erfahrung. 3) Sagen Sie, dass Sie Ihren Lebenslauf anhängen.",
+          task: "Halbformelle E-Mail – Bewerbung (ca. 70 Wörter): Sie haben eine Stellenanzeige für eine Buchhalter/-in-Position bei der Acushnet GmbH in Idstein gelesen. Schreiben Sie eine kurze Bewerbungs-E-Mail: 1) Nennen Sie die Stelle, auf die Sie sich bewerben. 2) Erwähnen Sie Ihre Erfahrung in der Buchhaltung, auch mit 1C und Excel. 3) Sagen Sie, dass Sie Ihren Lebenslauf anhängen.",
           model: `Sehr geehrte Frau Focken,
 
-mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Buchhalter/-in gelesen. Ich verfüge über mehrere Jahre Erfahrung in der Kreditoren- und Debitorenbuchhaltung sowie sehr gute MS-Office-Kenntnisse. Ich freue mich darüber, mich bei Ihnen bewerben zu können.
+mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Buchhalter/-in gelesen. Ich verfüge über mehrere Jahre Erfahrung in der Kreditoren- und Debitorenbuchhaltung. Darüber hinaus habe ich Buchhaltungsaufgaben teilweise in 1C und Excel ausgeführt und bin mit diesen Programmen vertraut. Ich freue mich darüber, mich bei Ihnen bewerben zu können.
 
 Meinen Lebenslauf auf Englisch habe ich dieser E-Mail beigefügt.
 
