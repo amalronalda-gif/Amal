@@ -66,9 +66,11 @@ SETUP_STRATEGIES = {"liquidity_sweep", "order_block", "fair_value_gap",
 SIGNAL_THRESHOLD = 0.23     # |score| that fires an ENTRY signal on /watch
 SIGNAL_MAX_HOLD = 48        # bars before an open signal is closed by time
 SIDE_WAIT_T = 0.14          # weak-but-aligned zone for /short and /long
-SCALP_STOP_ATR = 1.5        # tighter exits for /scalp on 5m
-SCALP_TP1_ATR = 0.75        # close first target (high hit rate)
-SCALP_TP2_ATR = 1.5
+SCALP_STOP_ATR = 1.0        # tight scalp stop on 5m (TP rungs every 0.3 ATR)
+SCALP_TP_STEP = 0.3
+# swing: higher-timeframe (Daily->4H->1H), wider exits for multi-day holds
+SWING_STOP_ATR = 3.0        # measured on 4H ATR
+SWING_TP_STEP = 1.0         # TP rungs every 1 ATR out to 7 ATR
 
 # autonomous confluence scanner: runs for everyone, no subscription needed
 SCAN_MARKETS = ("XAUUSD", "BTCUSD", "EURUSD")
@@ -468,6 +470,8 @@ class Bot:
             self.cmd_side(chat_id, args, 1)
         elif cmd == "/scalp":
             self.cmd_scalp(chat_id, args)
+        elif cmd == "/swing":
+            self.cmd_swing(chat_id, args)
         elif cmd == "/stats":
             self.cmd_stats(chat_id)
         elif cmd == "/watch":
@@ -715,13 +719,79 @@ class Bot:
                 msg += trade_plan_line(candles, pred, lang, symbol,
                                        force_side=side,
                                        stop_mult=SCALP_STOP_ATR,
-                                       tp1_mult=SCALP_TP1_ATR,
-                                       tp2_mult=SCALP_TP2_ATR)
+                                       tp_step=SCALP_TP_STEP)
             msg += t(lang, "scalp_warn") + event_risk_line(lang)
             self.api.send(chat_id, msg + t(lang, "disclaimer"))
             if side:
                 self._send_chart(chat_id, candles, symbol, "5m", pred, lang,
                                  side=side)
+        except Exception as e:
+            self.api.send(chat_id, t(lang, "failed", error=e))
+
+    def cmd_swing(self, chat_id: int, args: list[str]):
+        """Swing trade: Daily direction -> 4H setup -> 1H entry, with wide
+        (4H-ATR) stops and a 7-rung TP ladder for multi-day holds."""
+        lang = self.lang(chat_id)
+        symbol, _, _ = parse_args_text(args)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval="1D→4H→1H"))
+        try:
+            engine = engine_for(symbol)
+            cD = fetch_klines(symbol, "1d", 400)
+            c4 = fetch_klines(symbol, "4h", 600)
+            c1 = fetch_klines(symbol, "1h", 600)
+            pD = engine.predict(cD, news_signal(symbol))
+            p4 = engine.predict(c4)
+            p1 = engine.predict(c1)
+            side = (1 if pD.direction == "BULLISH"
+                    else -1 if pD.direction == "BEARISH" else 0)
+
+            lines = [t(lang, "swing_header", symbol=symbol), "",
+                     regime_line(pD, lang).strip()]
+            lines.append(t(lang, "swing_dir",
+                           dir=i18n.direction(lang, pD.direction),
+                           score=f"{pD.score:+.3f}"))
+            setups = [i18n.strategy_name(lang, n)
+                      for n, s in p4.signals.items()
+                      if n in SETUP_STRATEGIES and side and s.score * side > 0]
+            lines.append(t(lang, "swing_setup",
+                           setups=html.escape(", ".join(setups))
+                           if setups else t(lang, "mtf_no_setup")))
+            entry_ok = side != 0 and p1.score * side >= SIDE_WAIT_T
+            lines.append(t(lang, "swing_entry",
+                           ans=t(lang, "mtf_yes" if entry_ok else "mtf_not_yet"),
+                           score=f"{p1.score:+.3f}"))
+            lines.append("")
+
+            if side == 0:
+                lines.append(t(lang, "swing_no_dir"))
+                final_side = None
+            elif setups and entry_ok:
+                sideword = t(lang, "side_long" if side == 1 else "side_short")
+                lines.append(t(lang, "mtf_go", side=sideword))
+                final_side = side
+            else:
+                what = (t(lang, "mtf_what_setup") if not setups
+                        else t(lang, "swing_what_entry"))
+                lines.append(t(lang, "mtf_wait2",
+                               dir=i18n.direction(lang, pD.direction),
+                               what=what))
+                final_side = None
+
+            msg = "\n".join(lines)
+            if final_side:
+                # levels sized on the 4H ATR for a multi-day swing
+                msg += trade_plan_line(c4, p4, lang, symbol,
+                                       force_side=final_side,
+                                       stop_mult=SWING_STOP_ATR,
+                                       tp_step=SWING_TP_STEP)
+            msg += t(lang, "swing_warn") + event_risk_line(lang)
+            self.api.send(chat_id, msg + t(lang, "disclaimer"))
+            if final_side:
+                self._send_chart(chat_id, c4, symbol, "4h", p4, lang,
+                                 side=final_side)
         except Exception as e:
             self.api.send(chat_id, t(lang, "failed", error=e))
 

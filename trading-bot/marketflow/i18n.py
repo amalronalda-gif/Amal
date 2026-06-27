@@ -68,6 +68,7 @@ BOT_PROFILE = {
             ("short", "short-entry analysis, e.g. /short XAUUSD 1h"),
             ("long", "long-entry analysis"),
             ("scalp", "quick 5m scalp signal with tight exits"),
+            ("swing", "swing trade: Daily->4H->1H, multi-day hold"),
             ("stats", "accuracy of past predictions"),
             ("backtest", "test the strategy on history"),
             ("status", "my subscription"),
@@ -93,6 +94,7 @@ BOT_PROFILE = {
             ("short", "анализ для входа в шорт, напр. /short XAUUSD 1h"),
             ("long", "анализ для входа в лонг"),
             ("scalp", "быстрый скальп-сигнал на 5m"),
+            ("swing", "свинг: Daily->4H->1H, удержание днями"),
             ("stats", "точность прошлых прогнозов"),
             ("backtest", "проверка стратегии на истории"),
             ("status", "моя подписка"),
@@ -118,6 +120,7 @@ BOT_PROFILE = {
             ("short", "short uchun kirish tahlili, masalan /short XAUUSD 1h"),
             ("long", "long uchun kirish tahlili"),
             ("scalp", "5m da tezkor skalp signali"),
+            ("swing", "sving: Daily->4H->1H, kunlab ushlash"),
             ("stats", "o'tgan prognozlar aniqligi"),
             ("backtest", "strategiyani tarixda sinash"),
             ("status", "mening obunam"),
@@ -180,6 +183,7 @@ Barcha buyruqlar: /help""",
 /short [symbol] [interval] — can I short now? verdict + levels
 /long [symbol] [interval] — can I long now? verdict + levels
 /scalp [symbol] — quick 5m scalp signal (tight SL/TP)
+/swing [symbol] — swing: Daily trend → 4H setup → 1H entry (wide SL/TP)
 💎 Strong-confluence alerts (1h+4h aligned, no news risk) arrive automatically — nothing to enable.
 /stats — accuracy of my past predictions
 /watch [symbol] [interval] [minutes] — entry/exit signals + flip alerts
@@ -202,6 +206,7 @@ Examples:
 /short [символ] [таймфрейм] — можно ли шортить сейчас? вердикт + уровни
 /long [символ] [таймфрейм] — можно ли лонговать сейчас? вердикт + уровни
 /scalp [символ] — быстрый скальп-сигнал на 5m (узкие SL/TP)
+/swing [символ] — свинг: дневной тренд → 4H сетап → 1H вход (широкие SL/TP)
 💎 Сильные сигналы (совпадение 1h+4h, без новостного риска) приходят автоматически — включать ничего не нужно.
 /stats — точность моих прошлых прогнозов
 /watch [символ] [таймфрейм] [минуты] — сигналы входа/выхода + смена направления
@@ -224,6 +229,7 @@ Examples:
 /short [simvol] [interval] — hozir short mumkinmi? xulosa + darajalar
 /long [simvol] [interval] — hozir long mumkinmi? xulosa + darajalar
 /scalp [simvol] — 5m da tezkor skalp signali (tor SL/TP)
+/swing [simvol] — sving: kunlik trend → 4H setup → 1H kirish (keng SL/TP)
 💎 Kuchli signallar (1h+4h mos, yangilik riski yo'q) avtomatik keladi — hech narsa yoqish shart emas.
 /stats — o'tgan prognozlarim aniqligi
 /watch [simvol] [interval] [daqiqa] — kirish/chiqish signallari + yo'nalish
@@ -625,6 +631,44 @@ Misollar:
                      "uz": "⚪ <b>Neytral (setup yo'q):</b>"},
     "side_against": {"en": "<b>Against:</b>", "ru": "<b>Против:</b>",
                      "uz": "<b>Qarshi:</b>"},
+    "swing_header": {
+        "en": "📈 <b>SWING {symbol}</b> (1D → 4H → 1H)",
+        "ru": "📈 <b>СВИНГ {symbol}</b> (1D → 4H → 1H)",
+        "uz": "📈 <b>SVING {symbol}</b> (1D → 4H → 1H)",
+    },
+    "swing_dir": {
+        "en": "1️⃣ <b>Daily — trend:</b> {dir} (<code>{score}</code>)",
+        "ru": "1️⃣ <b>Дневной — тренд:</b> {dir} (<code>{score}</code>)",
+        "uz": "1️⃣ <b>Kunlik — trend:</b> {dir} (<code>{score}</code>)",
+    },
+    "swing_setup": {
+        "en": "2️⃣ <b>4H — setup:</b> {setups}",
+        "ru": "2️⃣ <b>4H — сетап:</b> {setups}",
+        "uz": "2️⃣ <b>4H — setup:</b> {setups}",
+    },
+    "swing_entry": {
+        "en": "3️⃣ <b>1H — entry:</b> {ans} (<code>{score}</code>)",
+        "ru": "3️⃣ <b>1H — вход:</b> {ans} (<code>{score}</code>)",
+        "uz": "3️⃣ <b>1H — kirish:</b> {ans} (<code>{score}</code>)",
+    },
+    "swing_no_dir": {
+        "en": "➖ <b>Daily has no trend — no swing. Wait for a clear daily bias.</b>",
+        "ru": "➖ <b>Дневной без тренда — свинга нет. Ждём чёткий дневной уклон.</b>",
+        "uz": "➖ <b>Kunlik trend yo'q — sving yo'q. Aniq kunlik yo'nalish kuting.</b>",
+    },
+    "swing_what_entry": {
+        "en": "1H does not confirm the entry",
+        "ru": "1H не подтверждает вход",
+        "uz": "1H kirishni tasdiqlamayapti",
+    },
+    "swing_warn": {
+        "en": "\n📅 Swing trade: hold for days, wide stop — size small and "
+              "mind the news calendar over the holding period.",
+        "ru": "\n📅 Свинг: удержание несколько дней, широкий стоп — берите "
+              "малый объём и следите за новостями весь период.",
+        "uz": "\n📅 Sving: bir necha kun ushlash, keng stop — kichik hajm "
+              "oling va butun davr davomida yangiliklarni kuzating.",
+    },
     "scalp_header": {
         "en": "⚡ <b>SCALP {symbol} 5m</b>",
         "ru": "⚡ <b>СКАЛЬП {symbol} 5m</b>",
