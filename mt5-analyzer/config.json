@@ -1,0 +1,44 @@
+{
+    "symbol": "XAUUSD",
+    "magic_comment": "mt5-analyzer",
+
+    "timeframe_signal": "H1",
+    "timeframe_trend": "H4",
+
+    "ema_trend_period": 50,
+    "ema_pullback_period": 21,
+    "rsi_period": 14,
+    "rsi_zone_low": 40,
+    "rsi_zone_high": 50,
+    "pullback_lookback": 3,
+
+    "atr_period": 14,
+    "sl_atr_mult": 1.5,
+    "rr": 2.0,
+
+    "tz_offset_hours": 5,
+    "trade_hour_start": 10,
+    "trade_hour_end": 20,
+
+    "max_signals_per_day": 2,
+    "news_window_minutes": 30,
+    "news_events_utc": [
+        ["2026-06-17 18:00", "FOMC rate decision"],
+        ["2026-06-25 12:30", "US CPI"],
+        ["2026-07-03 12:30", "NFP"],
+        ["2026-07-15 12:30", "US CPI"],
+        ["2026-07-29 18:00", "FOMC rate decision"],
+        ["2026-08-07 12:30", "NFP"]
+    ],
+
+    "backtest_h1_bars": 5000,
+    "max_hold_bars": 96,
+    "risk_pct_per_trade": 1.0,
+
+    "poll_seconds": 30,
+    "mt5_terminal_path": "",
+
+    "telegram_token": "",
+    "telegram_chat_id": "",
+    "signals_csv": "signals.csv"
+}

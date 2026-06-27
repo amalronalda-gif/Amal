@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+subscriptions.json
+*.log
+user_langs.json
+predictions_log.json
+bot.log

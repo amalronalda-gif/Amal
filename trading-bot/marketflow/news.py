@@ -1,0 +1,239 @@
+"""News & event-risk layer for gold.
+
+Two free sources, no API keys:
+  - ForexFactory weekly economic calendar (high-impact USD events move gold)
+  - Yahoo Finance RSS headlines for gold futures (GC=F)
+
+Headline sentiment is deliberately crude (keyword counting) and labeled as
+such — it adds context, it is not deep NLP.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import time
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+from datetime import datetime, timezone
+
+CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+HEADLINES_URL = ("https://feeds.finance.yahoo.com/rss/2.0/headline"
+                 "?s={feed}&region=US&lang=en-US")
+
+# resolved market symbol -> Yahoo news feed ticker
+NEWS_FEEDS = {
+    "PAXGUSDT": "GC=F",
+    "XAUTUSDT": "GC=F",
+    "BTCUSDT": "BTC-USD",
+}
+
+# Major-media coverage. Google News aggregates Reuters, Bloomberg, FT, WSJ,
+# AP etc. (each item tagged with its real <source>); CNBC, CNN Money and
+# Investing.com are pulled directly and filtered by keywords.
+GOOGLE_NEWS_URL = ("https://news.google.com/rss/search?q={query}"
+                   "&hl=en-US&gl=US&ceid=US:en")
+DIRECT_MEDIA_FEEDS = [
+    ("CNBC", "https://search.cnbc.com/rs/search/combinedcms/view.xml"
+             "?partnerId=wrss01&id=100003114"),
+    ("CNN", "http://rss.cnn.com/rss/money_latest.rss"),
+    ("Investing.com", "https://www.investing.com/rss/news_301.rss"),
+]
+
+# per-market Google News query + relevance keywords for the direct feeds
+MEDIA_TOPICS = {
+    "PAXGUSDT": ('gold price OR XAUUSD OR "federal reserve" OR inflation '
+                 'OR "interest rates"',
+                 ("gold", "xau", "fed", "inflation", "dollar", "treasury",
+                  "rate")),
+    "XAUTUSDT": ('gold price OR XAUUSD OR "federal reserve" OR inflation',
+                 ("gold", "xau", "fed", "inflation", "dollar", "treasury")),
+    "BTCUSDT": ("bitcoin price OR BTC OR crypto market OR ethereum",
+                ("bitcoin", "btc", "crypto", "ether")),
+    "EURUSDT": ('EURUSD OR "euro dollar" OR ECB OR eurozone',
+                ("euro", "ecb", "eurozone", "dollar", "fed")),
+}
+
+# countries whose data moves XAU/USD; "All" covers OPEC/G7-style events
+RELEVANT_COUNTRIES = {"USD", "All"}
+
+BULLISH_WORDS = re.compile(
+    r"\b(rall(?:y|ies)|surge[sd]?|soar(?:s|ed)?|jump(?:s|ed)?|gain(?:s|ed)?|"
+    r"climb(?:s|ed)?|record high|haven|safe.haven|rate cut|dovish|"
+    r"weak(?:er)? dollar|inflation fears|buy(?:ing)? gold)\b", re.I)
+BEARISH_WORDS = re.compile(
+    r"\b(fall(?:s|ing)?|fell|drop(?:s|ped)?|slump(?:s|ed)?|slide[sd]?|"
+    r"plunge[sd]?|tumble[sd]?|pressure[sd]?|rate hike|hawkish|"
+    r"strong(?:er)? dollar|sell(?:ing|.off)|profit.taking)\b", re.I)
+
+_cache: dict[str, tuple[float, object]] = {}
+CACHE_TTL = 1800  # 30 min: both feeds update slowly; be a polite client
+
+
+def _cached(key: str, fetcher):
+    now = time.time()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < CACHE_TTL:
+        return hit[1]
+    value = fetcher()
+    _cache[key] = (now, value)
+    return value
+
+
+def _http_get(url: str) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return resp.read()
+
+
+@dataclass
+class CalendarEvent:
+    title: str
+    country: str
+    impact: str          # High / Medium / Low / Holiday
+    when: datetime
+    forecast: str
+    previous: str
+
+    def hours_from_now(self) -> float:
+        return (self.when - datetime.now(timezone.utc)).total_seconds() / 3600
+
+
+@dataclass
+class Headline:
+    title: str
+    link: str
+    sentiment: int       # +1 bullish-ish, -1 bearish-ish, 0 neutral
+    source: str = ""
+
+
+def upcoming_events(hours_ahead: float = 24.0,
+                    hours_back: float = 2.0) -> list[CalendarEvent]:
+    """High/Medium-impact USD events from -hours_back to +hours_ahead."""
+    def fetch():
+        rows = json.loads(_http_get(CALENDAR_URL).decode())
+        events = []
+        for r in rows:
+            try:
+                when = datetime.fromisoformat(r["date"]).astimezone(timezone.utc)
+            except (KeyError, ValueError):
+                continue
+            events.append(CalendarEvent(r.get("title", "?"), r.get("country", "?"),
+                                        r.get("impact", "?"), when,
+                                        r.get("forecast", ""), r.get("previous", "")))
+        return events
+
+    events = _cached("calendar", fetch)
+    out = [e for e in events
+           if e.country in RELEVANT_COUNTRIES
+           and e.impact in ("High", "Medium")
+           and -hours_back <= e.hours_from_now() <= hours_ahead]
+    out.sort(key=lambda e: e.when)
+    return out
+
+
+def headlines(feed: str = "GC=F", limit: int = 6) -> list[Headline]:
+    def fetch():
+        root = ET.fromstring(_http_get(HEADLINES_URL.format(feed=feed)))
+        items = []
+        for item in root.iter("item"):
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "").strip()
+            if title:
+                items.append(Headline(title, link, _sentiment(title)))
+        return items
+
+    return _cached(f"headlines:{feed}", fetch)[:limit]
+
+
+def gold_headlines(limit: int = 6) -> list[Headline]:
+    return headlines("GC=F", limit)
+
+
+def media_headlines(resolved_symbol: str, limit: int = 8) -> list[Headline]:
+    """Market-relevant headlines from major outlets (Reuters/Bloomberg/FT/WSJ
+    via Google News, plus CNBC, CNN and Investing.com), deduplicated."""
+    topic = MEDIA_TOPICS.get(resolved_symbol)
+    if not topic:
+        return []
+    query, keywords = topic
+
+    def fetch():
+        items: list[Headline] = []
+        try:
+            url = GOOGLE_NEWS_URL.format(query=urllib.parse.quote(query))
+            root = ET.fromstring(_http_get(url))
+            for item in root.iter("item"):
+                title = (item.findtext("title") or "").strip()
+                source = (item.findtext("source") or "").strip()
+                link = (item.findtext("link") or "").strip()
+                if source and title.endswith(f" - {source}"):
+                    title = title[: -len(source) - 3]
+                if title:
+                    items.append(Headline(title, link, _sentiment(title),
+                                          source or "Google News"))
+        except Exception:
+            pass
+        for name, url in DIRECT_MEDIA_FEEDS:
+            try:
+                root = ET.fromstring(_http_get(url))
+                for item in root.iter("item"):
+                    title = (item.findtext("title") or "").strip()
+                    link = (item.findtext("link") or "").strip()
+                    if title and any(k in title.lower() for k in keywords):
+                        items.append(Headline(title, link,
+                                              _sentiment(title), name))
+            except Exception:
+                pass
+        seen, unique = set(), []
+        for h in items:
+            key = h.title.lower()[:60]
+            if key not in seen:
+                seen.add(key)
+                unique.append(h)
+        return unique
+
+    return _cached(f"media:{resolved_symbol}", fetch)[:limit]
+
+
+def sentiment_for(resolved_symbol: str) -> tuple[float, int, int] | None:
+    """Net headline sentiment for a market, from Yahoo + major media.
+
+    Returns (score in [-1, 1], positive_count, total_scored) or None when
+    no opinionated headlines are available.
+    """
+    heads: list[Headline] = []
+    feed = NEWS_FEEDS.get(resolved_symbol)
+    if feed:
+        try:
+            heads += headlines(feed)
+        except Exception:
+            pass
+    heads += media_headlines(resolved_symbol)
+    scored = [h.sentiment for h in heads if h.sentiment != 0]
+    if not scored:
+        return None
+    net = sum(scored) / len(scored)
+    pos = sum(1 for s in scored if s > 0)
+    return max(-1.0, min(1.0, net)), pos, len(scored)
+
+
+def _sentiment(text: str) -> int:
+    score = len(BULLISH_WORDS.findall(text)) - len(BEARISH_WORDS.findall(text))
+    return (score > 0) - (score < 0)
+
+
+def event_risk(events: list[CalendarEvent] | None = None,
+               window_hours: float = 8.0) -> CalendarEvent | None:
+    """The next high-impact USD event inside the danger window, if any."""
+    if events is None:
+        try:
+            events = upcoming_events(hours_ahead=window_hours)
+        except Exception:
+            return None
+    for e in events:
+        if e.impact == "High" and 0 <= e.hours_from_now() <= window_hours:
+            return e
+    return None
