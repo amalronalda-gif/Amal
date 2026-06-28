@@ -44,6 +44,7 @@ function render() {
     case "listening": renderListening(); break;
     case "quiz":      renderQuizStart(); break;
     case "exam":      renderExam(); break;
+    case "jobs":      renderJobs(); break;
   }
 }
 
@@ -632,6 +633,100 @@ function toggleCheck(i) {
     const list = d.examChecks[lv];
     list.includes(i) ? list.splice(list.indexOf(i), 1) : list.push(i);
   });
+}
+
+/* ---------------- jobs (Berufe / Stellenanzeigen) ---------------- */
+
+let jobsState = { answers: {}, showVocab: false };
+
+function renderJobs() {
+  jobsState = { answers: {}, showVocab: false };
+  drawJobs();
+}
+
+function drawJobs() {
+  const job = JOBS[0];
+  app.innerHTML = `
+    <h1>💼 Stellenanzeige <span class="tag tag-B1">B1 Lesen</span></h1>
+    <p class="sub">Read a real German job posting and practise your reading comprehension. The text uses professional vocabulary typical of B1+ level — use the vocabulary panel if you need help.</p>
+
+    <div class="card" style="border-top:4px solid var(--gold)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="margin-bottom:4px">${esc(job.title)}</h2>
+          <div style="color:var(--muted);font-size:.9rem">
+            🏢 ${esc(job.company)} &nbsp;·&nbsp; 📍 ${esc(job.location)} &nbsp;·&nbsp; ⏱ ${esc(job.type)}
+          </div>
+          <div style="margin-top:6px">
+            <span class="tag tag-B1">${esc(job.level)}</span>
+            <span style="margin-left:8px;font-weight:700;color:var(--green)">${esc(job.salary)}</span>
+          </div>
+        </div>
+        <button class="btn outline" onclick="speakJobText()">🔊 Vorlesen</button>
+      </div>
+      <p style="margin:12px 0 4px;color:var(--muted)">${esc(job.intro)}</p>
+      <div class="reading-text">${esc(job.text)}</div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:${jobsState.showVocab ? "14px" : "0"}">
+        <h2 style="margin:0">📚 Schlüsselwortschatz</h2>
+        <button class="btn outline" onclick="toggleJobVocab()">${jobsState.showVocab ? "▲ Hide" : "▼ Show"} vocabulary (${job.vocab.length} terms)</button>
+      </div>
+      ${jobsState.showVocab ? `
+        <table class="vocab" style="margin-top:10px">
+          <tr><th>Deutsch</th><th>English</th><th>Erklärung / Note</th></tr>
+          ${job.vocab.map(v => `
+            <tr>
+              <td><b>${esc(v.de)}</b></td>
+              <td>${esc(v.en)}</td>
+              <td style="color:var(--muted);font-size:.88rem;font-style:italic">${esc(v.note)}</td>
+            </tr>`).join("")}
+        </table>` : ""}
+    </div>
+
+    <div class="card">
+      <h2>✏️ Leseverstehen — Richtig oder Falsch?</h2>
+      <p class="sub">Read the posting carefully and decide whether each statement is <b>Richtig</b> (true) or <b>Falsch</b> (false).</p>
+      ${job.questions.map((q, i) => `
+        <div style="margin-bottom:14px">
+          <div class="quiz-q" style="font-size:1rem">${i + 1}. ${esc(q.q)}</div>
+          ${q.opts.map((o, j) => `
+            <button class="quiz-opt ${jobsCls(i, j, q)}" style="display:inline-block;width:auto;margin-right:8px"
+              onclick="answerJob(${i},${j})" ${jobsState.answers[i] != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}
+          ${jobsState.answers[i] != null ? `<div class="quiz-explain">${jobsState.answers[i] === q.a ? "✅" : "❌"} ${esc(q.why)}</div>` : ""}
+        </div>`).join("")}
+      ${Object.keys(jobsState.answers).length === job.questions.length ? `
+        <div class="quiz-explain" style="margin-top:16px;font-size:1rem">
+          <b>Ergebnis: ${Object.values(jobsState.answers).filter((a, i) => a === job.questions[i].a).length} / ${job.questions.length} richtig</b>
+          ${Object.values(jobsState.answers).filter((a, i) => a === job.questions[i].a).length >= 5
+            ? " — Ausgezeichnet! 🎉 Sehr gutes Leseverstehen!"
+            : " — Lies die Anzeige nochmal sorgfältig und versuche es erneut."}
+          <br><button class="btn secondary" style="margin-top:12px" onclick="renderJobs()">Try again</button>
+        </div>` : ""}
+    </div>
+  `;
+}
+
+function jobsCls(qi, oj, q) {
+  if (jobsState.answers[qi] == null) return "";
+  if (oj === q.a) return "correct";
+  if (oj === jobsState.answers[qi]) return "wrong";
+  return "";
+}
+
+function answerJob(qi, oj) {
+  jobsState.answers[qi] = oj;
+  drawJobs();
+}
+
+function toggleJobVocab() {
+  jobsState.showVocab = !jobsState.showVocab;
+  drawJobs();
+}
+
+function speakJobText() {
+  speak(JOBS[0].text, 0.88);
 }
 
 /* ---------------- init ---------------- */

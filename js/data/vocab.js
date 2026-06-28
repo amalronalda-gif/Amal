@@ -150,6 +150,13 @@ const VOCAB = {
     { de: "die Maßnahme", en: "measure / action", ex: "Die Stadt plant neue Maßnahmen gegen den Lärm." },
     { de: "es kommt darauf an", en: "it depends", ex: "Es kommt darauf an, wie viel Zeit du hast." },
     { de: "einerseits … andererseits", en: "on the one hand … on the other", ex: "Einerseits ist es teuer, andererseits sehr praktisch." },
-    { de: "die Prüfung ablegen", en: "to take an exam", ex: "Ich lege im Juni die B1-Prüfung ab." }
+    { de: "die Prüfung ablegen", en: "to take an exam", ex: "Ich lege im Juni die B1-Prüfung ab." },
+    { de: "der Vertrag", en: "contract", ex: "Wir haben einen Vertrag unterschrieben." },
+    { de: "das Gericht (Justiz)", en: "court (of law)", ex: "Der Fall wird vor Gericht verhandelt." },
+    { de: "die Kanzlei", en: "law office / chambers", ex: "Er arbeitet in einer Anwaltskanzlei." },
+    { de: "sorgfältig", en: "careful / thorough", ex: "Bitte prüfen Sie die Unterlagen sorgfältig." },
+    { de: "selbstständig", en: "independent / autonomous", ex: "Sie arbeitet sehr selbstständig und braucht keine Aufsicht." },
+    { de: "die Vergütung", en: "remuneration / pay", ex: "Die Vergütung wird monatlich ausgezahlt." },
+    { de: "die Einarbeitung", en: "induction / onboarding", ex: "Die strukturierte Einarbeitung dauert zwei Wochen." }
   ]
 };
