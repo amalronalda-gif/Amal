@@ -4,14 +4,14 @@
 
 ---
 
-**To:** Mr. Giuliano Mazzarelli
+**To:** Ms. Juliana Massarelli
 **From:** Uztelecom Call Center LLC
 **Date:** July 6, 2026
 **Subject:** Proposal for Outsourced Call Center Services — Uztelecom
 
 ---
 
-Dear Mr. Mazzarelli,
+Dear Ms. Massarelli,
 
 We are pleased to submit this commercial proposal to Uztelecom for the provision of professional call center services. Our goal is to help Uztelecom deliver an outstanding customer experience, improve first-contact resolution, and reduce operating costs through a scalable, multi-channel support solution.
 
