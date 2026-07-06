@@ -71,7 +71,7 @@ We look forward to building a long-term partnership with Uztelecom and supportin
 
 Sincerely,
 
-**[Your Name]**
+**Amalbek Bekpulatov**
 [Your Title]
 Uztelecom Call Center LLC
 [Phone] | [Email] | [Website]
