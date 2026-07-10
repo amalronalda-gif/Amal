@@ -1,41 +1,36 @@
 # English Translation — Cover Letter (for your reference only)
 
-> This is a translation of `anschreiben.md` so you know exactly what the German letter says.
-> **Send only the German version** to the law firm.
+> Translation of `anschreiben.md`. **Send only the German version** to the law firm.
 
 ---
 
-Amal Ronalda
-[Street and house number]
-[Postal code] [City]
-Phone: [phone number]
-E-mail: amalronalda@gmail.com
+Amalbek Bekpulatov
+Gulistan, Obod Yurt MFY, 17,36
+Sirdarya Region, Uzbekistan
+Tel.: +998 901 271 191
+E-mail: bekpulatov02@icloud.com
 
 Dr. H. Freytag u. S. Neubecker GbR
 Attn: Mr. Harald Freytag
-Kaiserstraße [house number]
+Kaiserstraße
 63065 Offenbach am Main
 
-[City], [date]
+Tashkent, July 10, 2026
 
-**Application as legal assistant (Rechtsanwaltsfachangestellte/r, m/f/d) — Reference number 10001-1000730952-S**
+**Application as legal assistant (m/f/d) — Reference number 10001-1000730952-S**
 
 Dear Mr. Freytag,
 
-I read your job advertisement with great interest. Working in a small law firm in the center of Offenbach, where one works closely with the attorneys and takes on responsibility, is exactly what I am looking for. I am therefore applying for the position of legal assistant.
+In June 2026 I completed my Bachelor's degree in International Business Management at IMC Krems (Austria) with distinction. In addition, I completed a DAAD-funded exchange semester at Hochschule Stralsund. Since your advertisement explicitly addresses applicants without professional experience in this occupation, I am applying with great interest for the position of legal assistant at your firm.
 
-[Version A — with training/professional experience:]
-I successfully completed my training as a legal assistant in [year] at [law firm/city]. Since then I have gained [X years] of experience in [areas, e.g. deadline and resubmission management, file management, preparing legal documents from dictation, billing under the RVG fee schedule, enforcement proceedings, client care]. I am fully comfortable with [law firm software, e.g. RA-MICRO / Advoware] and with the special electronic attorney mailbox (beA).
+In my current role as Client Relations Specialist at Uztelecom, I prepare business documents and correspondence daily, coordinate appointments and workflows, and handle requests reliably and in a structured manner. Previously, I prepared official documents, reports and correspondence at a regional government authority and looked after international guests at a hostel reception. Careful file management, deadline monitoring, correspondence and a friendly, discreet manner with people are therefore familiar to me — exactly the skills that matter for the usual tasks in a law office. I use MS Office confidently in my daily work and quickly familiarize myself with new specialist systems.
 
-[Version B — without professional experience / career changer:]
-Although I do not yet have professional experience in a law firm, I have a strong interest in legal matters and work carefully, reliably and in a structured way. From my previous work as [occupation/role] I bring experience in [e.g. office organization, appointment management, customer contact, correspondence] and I learn quickly. I look forward to being trained, with your support, in the usual tasks of a legal assistant.
+I am currently planning my move to Germany; my Chancenkarte (Opportunity Card) application is in progress. In addition to English (C1) and Russian and Uzbek (native languages), I bring German skills (B1) with a recognized language diploma and am continuously improving my German. Your flexibility regarding working hours suits me very well — I am primarily interested in full-time employment, but part-time is also an option for me.
 
-My strengths include discretion, accuracy, and a friendly, dependable manner with clients. Your flexibility regarding working hours suits me very well; I am interested in employment [full-time / part-time in the mornings / part-time in the afternoons].
-
-I am available starting [earliest possible start date / date]. I would be very pleased to be invited to a personal interview.
+I would be very pleased to be invited to an interview — initially also by phone or video.
 
 Kind regards,
 
-Amal Ronalda
+Amalbek Bekpulatov
 
-**Enclosures:** CV, examination certificate, employment references
+**Enclosures:** CV, examination certificate (Bachelor's diploma), employment references

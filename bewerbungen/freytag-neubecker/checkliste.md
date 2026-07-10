@@ -4,32 +4,28 @@
 **Posted:** Jul 9, 2026 · **Location:** Kaiserstraße, 63065 Offenbach am Main
 **Contact:** Mr. Harald Freytag · freytag@fachanwalt-of.de · +49 69 8200090 · [www.hmf-anwaelte.de](http://www.hmf-anwaelte.de)
 
-## What the firm expects with the application (from the posting)
+## Documents — status
 
-- [ ] **Lebenslauf** — CV (tabular, in German, with photo optional; signed and dated is customary)
-- [ ] **Prüfungszeugnis** — examination certificate (from your Rechtsanwaltsfachangestellte training, or your highest relevant qualification if you're applying without the formal training — the posting explicitly says experience is *not* required: "mit oder ohne Berufserfahrung")
-- [ ] **Arbeitszeugnisse** — employment reference letters from previous employers (if available)
-- [ ] **Anschreiben** — cover letter (finalize `anschreiben.md`: fill all `[placeholders]`, choose Variant A **or** B, delete the other)
+- [x] **Anschreiben** — done (`anschreiben.md`), fully filled in with your details
+- [x] **Lebenslauf** — done, Europass format in German (`lebenslauf-europass.html` → print to PDF)
+- [ ] **Prüfungszeugnis** — you don't hold the German Rechtsanwaltsfachangestellte training certificate, so attach your **Bachelor's diploma (IMC Krems)** instead; the posting explicitly welcomes applicants without experience in this occupation
+- [ ] **Arbeitszeugnisse** — attach any reference letters you have (Uztelecom, Sirdaryo administration internship, Beeline); if a document is in Russian/Uzbek, add a simple German or English translation
 
-## How to apply (options listed in the posting)
+## How to send (recommended: email)
 
-Applications are accepted **by email, by phone, by post, or in person**. Recommended: **email** to freytag@fachanwalt-of.de with:
-
-- Subject line: `Bewerbung als Rechtsanwaltsfachangestellte/r – Referenznummer 10001-1000730952-S`
-- One single PDF attachment (cover letter + CV + certificates merged, in that order), named e.g. `Bewerbung_Amal_Ronalda.pdf`
-- Short, polite email body (2–3 sentences) referring to the attached application
+- To: **freytag@fachanwalt-of.de**
+- Subject: `Bewerbung als Rechtsanwaltsfachangestellter – Referenznummer 10001-1000730952-S`
+- One single PDF (Anschreiben → Lebenslauf → Bachelorurkunde → Zeugnisse, in that order), e.g. `Bewerbung_Amalbek_Bekpulatov.pdf`
+- Short German email body (2–3 sentences) referring to the attachment
 
 ## Before sending
 
-- [ ] Fill in your address, phone number, date, and the Kaiserstraße house number (check the firm's website or the full posting for it)
-- [ ] Decide and state your preferred working-time model (full-time / part-time mornings / part-time afternoons) — the firm is flexible on this
-- [ ] State your earliest start date
-- [ ] Convert the cover letter to PDF (no Markdown files to the firm)
-- [ ] Proofread — ideally have a native German speaker read it once
+- [ ] Check the Kaiserstraße **house number** on www.hmf-anwaelte.de and add it to the letter address block
+- [ ] Update the date in the letter and CV to the day you actually send it
+- [ ] Print `lebenslauf-europass.html` to PDF (Ctrl+P → Save as PDF) and sign both letter and CV
+- [ ] Convert the Anschreiben to the same layout as your Tischkönig letter (right-aligned sender block, justified text) if you assemble it in Word
 
-## Notes on the posting
+## Honest framing (already reflected in the letter)
 
-- Small firm: 4 attorneys, fewer than 6 employees — expect a broad range of tasks and close collaboration
-- Open-ended contract (unbefristet), salaried employment
-- Parking available in the building
-- The posting welcomes applicants **with or without professional experience**
+- The letter openly positions you as a **career entrant** ("mit oder ohne Berufserfahrung" — the firm invites this) with transferable skills: document preparation, deadline/appointment coordination, correspondence, discreet client contact
+- German level (B1, recognized diploma) and the pending Chancenkarte/relocation are stated transparently; the letter suggests a phone/video interview first since you're currently in Tashkent

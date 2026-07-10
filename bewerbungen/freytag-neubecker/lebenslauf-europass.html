@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lebenslauf — Amal Ronalda</title>
+<title>Lebenslauf — Amalbek Bekpulatov</title>
 <style>
   :root {
     --eu-blue: #0e4194;
@@ -16,99 +16,89 @@
   body {
     font-family: Arial, Helvetica, sans-serif;
     color: var(--text);
-    font-size: 10.5pt;
-    line-height: 1.45;
+    font-size: 10pt;
+    line-height: 1.4;
     background: #f0f0f0;
   }
   .page {
     max-width: 210mm;
-    min-height: 297mm;
     margin: 0 auto;
     background: #fff;
-    padding: 18mm 16mm;
+    padding: 16mm 16mm;
   }
   header.cv-head {
     border-bottom: 3px solid var(--eu-blue);
-    padding-bottom: 6mm;
-    margin-bottom: 6mm;
+    padding-bottom: 5mm;
+    margin-bottom: 5mm;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
   }
-  .brand { font-size: 9pt; color: var(--eu-blue); font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+  .brand { font-size: 9pt; color: var(--eu-blue); font-weight: bold; letter-spacing: 1px; text-transform: uppercase; text-align: right; }
   .brand small { display: block; color: var(--muted); font-weight: normal; letter-spacing: 0; text-transform: none; }
-  h1 { font-size: 20pt; color: var(--eu-blue); font-weight: bold; }
-  section { display: grid; grid-template-columns: 48mm 1fr; gap: 4mm; padding: 4mm 0; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 19pt; color: var(--eu-blue); font-weight: bold; }
+  .subtitle { color: var(--muted); font-size: 10pt; }
+  section { display: grid; grid-template-columns: 46mm 1fr; gap: 4mm; padding: 3.5mm 0; border-bottom: 1px solid var(--line); }
   section:last-of-type { border-bottom: none; }
   section > h2 {
-    font-size: 10pt; color: var(--eu-blue); text-transform: uppercase;
+    font-size: 9.5pt; color: var(--eu-blue); text-transform: uppercase;
     letter-spacing: 0.5px; font-weight: bold; padding-top: 1mm;
   }
-  .row { display: grid; grid-template-columns: 34mm 1fr; gap: 2mm; margin-bottom: 1.2mm; }
+  .row { display: grid; grid-template-columns: 36mm 1fr; gap: 2mm; margin-bottom: 1mm; }
   .row .k { color: var(--muted); }
-  .job { margin-bottom: 4mm; }
+  .job { margin-bottom: 3.5mm; }
   .job:last-child { margin-bottom: 0; }
-  .job .dates { color: var(--eu-blue-light); font-weight: bold; font-size: 9.5pt; }
+  .job .dates { color: var(--eu-blue-light); font-weight: bold; font-size: 9pt; }
   .job .title { font-weight: bold; }
-  .job .org { color: var(--muted); font-style: italic; margin-bottom: 1mm; }
+  .job .org { color: var(--muted); font-style: italic; margin-bottom: 0.8mm; }
   .job ul { margin-left: 5mm; }
-  .job li { margin-bottom: 0.6mm; }
+  .job li { margin-bottom: 0.5mm; }
   table.lang { border-collapse: collapse; width: 100%; }
   table.lang th, table.lang td {
-    border: 1px solid var(--line); padding: 1.5mm 2.5mm; text-align: center; font-size: 9.5pt;
+    border: 1px solid var(--line); padding: 1.2mm 2.5mm; text-align: center; font-size: 9pt;
   }
   table.lang th { background: #eef2f9; color: var(--eu-blue); font-weight: bold; }
   table.lang td:first-child { text-align: left; font-weight: bold; }
   .note { font-size: 8.5pt; color: var(--muted); margin-top: 1.5mm; }
   ul.plain { margin-left: 5mm; }
-  ul.plain li { margin-bottom: 0.8mm; }
-  .sign { margin-top: 10mm; }
-  .sign .line { margin-top: 12mm; border-top: 1px solid var(--text); width: 60mm; padding-top: 1mm; font-size: 9pt; color: var(--muted); }
-  .placeholder { background: #fff3c4; padding: 0 1px; }
-  .howto {
-    max-width: 210mm; margin: 0 auto; background: #fffbe6; border: 1px solid #e6d780;
-    padding: 4mm 16mm; font-size: 9.5pt; color: #6b5d00;
-  }
+  ul.plain li { margin-bottom: 0.6mm; }
+  .sign { margin-top: 8mm; }
+  .sign .line { margin-top: 11mm; border-top: 1px solid var(--text); width: 60mm; padding-top: 1mm; font-size: 9pt; color: var(--muted); }
   @media print {
     body { background: #fff; }
-    .page { max-width: none; margin: 0; padding: 14mm 14mm; min-height: 0; }
-    .howto { display: none; }
-    .placeholder { background: none; }
+    .page { max-width: none; margin: 0; padding: 13mm 14mm; }
     @page { size: A4; margin: 0; }
   }
 </style>
 </head>
 <body>
 
-<div class="howto">
-  <strong>Anleitung / Инструкция:</strong> Ersetzen Sie alle gelb markierten <span class="placeholder">[Platzhalter]</span>,
-  löschen Sie nicht zutreffende Zeilen und drucken Sie die Seite als PDF (Strg+P → „Als PDF speichern“).
-  Diese gelbe Box erscheint nicht im Ausdruck. / Замените все жёлтые поля, удалите ненужные строки и сохраните как PDF (Ctrl+P).
-</div>
-
 <div class="page">
 
   <header class="cv-head">
-    <h1>Amal Ronalda</h1>
+    <div>
+      <h1>Amalbek Bekpulatov</h1>
+      <div class="subtitle">Büroorganisation &amp; internationale Kundenbetreuung</div>
+    </div>
     <div class="brand">Lebenslauf<small>Curriculum Vitae — Europass</small></div>
   </header>
 
   <section>
     <h2>Persönliche Angaben</h2>
     <div>
-      <div class="row"><span class="k">Adresse</span><span><span class="placeholder">[Straße Hausnummer, PLZ Ort]</span></span></div>
-      <div class="row"><span class="k">Telefon</span><span><span class="placeholder">[Telefonnummer]</span></span></div>
-      <div class="row"><span class="k">E-Mail</span><span>amalronalda@gmail.com</span></div>
-      <div class="row"><span class="k">Staatsangehörigkeit</span><span><span class="placeholder">[Staatsangehörigkeit]</span></span></div>
-      <div class="row"><span class="k">Geburtsdatum</span><span><span class="placeholder">[TT.MM.JJJJ]</span></span></div>
-      <div class="row"><span class="k">Geburtsort</span><span><span class="placeholder">[Ort, Land]</span></span></div>
+      <div class="row"><span class="k">Adresse</span><span>Obod Yurt MFY 17/36, Gulistan, Region Sirdaryo, Usbekistan</span></div>
+      <div class="row"><span class="k">Telefon</span><span>+998 901 271 191</span></div>
+      <div class="row"><span class="k">E-Mail</span><span>bekpulatov02@icloud.com</span></div>
+      <div class="row"><span class="k">Staatsangehörigkeit</span><span>usbekisch</span></div>
+      <div class="row"><span class="k">Geburtsdatum</span><span>04.09.2004</span></div>
+      <div class="row"><span class="k">Führerschein</span><span>Klasse B</span></div>
     </div>
   </section>
 
   <section>
     <h2>Angestrebte Stelle</h2>
     <div>
-      <strong>Rechtsanwaltsfachangestellte/r (m/w/d)</strong><br>
+      <strong>Rechtsanwaltsfachangestellter (m/w/d)</strong><br>
       Dr. H. Freytag u. S. Neubecker GbR, Offenbach am Main<br>
       <span class="note">Referenznummer 10001-1000730952-S</span>
     </div>
@@ -118,19 +108,41 @@
     <h2>Berufserfahrung</h2>
     <div>
       <div class="job">
-        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ / heute]</span></div>
-        <div class="title"><span class="placeholder">[Position]</span></div>
-        <div class="org"><span class="placeholder">[Arbeitgeber]</span>, <span class="placeholder">[Ort, Land]</span></div>
+        <div class="dates">10/2025 – heute</div>
+        <div class="title">Client Relations Specialist</div>
+        <div class="org">Uztelecom, Internationale Outsourcing-Abteilung, Taschkent, Usbekistan</div>
         <ul>
-          <li><span class="placeholder">[Tätigkeit 1, z. B. Büroorganisation und Terminverwaltung]</span></li>
-          <li><span class="placeholder">[Tätigkeit 2, z. B. Schriftverkehr und Kundenkontakt]</span></li>
-          <li><span class="placeholder">[Tätigkeit 3]</span></li>
+          <li>Zentraler Ansprechpartner für internationale Partner; Bearbeitung von Korrespondenz und Supportanfragen auf professionellem Niveau</li>
+          <li>Abteilungsübergreifende Koordination von Abläufen; termingerechte und korrekte Erledigung von Anfragen</li>
+          <li>Mehrsprachige Betreuung (Englisch, Russisch, Usbekisch) mit durchgehend hoher Zufriedenheits- und Lösungsquote</li>
         </ul>
       </div>
       <div class="job">
-        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
-        <div class="title"><span class="placeholder">[frühere Position — Block bei Bedarf kopieren oder löschen]</span></div>
-        <div class="org"><span class="placeholder">[Arbeitgeber]</span>, <span class="placeholder">[Ort, Land]</span></div>
+        <div class="dates">03/2025 – 07/2025</div>
+        <div class="title">Praktikant — Abteilung für internationale Beziehungen</div>
+        <div class="org">Regionalverwaltung für Investitionen, Handel und Industrie Sirdaryo, Gulistan, Usbekistan</div>
+        <ul>
+          <li>Koordination offizieller Veranstaltungen und Delegationsbesuche auf Behördenebene</li>
+          <li>Erstellung offizieller Dokumente, Berichte und Korrespondenz auf Englisch und Russisch für die Leitungsebene</li>
+        </ul>
+      </div>
+      <div class="job">
+        <div class="dates">03/2024 – 07/2024</div>
+        <div class="title">Callcenter-Mitarbeiter</div>
+        <div class="org">Beeline Uzbekistan, Taschkent, Usbekistan</div>
+        <ul>
+          <li>Bearbeitung eines hohen Aufkommens paralleler Kundenanfragen unter Einhaltung aller Qualitäts- und Zeitvorgaben</li>
+          <li>Klärung technischer und Abrechnungsfragen; fehlerfreie Zahlungsabwicklung</li>
+        </ul>
+      </div>
+      <div class="job">
+        <div class="dates">06/2023 – 08/2023</div>
+        <div class="title">Hostel-Administrator — Empfang und Organisation</div>
+        <div class="org">Safarov's Family Hostel, Taschkent, Usbekistan</div>
+        <ul>
+          <li>Empfang und Betreuung internationaler Gäste auf Englisch, Russisch und Usbekisch</li>
+          <li>Verwaltung von Reservierungen und Finanzunterlagen; Koordination des Servicepersonals</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -139,14 +151,27 @@
     <h2>Schul- und Berufsbildung</h2>
     <div>
       <div class="job">
-        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
-        <div class="title"><span class="placeholder">[Abschluss, z. B. Ausbildung zur Rechtsanwaltsfachangestellten / Studium]</span></div>
-        <div class="org"><span class="placeholder">[Einrichtung]</span>, <span class="placeholder">[Ort, Land]</span></div>
+        <div class="dates">10/2023 – 06/2026</div>
+        <div class="title">Bachelor-Doppelabschluss „International Business Management“ (EQR 6)</div>
+        <div class="org">Tashkent State University of Economics &amp; IMC Fachhochschule Krems (Österreich)</div>
+        <ul>
+          <li>Abschluss Juni 2026 mit Auszeichnung; Bachelorarbeit erfolgreich verteidigt</li>
+        </ul>
       </div>
       <div class="job">
-        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
-        <div class="title"><span class="placeholder">[weiterer Abschluss]</span></div>
-        <div class="org"><span class="placeholder">[Einrichtung]</span>, <span class="placeholder">[Ort, Land]</span></div>
+        <div class="dates">10/2024 – 02/2025</div>
+        <div class="title">Auslandssemester „International Management Studies“ (DAAD-Stipendium, 30 ECTS)</div>
+        <div class="org">Hochschule Stralsund, Deutschland</div>
+      </div>
+      <div class="job">
+        <div class="dates">09/2022 – 06/2023</div>
+        <div class="title">Foundation Year (EQR 5)</div>
+        <div class="org">Tashkent State University of Economics &amp; IMC FH Krems</div>
+      </div>
+      <div class="job">
+        <div class="dates">09/2011 – 05/2022</div>
+        <div class="title">Schulabschluss (EQR 4)</div>
+        <div class="org">Schule Nr. 5, Gulistan, Usbekistan</div>
       </div>
     </div>
   </section>
@@ -156,11 +181,13 @@
     <div>
       <table class="lang">
         <tr><th>Sprache</th><th>Verstehen</th><th>Sprechen</th><th>Schreiben</th></tr>
-        <tr><td><span class="placeholder">[Muttersprache]</span></td><td colspan="3">Muttersprache</td></tr>
-        <tr><td>Deutsch</td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td></tr>
-        <tr><td>Englisch</td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td></tr>
+        <tr><td>Usbekisch</td><td colspan="3">Muttersprache</td></tr>
+        <tr><td>Russisch</td><td colspan="3">Muttersprache</td></tr>
+        <tr><td>Englisch</td><td>C1</td><td>B2</td><td>C1</td></tr>
+        <tr><td>Deutsch</td><td>B1</td><td>A2</td><td>B1</td></tr>
+        <tr><td>Türkisch</td><td>B1</td><td>B1</td><td>B1</td></tr>
       </table>
-      <div class="note">Niveaus nach dem Gemeinsamen Europäischen Referenzrahmen (GER). Zertifikate: <span class="placeholder">[z. B. Goethe-Zertifikat B1, Jahr]</span></div>
+      <div class="note">Niveaus nach dem Gemeinsamen Europäischen Referenzrahmen (GER). Deutsch: anerkanntes Sprachdiplom vorhanden.</div>
     </div>
   </section>
 
@@ -168,9 +195,8 @@
     <h2>Digitale Kompetenzen</h2>
     <div>
       <ul class="plain">
-        <li>MS Office (Word, Excel, Outlook): <span class="placeholder">[Grundkenntnisse / gut / sehr gut]</span></li>
-        <li><span class="placeholder">[Kanzleisoftware, z. B. RA-MICRO / Advoware — falls vorhanden, sonst Zeile löschen]</span></li>
-        <li><span class="placeholder">[Weitere, z. B. schnelles Tastaturschreiben]</span></li>
+        <li>MS Office (Word, Excel, PowerPoint, Outlook, OneNote): sehr gute Kenntnisse</li>
+        <li>Schnelle Einarbeitung in ERP- und andere Fachsysteme</li>
       </ul>
     </div>
   </section>
@@ -181,8 +207,8 @@
       <ul class="plain">
         <li>Sorgfältige, strukturierte und zuverlässige Arbeitsweise</li>
         <li>Diskretion im Umgang mit vertraulichen Informationen</li>
-        <li>Freundliches Auftreten gegenüber Mandantinnen und Mandanten</li>
-        <li><span class="placeholder">[Weitere Stärke]</span></li>
+        <li>Freundliches, verbindliches Auftreten im Kunden- und Mandantenkontakt</li>
+        <li>Ruhige Priorisierung paralleler Aufgaben; interkulturelle Kommunikationsstärke</li>
       </ul>
     </div>
   </section>
@@ -191,12 +217,13 @@
     <h2>Sonstiges</h2>
     <div>
       <ul class="plain">
-        <li>Führerschein: <span class="placeholder">[Klasse B / keiner]</span></li>
-        <li>Verfügbarkeit: ab <span class="placeholder">[Datum]</span>, <span class="placeholder">[Vollzeit / Teilzeit vormittags / Teilzeit nachmittags]</span></li>
+        <li>Umzug nach Deutschland in Planung; Chancenkarte in Beantragung</li>
+        <li>EU-anerkannter österreichischer Hochschulabschluss (IMC Krems)</li>
+        <li>Verfügbarkeit: Vollzeit bevorzugt, Teilzeit möglich</li>
       </ul>
       <div class="sign">
-        <span class="placeholder">[Ort]</span>, <span class="placeholder">[Datum]</span>
-        <div class="line">Unterschrift — Amal Ronalda</div>
+        Taschkent, den 10. Juli 2026
+        <div class="line">Unterschrift — Amalbek Bekpulatov</div>
       </div>
     </div>
   </section>

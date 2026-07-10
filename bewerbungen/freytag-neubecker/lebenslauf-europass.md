@@ -1,7 +1,6 @@
-# Lebenslauf (Europass-Format)
+# Lebenslauf (Europass-Format) — Amalbek Bekpulatov
 
-> Platzhalter in `[eckigen Klammern]` ausfüllen. Nicht zutreffende Zeilen löschen.
-> Для отправки используйте немецкую версию; печатайте из `lebenslauf-europass.html` в PDF.
+> Druckfassung: `lebenslauf-europass.html` im Browser öffnen → Strg+P → „Als PDF speichern“.
 
 ---
 
@@ -9,67 +8,89 @@
 
 | | |
 |---|---|
-| **Name** | Amal Ronalda |
-| **Adresse** | [Straße Hausnummer, PLZ Ort] |
-| **Telefon** | [Telefonnummer] |
-| **E-Mail** | amalronalda@gmail.com |
-| **Staatsangehörigkeit** | [Staatsangehörigkeit] |
-| **Geburtsdatum** | [TT.MM.JJJJ] |
-| **Geburtsort** | [Ort, Land] |
+| **Name** | Amalbek Bekpulatov |
+| **Adresse** | Obod Yurt MFY 17/36, Gulistan, Region Sirdaryo, Usbekistan |
+| **Telefon** | +998 901 271 191 |
+| **E-Mail** | bekpulatov02@icloud.com |
+| **Staatsangehörigkeit** | usbekisch |
+| **Geburtsdatum** | 04.09.2004 |
+| **Führerschein** | Klasse B |
 
 ## Angestrebte Stelle
 
-**Rechtsanwaltsfachangestellte/r (m/w/d)** — Dr. H. Freytag u. S. Neubecker GbR, Offenbach am Main (Referenznummer 10001-1000730952-S)
+**Rechtsanwaltsfachangestellter (m/w/d)** — Dr. H. Freytag u. S. Neubecker GbR, Offenbach am Main (Referenznummer 10001-1000730952-S)
 
 ## Berufserfahrung
 
-*(neueste zuerst; für jede Station diesen Block kopieren)*
+**10/2025 – heute** — **Client Relations Specialist**
+Uztelecom, Internationale Outsourcing-Abteilung, Taschkent, Usbekistan
+- Zentraler Ansprechpartner für internationale Partner; Bearbeitung von Korrespondenz und Supportanfragen auf professionellem Niveau
+- Abteilungsübergreifende Koordination von Abläufen; termingerechte und korrekte Erledigung von Anfragen
+- Mehrsprachige Betreuung (Englisch, Russisch, Usbekisch) mit durchgehend hoher Zufriedenheits- und Lösungsquote
 
-**[MM.JJJJ] – [MM.JJJJ bzw. „heute“]** — **[Position]**
-[Arbeitgeber], [Ort, Land]
-- [Tätigkeit/Verantwortung 1, z. B. Büroorganisation und Terminverwaltung]
-- [Tätigkeit/Verantwortung 2, z. B. Schriftverkehr und Kundenkontakt]
-- [Tätigkeit/Verantwortung 3]
+**03/2025 – 07/2025** — **Praktikant, Abteilung für internationale Beziehungen**
+Regionalverwaltung für Investitionen, Handel und Industrie Sirdaryo, Gulistan, Usbekistan
+- Koordination offizieller Veranstaltungen und Delegationsbesuche auf Behördenebene
+- Erstellung offizieller Dokumente, Berichte und Korrespondenz auf Englisch und Russisch für die Leitungsebene
+
+**03/2024 – 07/2024** — **Callcenter-Mitarbeiter**
+Beeline Uzbekistan, Taschkent, Usbekistan
+- Bearbeitung eines hohen Aufkommens paralleler Kundenanfragen unter Einhaltung aller Qualitäts- und Zeitvorgaben
+- Klärung technischer und Abrechnungsfragen; fehlerfreie Zahlungsabwicklung
+
+**06/2023 – 08/2023** — **Hostel-Administrator (Empfang und Organisation)**
+Safarov's Family Hostel, Taschkent, Usbekistan
+- Empfang und Betreuung internationaler Gäste auf Englisch, Russisch und Usbekisch
+- Verwaltung von Reservierungen und Finanzunterlagen; Koordination des Servicepersonals
 
 ## Schul- und Berufsbildung
 
-**[MM.JJJJ] – [MM.JJJJ]** — **[Abschluss, z. B. Ausbildung zur Rechtsanwaltsfachangestellten / Studium / Schulabschluss]**
-[Einrichtung], [Ort, Land]
+**10/2023 – 06/2026** — **Bachelor-Doppelabschluss „International Business Management“** (EQR 6)
+Tashkent State University of Economics & IMC Fachhochschule Krems (Österreich)
+Abschluss Juni 2026 mit Auszeichnung; Bachelorarbeit erfolgreich verteidigt
 
-**[MM.JJJJ] – [MM.JJJJ]** — **[weiterer Abschluss]**
-[Einrichtung], [Ort, Land]
+**10/2024 – 02/2025** — **Auslandssemester „International Management Studies“ (DAAD-Stipendium, 30 ECTS)**
+Hochschule Stralsund, Deutschland
+
+**09/2022 – 06/2023** — **Foundation Year** (EQR 5)
+Tashkent State University of Economics & IMC FH Krems
+
+**09/2011 – 05/2022** — **Schulabschluss** (EQR 4)
+Schule Nr. 5, Gulistan, Usbekistan
 
 ## Sprachkenntnisse
 
 | Sprache | Verstehen | Sprechen | Schreiben |
 |---|---|---|---|
-| **[Muttersprache]** | Muttersprache | Muttersprache | Muttersprache |
-| **Deutsch** | [A1–C2] | [A1–C2] | [A1–C2] |
-| **Englisch** | [A1–C2] | [A1–C2] | [A1–C2] |
+| **Usbekisch** | Muttersprache | Muttersprache | Muttersprache |
+| **Russisch** | Muttersprache | Muttersprache | Muttersprache |
+| **Englisch** | C1 | B2 | C1 |
+| **Deutsch** | B1 | A2 | B1 |
+| **Türkisch** | B1 | B1 | B1 |
 
-*(Niveaus nach dem Gemeinsamen Europäischen Referenzrahmen — GER/CEFR. Vorhandene Zertifikate angeben, z. B. „Goethe-Zertifikat B1, [Jahr]“.)*
+*(Niveaus nach dem Gemeinsamen Europäischen Referenzrahmen — GER. Deutsch: anerkanntes Sprachdiplom vorhanden.)*
 
 ## Digitale Kompetenzen
 
-- MS Office (Word, Excel, Outlook): [Grundkenntnisse / gut / sehr gut]
-- [Kanzleisoftware, z. B. RA-MICRO / Advoware — falls vorhanden]
-- [Weitere, z. B. schnelles Tastaturschreiben, Datenbanken]
+- MS Office (Word, Excel, PowerPoint, Outlook, OneNote): sehr gute Kenntnisse
+- Schnelle Einarbeitung in ERP- und andere Fachsysteme
 
 ## Persönliche Kompetenzen
 
 - Sorgfältige, strukturierte und zuverlässige Arbeitsweise
 - Diskretion im Umgang mit vertraulichen Informationen
-- Freundliches Auftreten gegenüber Mandantinnen und Mandanten
-- [Weitere Stärke]
+- Freundliches, verbindliches Auftreten im Kunden- und Mandantenkontakt
+- Ruhige Priorisierung paralleler Aufgaben; interkulturelle Kommunikationsstärke
 
 ## Sonstiges
 
-- Führerschein: [Klasse B / keiner]
-- Verfügbarkeit: ab [Datum], [Vollzeit / Teilzeit vormittags / Teilzeit nachmittags]
+- Umzug nach Deutschland in Planung; Chancenkarte in Beantragung
+- EU-anerkannter österreichischer Hochschulabschluss (IMC Krems)
+- Verfügbarkeit: Vollzeit bevorzugt, Teilzeit möglich
 
 ---
 
-[Ort], [Datum]
+Taschkent, den 10. Juli 2026
 
 *Unterschrift*
-Amal Ronalda
+Amalbek Bekpulatov
