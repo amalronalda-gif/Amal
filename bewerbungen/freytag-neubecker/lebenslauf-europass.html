@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lebenslauf — Amal Ronalda</title>
+<style>
+  :root {
+    --eu-blue: #0e4194;
+    --eu-blue-light: #3b6fc4;
+    --text: #1a1a1a;
+    --muted: #555;
+    --line: #d9d9d9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    font-size: 10.5pt;
+    line-height: 1.45;
+    background: #f0f0f0;
+  }
+  .page {
+    max-width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: #fff;
+    padding: 18mm 16mm;
+  }
+  header.cv-head {
+    border-bottom: 3px solid var(--eu-blue);
+    padding-bottom: 6mm;
+    margin-bottom: 6mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .brand { font-size: 9pt; color: var(--eu-blue); font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+  .brand small { display: block; color: var(--muted); font-weight: normal; letter-spacing: 0; text-transform: none; }
+  h1 { font-size: 20pt; color: var(--eu-blue); font-weight: bold; }
+  section { display: grid; grid-template-columns: 48mm 1fr; gap: 4mm; padding: 4mm 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  section > h2 {
+    font-size: 10pt; color: var(--eu-blue); text-transform: uppercase;
+    letter-spacing: 0.5px; font-weight: bold; padding-top: 1mm;
+  }
+  .row { display: grid; grid-template-columns: 34mm 1fr; gap: 2mm; margin-bottom: 1.2mm; }
+  .row .k { color: var(--muted); }
+  .job { margin-bottom: 4mm; }
+  .job:last-child { margin-bottom: 0; }
+  .job .dates { color: var(--eu-blue-light); font-weight: bold; font-size: 9.5pt; }
+  .job .title { font-weight: bold; }
+  .job .org { color: var(--muted); font-style: italic; margin-bottom: 1mm; }
+  .job ul { margin-left: 5mm; }
+  .job li { margin-bottom: 0.6mm; }
+  table.lang { border-collapse: collapse; width: 100%; }
+  table.lang th, table.lang td {
+    border: 1px solid var(--line); padding: 1.5mm 2.5mm; text-align: center; font-size: 9.5pt;
+  }
+  table.lang th { background: #eef2f9; color: var(--eu-blue); font-weight: bold; }
+  table.lang td:first-child { text-align: left; font-weight: bold; }
+  .note { font-size: 8.5pt; color: var(--muted); margin-top: 1.5mm; }
+  ul.plain { margin-left: 5mm; }
+  ul.plain li { margin-bottom: 0.8mm; }
+  .sign { margin-top: 10mm; }
+  .sign .line { margin-top: 12mm; border-top: 1px solid var(--text); width: 60mm; padding-top: 1mm; font-size: 9pt; color: var(--muted); }
+  .placeholder { background: #fff3c4; padding: 0 1px; }
+  .howto {
+    max-width: 210mm; margin: 0 auto; background: #fffbe6; border: 1px solid #e6d780;
+    padding: 4mm 16mm; font-size: 9.5pt; color: #6b5d00;
+  }
+  @media print {
+    body { background: #fff; }
+    .page { max-width: none; margin: 0; padding: 14mm 14mm; min-height: 0; }
+    .howto { display: none; }
+    .placeholder { background: none; }
+    @page { size: A4; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="howto">
+  <strong>Anleitung / Инструкция:</strong> Ersetzen Sie alle gelb markierten <span class="placeholder">[Platzhalter]</span>,
+  löschen Sie nicht zutreffende Zeilen und drucken Sie die Seite als PDF (Strg+P → „Als PDF speichern“).
+  Diese gelbe Box erscheint nicht im Ausdruck. / Замените все жёлтые поля, удалите ненужные строки и сохраните как PDF (Ctrl+P).
+</div>
+
+<div class="page">
+
+  <header class="cv-head">
+    <h1>Amal Ronalda</h1>
+    <div class="brand">Lebenslauf<small>Curriculum Vitae — Europass</small></div>
+  </header>
+
+  <section>
+    <h2>Persönliche Angaben</h2>
+    <div>
+      <div class="row"><span class="k">Adresse</span><span><span class="placeholder">[Straße Hausnummer, PLZ Ort]</span></span></div>
+      <div class="row"><span class="k">Telefon</span><span><span class="placeholder">[Telefonnummer]</span></span></div>
+      <div class="row"><span class="k">E-Mail</span><span>amalronalda@gmail.com</span></div>
+      <div class="row"><span class="k">Staatsangehörigkeit</span><span><span class="placeholder">[Staatsangehörigkeit]</span></span></div>
+      <div class="row"><span class="k">Geburtsdatum</span><span><span class="placeholder">[TT.MM.JJJJ]</span></span></div>
+      <div class="row"><span class="k">Geburtsort</span><span><span class="placeholder">[Ort, Land]</span></span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Angestrebte Stelle</h2>
+    <div>
+      <strong>Rechtsanwaltsfachangestellte/r (m/w/d)</strong><br>
+      Dr. H. Freytag u. S. Neubecker GbR, Offenbach am Main<br>
+      <span class="note">Referenznummer 10001-1000730952-S</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Berufserfahrung</h2>
+    <div>
+      <div class="job">
+        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ / heute]</span></div>
+        <div class="title"><span class="placeholder">[Position]</span></div>
+        <div class="org"><span class="placeholder">[Arbeitgeber]</span>, <span class="placeholder">[Ort, Land]</span></div>
+        <ul>
+          <li><span class="placeholder">[Tätigkeit 1, z. B. Büroorganisation und Terminverwaltung]</span></li>
+          <li><span class="placeholder">[Tätigkeit 2, z. B. Schriftverkehr und Kundenkontakt]</span></li>
+          <li><span class="placeholder">[Tätigkeit 3]</span></li>
+        </ul>
+      </div>
+      <div class="job">
+        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
+        <div class="title"><span class="placeholder">[frühere Position — Block bei Bedarf kopieren oder löschen]</span></div>
+        <div class="org"><span class="placeholder">[Arbeitgeber]</span>, <span class="placeholder">[Ort, Land]</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Schul- und Berufsbildung</h2>
+    <div>
+      <div class="job">
+        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
+        <div class="title"><span class="placeholder">[Abschluss, z. B. Ausbildung zur Rechtsanwaltsfachangestellten / Studium]</span></div>
+        <div class="org"><span class="placeholder">[Einrichtung]</span>, <span class="placeholder">[Ort, Land]</span></div>
+      </div>
+      <div class="job">
+        <div class="dates"><span class="placeholder">[MM.JJJJ]</span> – <span class="placeholder">[MM.JJJJ]</span></div>
+        <div class="title"><span class="placeholder">[weiterer Abschluss]</span></div>
+        <div class="org"><span class="placeholder">[Einrichtung]</span>, <span class="placeholder">[Ort, Land]</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sprachkenntnisse</h2>
+    <div>
+      <table class="lang">
+        <tr><th>Sprache</th><th>Verstehen</th><th>Sprechen</th><th>Schreiben</th></tr>
+        <tr><td><span class="placeholder">[Muttersprache]</span></td><td colspan="3">Muttersprache</td></tr>
+        <tr><td>Deutsch</td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td></tr>
+        <tr><td>Englisch</td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td><td><span class="placeholder">[A1–C2]</span></td></tr>
+      </table>
+      <div class="note">Niveaus nach dem Gemeinsamen Europäischen Referenzrahmen (GER). Zertifikate: <span class="placeholder">[z. B. Goethe-Zertifikat B1, Jahr]</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Digitale Kompetenzen</h2>
+    <div>
+      <ul class="plain">
+        <li>MS Office (Word, Excel, Outlook): <span class="placeholder">[Grundkenntnisse / gut / sehr gut]</span></li>
+        <li><span class="placeholder">[Kanzleisoftware, z. B. RA-MICRO / Advoware — falls vorhanden, sonst Zeile löschen]</span></li>
+        <li><span class="placeholder">[Weitere, z. B. schnelles Tastaturschreiben]</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Persönliche Kompetenzen</h2>
+    <div>
+      <ul class="plain">
+        <li>Sorgfältige, strukturierte und zuverlässige Arbeitsweise</li>
+        <li>Diskretion im Umgang mit vertraulichen Informationen</li>
+        <li>Freundliches Auftreten gegenüber Mandantinnen und Mandanten</li>
+        <li><span class="placeholder">[Weitere Stärke]</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sonstiges</h2>
+    <div>
+      <ul class="plain">
+        <li>Führerschein: <span class="placeholder">[Klasse B / keiner]</span></li>
+        <li>Verfügbarkeit: ab <span class="placeholder">[Datum]</span>, <span class="placeholder">[Vollzeit / Teilzeit vormittags / Teilzeit nachmittags]</span></li>
+      </ul>
+      <div class="sign">
+        <span class="placeholder">[Ort]</span>, <span class="placeholder">[Datum]</span>
+        <div class="line">Unterschrift — Amal Ronalda</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
