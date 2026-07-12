@@ -205,8 +205,8 @@ def build(path):
         '<link href="mailto:bekpulatov02@icloud.com" color="#0E4194">'
         "bekpulatov02@icloud.com</link>", S["body"])))
     e.append(row("LinkedIn", Paragraph(
-        '<link href="https://linkedin.com/in/amalbek-bekpulatov" '
-        'color="#0E4194">linkedin.com/in/amalbek-bekpulatov</link>',
+        '<link href="https://linkedin.com/in/amalbek" '
+        'color="#0E4194">linkedin.com/in/amalbek</link>',
         S["body"])))
     e.append(row("Date of birth", Paragraph("04/09/2004", S["body"])))
     e.append(row("Nationality", Paragraph("Uzbek", S["body"])))
