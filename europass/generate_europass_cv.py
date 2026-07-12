@@ -19,12 +19,17 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     HRFlowable,
+    Image,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
 )
+
+import os
+
+PHOTO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "photo.jpg")
 
 EUROPASS_BLUE = colors.HexColor("#0E4194")
 LIGHT_BLUE = colors.HexColor("#D5E3F0")
@@ -169,20 +174,36 @@ def build(path):
     )
     e = []
 
-    e.append(row("Curriculum Vitae<br/><font size=8>Europass</font>", [
+    name_block = [
         Paragraph("Amalbek Bekpulatov", S["name"]),
         Spacer(1, 2),
         Paragraph(
             "Outsourcing Specialist @ Uztelecom &nbsp;|&nbsp; "
             "International Business Management", S["headline"]),
-    ]))
+    ]
+    if os.path.exists(PHOTO):
+        photo = Image(PHOTO, width=3.2 * cm, height=3.2 * cm)
+        header = Table(
+            [[name_block, photo]],
+            colWidths=[CONTENT_W - 10 - 3.4 * cm, 3.4 * cm],
+        )
+        header.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        name_block = [header]
+    e.append(row("Curriculum Vitae<br/><font size=8>Europass</font>",
+                 name_block))
 
     e += section("Personal information")
     e.append(row("Address", Paragraph("Tashkent, Uzbekistan", S["body"])))
     e.append(row("Telephone", Paragraph("(+998) 90 127 11 91", S["body"])))
     e.append(row("E-mail", Paragraph(
-        '<link href="mailto:amalbekpulatov2004@mail.ru" color="#0E4194">'
-        "amalbekpulatov2004@mail.ru</link>", S["body"])))
+        '<link href="mailto:bekpulatov02@icloud.com" color="#0E4194">'
+        "bekpulatov02@icloud.com</link>", S["body"])))
     e.append(row("LinkedIn", Paragraph(
         '<link href="https://linkedin.com/in/amalbek-bekpulatov" '
         'color="#0E4194">linkedin.com/in/amalbek-bekpulatov</link>',
