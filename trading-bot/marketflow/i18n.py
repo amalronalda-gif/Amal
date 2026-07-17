@@ -292,6 +292,48 @@ Misollar:
     "unknown_cmd": {"en": "Unknown command — try /help",
                     "ru": "Неизвестная команда — попробуйте /help",
                     "uz": "Noma'lum buyruq — /help ni sinab ko'ring"},
+    "ask_header": {
+        "en": "🧭 <b>{symbol}</b> — verdict across 1h / 4h / 1d:",
+        "ru": "🧭 <b>{symbol}</b> — вердикт по 1h / 4h / 1d:",
+        "uz": "🧭 <b>{symbol}</b> — 1h / 4h / 1d bo'yicha xulosa:",
+    },
+    "ask_tf": {
+        "en": "  {iv}: {dir} (confidence {conf}%)",
+        "ru": "  {iv}: {dir} (уверенность {conf}%)",
+        "uz": "  {iv}: {dir} (ishonch {conf}%)",
+    },
+    "ask_buy": {
+        "en": "\n🟢 <b>Answer: BUY</b> — {n_for} of {n} timeframes point up "
+              "(combined score {score}).",
+        "ru": "\n🟢 <b>Ответ: ПОКУПАТЬ (BUY)</b> — {n_for} из {n} таймфреймов "
+              "за рост (общий счёт {score}).",
+        "uz": "\n🟢 <b>Javob: SOTIB OLISH (BUY)</b> — {n} tadan {n_for} "
+              "taymfreym o'sish tomonda (umumiy ball {score}).",
+    },
+    "ask_sell": {
+        "en": "\n🔴 <b>Answer: SELL</b> — {n_for} of {n} timeframes point down "
+              "(combined score {score}).",
+        "ru": "\n🔴 <b>Ответ: ПРОДАВАТЬ (SELL)</b> — {n_for} из {n} таймфреймов "
+              "за падение (общий счёт {score}).",
+        "uz": "\n🔴 <b>Javob: SOTISH (SELL)</b> — {n} tadan {n_for} taymfreym "
+              "pasayish tomonda (umumiy ball {score}).",
+    },
+    "ask_wait": {
+        "en": "\n⚪ <b>Answer: WAIT</b> — timeframes disagree or the edge is too "
+              "small (combined score {score}). No trade is a position too.",
+        "ru": "\n⚪ <b>Ответ: ЖДАТЬ</b> — таймфреймы расходятся или перевес "
+              "слишком мал (общий счёт {score}). Вне рынка — тоже позиция.",
+        "uz": "\n⚪ <b>Javob: KUTISH</b> — taymfreymlar mos kelmayapti yoki "
+              "ustunlik juda kichik (umumiy ball {score}).",
+    },
+    "ask_hint": {
+        "en": "I read that as a market question but found no asset in it. "
+              "Ask e.g. “gold — buy or sell?”, “will BTC fall?”, or use /help.",
+        "ru": "Похоже на вопрос о рынке, но не вижу актива. Спросите, например: "
+              "«золото — покупать или продавать?», «упадёт биткоин?», или /help.",
+        "uz": "Savolda aktiv topilmadi. Masalan: «oltin — olish yoki sotish?», "
+              "«BTC tushadimi?» deb so'rang yoki /help.",
+    },
     "private": {"en": "Sorry, this bot is private.",
                 "ru": "Извините, этот бот приватный.",
                 "uz": "Kechirasiz, bu bot shaxsiy."},

@@ -363,6 +363,54 @@ def parse_args_text(parts: list[str]) -> tuple[str, str, list[str]]:
     return display_symbol(symbol), interval, rest
 
 
+# ---------- free-text question understanding (ru / en / uz) ----------
+
+_ASSET_WORDS = (
+    ("XAUUSD", ("золот", "gold", "xau", "paxg", "oltin", "олтин")),
+    ("BTC", ("битко", "биток", "btc", "bitcoin")),
+    ("EURUSD", ("евро", "eur")),
+)
+_NEWS_WORDS = ("новост", "news", "трамп", "trump", "календар", "событ",
+               "yangilik", "fomc", "nfp", "cpi", "выступ")
+_MARKET_WORDS = ("куп", "прода", "buy", "sell", "лонг", "шорт", "long",
+                 "short", "пад", "раст", "выраст", "обвал", "прогноз",
+                 "анализ", "куда", "сигнал", "signal", "памп", "дамп",
+                 "crash", "fall", "rise", "drop", "pump", "цел", "target",
+                 "tush", "o'sad", "ko'tar", "дно", "верш", "forecast",
+                 "движ", "тренд", "trend")
+
+
+def parse_question(text: str) -> tuple[str | None, str | None, bool, bool]:
+    """Extract (symbol, interval, is_news, asks_market) from free text.
+
+    Keyword stems keep it dependency-free: '-пад-' catches «упадёт/падение»,
+    '-куп-' catches «купить/покупать» and so on."""
+    low = text.lower()
+    is_news = any(w in low for w in _NEWS_WORDS)
+    symbol = None
+    for sym, words in _ASSET_WORDS:
+        if any(w in low for w in words):
+            symbol = sym
+            break
+    if symbol is None:
+        for tok in re.findall(r"[A-Za-z]{3,10}", text):
+            if tok.upper() in SYMBOL_ALIASES:
+                symbol = tok.upper()
+                break
+    interval = None
+    for tok in re.split(r"[\s,?!.]+", low):
+        if tok in INTERVAL_SECONDS:
+            interval = tok
+            break
+    if interval is None:
+        if "скальп" in low or "scalp" in low:
+            interval = "5m"
+        elif "днев" in low or "daily" in low or "день" in low:
+            interval = "1d"
+    asks_market = any(w in low for w in _MARKET_WORDS)
+    return symbol, interval, is_news, asks_market
+
+
 class Bot:
     def __init__(self, token: str, allowed: set[int] | None):
         self.api = TelegramAPI(token)
@@ -472,6 +520,8 @@ class Bot:
                 self.api.send(chat_id, t(lang, "status_none"))
         elif cmd.startswith("/"):
             self.api.send(chat_id, t(lang, "unknown_cmd"))
+        else:
+            self.cmd_ask(chat_id, text)
 
     def cmd_lang(self, chat_id: int, args: list[str]):
         choice = args[0].lower() if args else None
@@ -516,6 +566,59 @@ class Bot:
             return True
         self.api.send(chat_id, t(lang, "unsupported_symbol"))
         return False
+
+    def cmd_ask(self, chat_id: int, text: str):
+        """Free-text market question («упадёт золото?», "btc buy or sell?")
+        answered with a weighted 1h/4h/1d verdict plus the usual trade plan."""
+        lang = self.lang(chat_id)
+        symbol, interval, is_news, asks_market = parse_question(text)
+        if is_news and not asks_market:
+            self.api.send(chat_id, format_news(lang))
+            return
+        if symbol is None and not asks_market:
+            self.api.send(chat_id, t(lang, "ask_hint"))
+            return
+        symbol = display_symbol(symbol or DEFAULT_SYMBOL)
+        if not self._symbol_ok(chat_id, symbol, lang):
+            return
+        self.api.send(chat_id, t(lang, "crunching", symbol=symbol,
+                                 interval="1h+4h+1d"))
+        try:
+            engine = engine_for(symbol)
+            weights = {"1h": 0.40, "4h": 0.35, "1d": 0.25}
+            preds, candles = {}, {}
+            for iv in weights:
+                candles[iv] = fetch_klines(symbol, iv, 600)
+                preds[iv] = engine.predict(
+                    candles[iv], news_signal(symbol) if iv == "1h" else None)
+            combined = sum(weights[iv] * preds[iv].score for iv in weights)
+            bulls = sum(p.direction == "BULLISH" for p in preds.values())
+            bears = sum(p.direction == "BEARISH" for p in preds.values())
+            side = (1 if combined >= 0.08 and bulls >= 2 and not bears else
+                    -1 if combined <= -0.08 and bears >= 2 and not bulls else 0)
+            lines = [t(lang, "ask_header", symbol=symbol)]
+            for iv in ("1h", "4h", "1d"):
+                lines.append(t(lang, "ask_tf", iv=iv,
+                               dir=i18n.direction(lang, preds[iv].direction),
+                               conf=f"{preds[iv].confidence:.0f}"))
+            key = {1: "ask_buy", -1: "ask_sell", 0: "ask_wait"}[side]
+            lines.append(t(lang, key, n_for=max(bulls, bears),
+                           n=len(weights), score=f"{combined:+.3f}"))
+            msg = "\n".join(lines)
+            plan_iv = interval or "1h"
+            plan_candles = (candles[plan_iv] if plan_iv in candles
+                            else fetch_klines(symbol, plan_iv, 600))
+            if side:
+                msg += trade_plan_line(plan_candles, preds["1h"], lang,
+                                       symbol, force_side=side)
+            msg += movement_line(plan_candles, plan_iv, lang)
+            msg += event_risk_line(lang)
+            self.api.send(chat_id, msg)
+            if side:
+                self._send_chart(chat_id, plan_candles, symbol, plan_iv,
+                                 preds["1h"], lang, side=side)
+        except Exception as e:
+            self.api.send(chat_id, t(lang, "failed", error=e))
 
     def cmd_predict(self, chat_id: int, args: list[str]):
         lang = self.lang(chat_id)
